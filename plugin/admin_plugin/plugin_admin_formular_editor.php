@@ -2,12 +2,9 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
- 
-/*if (!isset($_SESSION['admin_a']) && !isset($_SESSION['admin'])) {
-    header('Location:/index.php');
-    exit;
-}*/
+
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
+include_once $_SERVER['DOCUMENT_ROOT'] . "/function/formular_generator.php";
 
 $connection = getDbConnection();
 
@@ -28,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'save') {
             if ($id) {
                 $stmt = $connection->prepare("UPDATE p_content_formular SET label=?, columns=?, use_placeholder=?, use_extra_label=? WHERE id=?");
-                $stmt->bind_param("siiii", $label, $column, $row, $label_enabled, $id);
+                $stmt->bind_param("siiis", $label, $column, $row, $label_enabled, $id);
             } else {
                 $stmt = $connection->prepare("INSERT INTO p_content_formular (label, columns, use_placeholder, use_extra_label) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("siii", $label, $column, $row, $label_enabled);
@@ -41,16 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
         }
-    } elseif ($type === 'field') {
+    }
+    if ($type === 'field') {
         if ($action === 'save') {
             if (empty($fk_formular_id)) {
                 echo "<div style='color:red;'>Fehler: Kein gültiger fk_formular_id-Wert gesetzt!</div>";
             } else {
                 if ($id) {
-                    $stmt = $connection->prepare("UPDATE p_content_formular_field SET fk_formular_id=?, type=?, label=?, `column`=?, `row`=?, label_enabled=?, folder=? WHERE id=?");
+                    $stmt = $connection->prepare("UPDATE p_content_formular_field 
+                        SET fk_formular_id=?, type=?, label=?, `column`=?, `row`=?, label_enabled=?, folder=? 
+                        WHERE id=?");
                     $stmt->bind_param("ssssiiis", $fk_formular_id, $type_field, $label, $column, $row, $label_enabled, $folder, $id);
                 } else {
-                    $stmt = $connection->prepare("INSERT INTO p_content_formular_field (fk_formular_id, type, label, `column`, `row`, label_enabled, folder) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    $stmt = $connection->prepare("INSERT INTO p_content_formular_field 
+                        (fk_formular_id, type, label, `column`, `row`, label_enabled, folder) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)");
                     $stmt->bind_param("ssssiis", $fk_formular_id, $type_field, $label, $column, $row, $label_enabled, $folder);
                 }
                 $stmt->execute();
@@ -79,7 +81,6 @@ $selected_formular = getSelected($formulare, $_POST['id'] ?? '');
 $selected_field = getSelected($felder, $_POST['id'] ?? '');
 ?>
 
-<!-- HTML-Ausgabe hier -->
 <div class="admin_container">
     <div class="admin_box">
         <h2>Formular</h2>
@@ -134,6 +135,20 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             </div>
         </form>
     </div>
+
+    <div class="admin_box">
+        <h2>HTML generieren &amp; speichern</h2>
+        <form method="post">
+            <label>Formular auswählen:</label>
+            <select name="formular_id">
+                <option value="">-- Formular wählen --</option>
+                <?php foreach ($formulare as $form): ?>
+                    <option value="<?= $form['id'] ?>"><?= htmlspecialchars($form['label']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit" name="generate_html">HTML generieren &amp; speichern</button>
+        </form>
+    </div>
 </div>
 
 <style>
@@ -143,4 +158,3 @@ label { display: block; margin-top: 10px; }
 input, select { width: 100%; padding: 6px; margin-top: 4px; }
 .buttons { margin-top: 10px; }
 </style>
-

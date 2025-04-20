@@ -1,5 +1,7 @@
 <?php
-include_once $_SERVER['DOCUMENT_ROOT'] . "/inc/session.php";
+include_once $_SERVER['DOCUMENT_ROOT'] . "/inc/session.php"; 
+include_once $_SERVER['DOCUMENT_ROOT'] . "/inc/web_besucher.php";
+
 // Datenbankverbindung
 $main_db_connection = getDbConnection();
 if (!$main_db_connection) {
@@ -7,17 +9,17 @@ if (!$main_db_connection) {
 }
  
 ?>
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>CMS SYSTEM  H & D</title>
-    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/style.css" media="screen">
-    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/checkbox.css" media="screen">
-    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/navi.css" media="screen">
+<title>Agentur / Webdesign / Dienstleistung / Personal / Vermittlung / Lohn</title>
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/style.css" media="screen">
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/checkbox.css" media="screen">   
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/navi.css" media="screen">    
     <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/services.css" media="screen">
-    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/language_selector.css" media="screen">
+    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/language_selector.css" media="screen">   
+    
     <link rel="icon" href="/images/icon/favicon.ico" type="image/x-icon">
     <?php
     if(isset($_REQUEST['language'])) {
@@ -34,17 +36,19 @@ if (!$main_db_connection) {
     }
     $_SESSION['language'] = $language;
 
-   #echo '<!-- Debug: LanguageSelector geladen -->';
+    echo '<!-- Debug: LanguageSelector geladen -->';
 
 ?>
-
+ 
+  
 </head>
 
 <body>
 
 <header>
 <?php
-
+ 
+ 
 $role = isset($_SESSION['admin_a']) ? (int) $_SESSION['admin_a'] : null;
 $language = 'de'; // Falls die Sprache nicht aus der Session kommt, setze hier die gewünschte Standardsprache.
 
@@ -62,7 +66,7 @@ if ($header_result->num_rows > 0) {
     $stmt->bind_param("s", $language);
     $stmt->execute();
     $header_result = $stmt->get_result();
-
+    
     if ($header_result->num_rows > 0) {
         $rec = $header_result->fetch_assoc();
     } else {
@@ -80,26 +84,22 @@ if ($rec) {
     error_log("❌ Kein Header gefunden.");
 }
 
-$stmt->close();
-if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/function/php/language_selector.inc.php')) {
-    error_log("❌ language_selector.inc.php nicht gefunden!");
-} else {
-    error_log("✅ language_selector.inc.php gefunden.");
-}
- include $_SERVER['DOCUMENT_ROOT'] . '/function/php/language_selector.inc.php'
- ?>
+#$stmt->close();
+ include $_SERVER['DOCUMENT_ROOT'] . '/function/language_selector.inc.php'
+ ?>/
+
  
     <navi>
     <div id="Navigation">
         <?php
-        if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/function/php/navi.inc.php')) {
+        if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/function//navi.inc.php')) {
             error_log("❌ Navi-Datei nicht gefunden!");
         } else {
             error_log("✅ Navi-Datei gefunden. Wird geladen...");
         }
-        include $_SERVER['DOCUMENT_ROOT'] . '/function/php/navi.inc.php';
+        include $_SERVER['DOCUMENT_ROOT'] . '/function/navi.inc.php';
         ?>
-
+        
     </div>
 </navi>
 
@@ -109,6 +109,7 @@ if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/function/php/language_selector.in
 <div class="content">  
 <?php
 // Verbindung zur Datenbank herstellen
+ 
 
 if ($main_db_connection->connect_error) {
     die("Verbindung fehlgeschlagen: " . $main_db_connection->connect_error);
@@ -173,11 +174,11 @@ while ($record = $result->fetch_assoc()) {
     // Definiere eine Liste möglicher Verzeichnisse
     $plugin_paths = [
         $_SERVER['DOCUMENT_ROOT'] . '/plugin/',         // Standardverzeichnis
-        $_SERVER['DOCUMENT_ROOT'] . '/plugin/admin_plugin/',
-        $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_login/',
-        $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_member/',
-        $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_cards/',
-        $_SERVER['DOCUMENT_ROOT'] . '/plugin/extra_plugin/'
+        $_SERVER['DOCUMENT_ROOT'] . '/plugin/admin_plugin/',  
+        $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_login/',  
+        $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_member/',  
+        $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_cards/',  
+        $_SERVER['DOCUMENT_ROOT'] . '/plugin/extra_plugin/'  
     ];
 
     $plugin_found = false;
@@ -199,7 +200,7 @@ while ($record = $result->fetch_assoc()) {
 }
 
 // Datenbankverbindung schließen
-#$stmt->close();
+$stmt->close();
 
 ?>
 
@@ -220,10 +221,9 @@ while ($record = $result->fetch_assoc()) {
     } else {
         error_log("❌ Fehler beim Laden des Footers.");
     }
-    ?>
-
+    ?> 
+    
 </footer>
-<script src="/function/js/editor.js"></script>
-<script src="function/js/language_selector.js"></script>
+ 
 </body>
 </html>
