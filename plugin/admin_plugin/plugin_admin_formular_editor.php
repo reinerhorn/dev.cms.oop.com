@@ -1,138 +1,146 @@
-<!--  ===================================================================
-	  Urheberrechtshinweis / Copyright
-
-	  Die Gestaltung, Inhalte und Programmierung dieser Seiten
-	  unterliegen dem Urheberrecht. Urheber ist Reiner Horn
-	  Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
-	  Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
-	  wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
-	  unter Einsatz von Rechtsmitteln geahndet.
-      Verwndung von der leeren datenbank und code muss eine genehmigung
-      des Urhebers eingeholt werden.
-      Die Datenbank und der Code sind urheberrechtlich geschützt.
-      Die Verwendung der Datenbank und des Codes ist nur mit
-      ausdrücklicher Genehmigung des Urhebers gestattet.
-      Die Datenbank und der Code dürfen nicht ohne Genehmigung
-      des Urhebers kopiert, verbreitet oder veröffentlicht werden.
-
-	 Reiner Horn
-	 Huaptstr. 8
-	 40597 Düsseldorf
-     horm.it@t-online.de
-===================================================================  -->
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-if (!isset($_SESSION['admin_a'])) {
-	header('Location:/index.php');
-}
+ 
+/*if (!isset($_SESSION['admin_a']) && !isset($_SESSION['admin'])) {
+    header('Location:/index.php');
+    exit;
+}*/
+include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 
 $connection = getDbConnection();
-    $id=""; 
-    $label="";
-    $columns="";
-    $use_placeholder="";
-    $use_extra_label="";
 
-    if (isset($_POST['action'])) {
-        $action = $_POST['action'];
-        $id = $_POST['id'];
-        if ($action == "store") {
-            $action = $id == "" ? "add" : "update";
-        }
-        if ($action == "add" || $action == "update") {
-            $label = $_POST['label'];
-            $columns = $_POST['columns'];
-            $use_placeholder = $_POST['use_placeholder'];
-            $use_extra_label = $_POST['use_extra_label'];
-       
-        }  
-        if ($action == "add") {
-            $prepared_stmt = $connection->prepare(
-            "INSERT INTO p_content_formular (label, columns ,use_placeholder, use_extra_label) VALUES (?, ?, ?, ?)"
-            );
-            $prepared_stmt->bind_param("ssii", $label, $columns,$use_placeholder, $use_extra_label );
-            $prepared_stmt->execute();
-            $result = $connection->query("SELECT id FROM p_content_formular ORDER BY id DESC LIMIT 1");
-            if ($rec = $result->fetch_assoc()) {
-                $id = $rec['id'];
+$action = $_POST['action'] ?? '';
+$type = $_POST['type'] ?? '';
+$id = $_POST['id'] ?? '';
+$fk_formular_id = $_POST['fk_formular_id'] ?? ($_POST['id'] ?? '');
+$type_field = $_POST['type_field'] ?? '';
+$label = $_POST['label'] ?? '';
+$column = $_POST['column'] ?? '';
+$row = $_POST['row'] ?? '';
+$label_enabled = $_POST['label_enabled'] ?? '';
+$folder = $_POST['folder'] ?? '';
+
+// Formular speichern
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($type === 'formular') {
+        if ($action === 'save') {
+            if ($id) {
+                $stmt = $connection->prepare("UPDATE p_content_formular SET label=?, columns=?, use_placeholder=?, use_extra_label=? WHERE id=?");
+                $stmt->bind_param("siiii", $label, $column, $row, $label_enabled, $id);
+            } else {
+                $stmt = $connection->prepare("INSERT INTO p_content_formular (label, columns, use_placeholder, use_extra_label) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("siii", $label, $column, $row, $label_enabled);
             }
-        } elseif ($action == "update") {
-            $prepared_stmt = $connection->prepare(
-                "UPDATE p_content_formular SET label=?, columns=? ,use_placeholder=?, use_extra_label=? WHERE id=?"
-            );
-            $prepared_stmt->bind_param("siiis",  $label, $columns, $use_placeholder, $use_extra_label, $id);
-            $prepared_stmt->execute();
-        } elseif ($action == "delete") {
-            $prepared_stmt = $connection->prepare(
-                "DELETE FROM p_content_formular WHERE id=?"
-            );
-            $prepared_stmt->bind_param("s", $id);
-            $prepared_stmt->execute();
-            $id = "";
-            $action = "add";
-        } elseif ($action == "edit") {
-            $prepared_stmt = $connection->prepare(
-                "SELECT * FROM p_content_formular WHERE id=?"
-            );
-            $prepared_stmt->bind_param("s", $id);
-            $prepared_stmt->execute();
-            $result = $prepared_stmt->get_result();
-            if ($rec = $result->fetch_assoc()) {
-              $label = $rec['label'];
-              $columns = $rec['columns'];
-              $use_placeholder = $rec['use_placeholder'];
-              $use_extra_label = $rec['use_extra_label'];
-            }
+            $stmt->execute();
+            $stmt->close();
+        } elseif ($action === 'delete' && $id) {
+            $stmt = $connection->prepare("DELETE FROM p_content_formular WHERE id=?");
+            $stmt->bind_param("s", $id);
+            $stmt->execute();
+            $stmt->close();
         }
-    } 
+    } elseif ($type === 'field') {
+        if ($action === 'save') {
+            if (empty($fk_formular_id)) {
+                echo "<div style='color:red;'>Fehler: Kein gültiger fk_formular_id-Wert gesetzt!</div>";
+            } else {
+                if ($id) {
+                    $stmt = $connection->prepare("UPDATE p_content_formular_field SET fk_formular_id=?, type=?, label=?, `column`=?, `row`=?, label_enabled=?, folder=? WHERE id=?");
+                    $stmt->bind_param("ssssiiis", $fk_formular_id, $type_field, $label, $column, $row, $label_enabled, $folder, $id);
+                } else {
+                    $stmt = $connection->prepare("INSERT INTO p_content_formular_field (fk_formular_id, type, label, `column`, `row`, label_enabled, folder) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->bind_param("ssssiis", $fk_formular_id, $type_field, $label, $column, $row, $label_enabled, $folder);
+                }
+                $stmt->execute();
+                $stmt->close();
+            }
+        } elseif ($action === 'delete' && $id) {
+            $stmt = $connection->prepare("DELETE FROM p_content_formular_field WHERE id=?");
+            $stmt->bind_param("s", $id);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+}
+
+$formulare = $connection->query("SELECT * FROM p_content_formular ORDER BY id DESC")->fetch_all(MYSQLI_ASSOC);
+$felder = $connection->query("SELECT * FROM p_content_formular_field ORDER BY id DESC")->fetch_all(MYSQLI_ASSOC);
+
+function getSelected($list, $id) {
+    foreach ($list as $item) {
+        if ($item['id'] === $id) return $item;
+    }
+    return [];
+}
+
+$selected_formular = getSelected($formulare, $_POST['id'] ?? '');
+$selected_field = getSelected($felder, $_POST['id'] ?? '');
 ?>
-<div class="flex_container">
-    <form name="editor" action="" method="post">
-        <input type="hidden" name="action" value="page">
-        <input type="hidden" name="id" value="<?php echo isset($_POST['id']) ? $_POST['id'] : 'neu' ?>">
-        <select name="record_selection" onchange="selectRecord()">
-           <option value="">auswählen...</option>
-           <option value="neu">neu</option>
-           <option value="-" disabled=disabled></option>
-           <?php
-               $stmt = $connection->prepare("SELECT * FROM p_content_formular");
-               $stmt->execute();
-               $result = $stmt->get_result();
-               while($page = $result->fetch_assoc()) {
-                   echo '<option value="' . $page['id'] . '">' . $page['label'] .' '.$page['extra_label'] .'</option>' . PHP_EOL; 
-               }
-               $connection->close();
-           ?>
-       </select>
-<br><br>
- 
-    <div class="group">
-    <input type="text" id="label" name="label" class="input_color" value="<?php echo $label?>" required>
-        <span class="highlight" value="true"></span>
-        <span class="bar" value="true"></span>
-        <label type="text" for="email">Label</label>
+
+<!-- HTML-Ausgabe hier -->
+<div class="admin_container">
+    <div class="admin_box">
+        <h2>Formular</h2>
+        <form method="post">
+            <input type="hidden" name="type" value="formular">
+            <input type="hidden" name="id" value="<?= $selected_formular['id'] ?? '' ?>">
+            <label>Formular auswählen:</label>
+            <select name="id" onchange="this.form.submit()">
+                <option value="">Neues Formular</option>
+                <?php foreach ($formulare as $form): ?>
+                    <option value="<?= $form['id'] ?>" <?= ($selected_formular['id'] ?? '') === $form['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($form['label']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <label>Label:</label>
+            <input type="text" name="label" value="<?= htmlspecialchars($selected_formular['label'] ?? '') ?>">
+            <label>Spalten:</label>
+            <input type="number" name="column" value="<?= $selected_formular['columns'] ?? 1 ?>">
+            <label>Placeholder:</label>
+            <input type="number" name="row" value="<?= $selected_formular['use_placeholder'] ?? 0 ?>">
+            <label>Extra Label:</label>
+            <input type="number" name="label_enabled" value="<?= $selected_formular['use_extra_label'] ?? 0 ?>">
+            <div class="buttons">
+                <button name="action" value="save">Speichern</button>
+                <button name="action" value="delete">Löschen</button>
+            </div>
+        </form>
     </div>
-    <div class="group">
-    <input type="text" id="columns" name="columns" class="input_color" value="<?php echo $columns?>" required>
-        <span class="highlight" value="true"></span>
-        <span class="bar" value="true"></span>
-        <label type="text" for="columns">Columns</label>
+
+    <div class="admin_box">
+        <h2>Formular-Feld</h2>
+        <form method="post">
+            <input type="hidden" name="type" value="field">
+            <input type="hidden" name="id" value="<?= $selected_field['id'] ?? '' ?>">
+            <input type="hidden" name="fk_formular_id" value="<?= $selected_formular['id'] ?? '' ?>">
+            <label>Typ:</label>
+            <input type="text" name="type_field" value="<?= htmlspecialchars($selected_field['type'] ?? '') ?>">
+            <label>Label:</label>
+            <input type="text" name="label" value="<?= htmlspecialchars($selected_field['label'] ?? '') ?>">
+            <label>Spalte:</label>
+            <input type="text" name="column" value="<?= htmlspecialchars($selected_field['column'] ?? '') ?>">
+            <label>Reihe:</label>
+            <input type="text" name="row" value="<?= htmlspecialchars($selected_field['row'] ?? '') ?>">
+            <label>Label aktiv:</label>
+            <input type="number" name="label_enabled" value="<?= $selected_field['label_enabled'] ?? 0 ?>">
+            <label>Ordner:</label>
+            <input type="text" name="folder" value="<?= htmlspecialchars($selected_field['folder'] ?? '') ?>">
+            <div class="buttons">
+                <button name="action" value="save">Speichern</button>
+                <button name="action" value="delete">Löschen</button>
+            </div>
+        </form>
     </div>
-    <div class="group">
-    <input type="text" id="use_placeholder" name="use_placeholder" class="input_color" value="<?php echo $use_placeholder?>" required>
-        <span class="highlight" value="true"></span>
-        <span class="bar" value="true"></span>
-        <label type="text" for="use_placeholder">Use Placeholder</label>
-    </div>
-    <div class="group">
-        <input type="text" id="use_extra_label" name="use_extra_label" class="input_color" value="<?php echo $use_extra_label?>" required>
-        <span class="highlight" value="true"></span>
-        <span class="bar" value="true"></span>
-        <label type="text" for="use_extra_label">Use Extra Label</label>
-    </div>
-        <button onclick="this.form.elements['action'].value='store'" type="submit">Speichern</button>
-        <button onclick="this.form.elements['action'].value='delete'">Löschen</button>
-</form>
 </div>
+
+<style>
+.admin_container { display: flex; flex-wrap: wrap; gap: 20px; }
+.admin_box { width: 30%; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+label { display: block; margin-top: 10px; }
+input, select { width: 100%; padding: 6px; margin-top: 4px; }
+.buttons { margin-top: 10px; }
+</style>
+

@@ -4,7 +4,7 @@ function getDbConnection() {
     static $connection = null;
 
     if ($connection === null) {
-        $config = require '/etc/hd_config.php'; // Sicher außerhalb des Webroots speichern!
+        $config = require '/private/conf/hd_config.php'; // Sicher außerhalb des Webroots speichern!
 
         $connection = new mysqli($config['db_host'], $config['db_user'], $config['db_pass'], $config['db_name']);
 
