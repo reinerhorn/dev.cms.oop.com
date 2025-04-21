@@ -18,25 +18,26 @@ $column = $_POST['column'] ?? '';
 $row = $_POST['row'] ?? '';
 $label_enabled = $_POST['label_enabled'] ?? '';
 $folder = $_POST['folder'] ?? '';
+$css_form = $_POST['css_form'] ?? '';
 
 // Formular speichern
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($type === 'formular') {
         if ($action === 'save') {
             if ($id) {
-                $stmt = $connection->prepare("UPDATE p_content_formular SET label=?, columns=?, use_placeholder=?, use_extra_label=? WHERE id=?");
-                $stmt->bind_param("siiis", $label, $column, $row, $label_enabled, $id);
+                $stmt = $connection->prepare("UPDATE p_content_formular SET label=?, css_form=?, columns=?, use_placeholder=?, use_extra_label=? WHERE id=?");
+                $stmt->bind_param("ssiiis", $label, $css_form, $column, $row, $label_enabled, $id);
             } else {
-                $stmt = $connection->prepare("INSERT INTO p_content_formular (label, columns, use_placeholder, use_extra_label) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("siii", $label, $column, $row, $label_enabled);
+                $stmt = $connection->prepare("INSERT INTO p_content_formular (label, css_form, columns, use_placeholder, use_extra_label) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssiii", $label, $css_form, $column, $row, $label_enabled);
             }
             $stmt->execute();
             $stmt->close();
         } elseif ($action === 'delete' && $id) {
             $stmt = $connection->prepare("DELETE FROM p_content_formular WHERE id=?");
             $stmt->bind_param("s", $id);
-            $stmt->execute();
-            $stmt->close();
+            #$stmt->execute();
+            #$stmt->close();
         }
     }
     if ($type === 'field') {
@@ -61,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'delete' && $id) {
             $stmt = $connection->prepare("DELETE FROM p_content_formular_field WHERE id=?");
             $stmt->bind_param("s", $id);
-            $stmt->execute();
-            $stmt->close();
+            #$stmt->execute();
+            #$stmt->close();
         }
     }
 }
@@ -98,6 +99,8 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             </select>
             <label>Label:</label>
             <input type="text" name="label" value="<?= htmlspecialchars($selected_formular['label'] ?? '') ?>">
+            <label>css:</label>
+            <input type="text" name="css_form" value="<?= htmlspecialchars($selected_formular['css_form'] ?? '') ?>">
             <label>Spalten:</label>
             <input type="number" name="column" value="<?= $selected_formular['columns'] ?? 1 ?>">
             <label>Placeholder:</label>
@@ -117,6 +120,17 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             <input type="hidden" name="type" value="field">
             <input type="hidden" name="id" value="<?= $selected_field['id'] ?? '' ?>">
             <input type="hidden" name="fk_formular_id" value="<?= $selected_formular['id'] ?? '' ?>">
+            <label>Feld auswählen:</label>
+            <select name="id" onchange="this.form.submit()">
+                <option value="">Neues Feld</option>
+                <?php foreach ($felder as $field): ?>
+                    <?php if ($field['fk_formular_id'] === $selected_formular['id']): ?>
+                        <option value="<?= $field['id'] ?>" <?= ($selected_field['id'] ?? '') === $field['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($field['label']) ?>
+                        </option>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </select>
             <label>Typ:</label>
             <input type="text" name="type_field" value="<?= htmlspecialchars($selected_field['type'] ?? '') ?>">
             <label>Label:</label>
@@ -135,21 +149,31 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             </div>
         </form>
     </div>
+<?php
+  $formulare = $connection->query("SELECT * FROM p_content_formular ORDER BY id DESC")->fetch_all(MYSQLI_ASSOC);
 
-    <div class="admin_box">
-        <h2>HTML generieren &amp; speichern</h2>
-        <form method="post">
-            <label>Formular auswählen:</label>
-            <select name="formular_id">
-                <option value="">-- Formular wählen --</option>
-                <?php foreach ($formulare as $form): ?>
-                    <option value="<?= $form['id'] ?>"><?= htmlspecialchars($form['label']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <button type="submit" name="generate_html">HTML generieren &amp; speichern</button>
-        </form>
-    </div>
-</div>
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_html'])) {
+      $formular_id = $_POST['formular_id'] ?? '';
+      $message = generateAndSaveFormular($formular_id, false, $connection);
+      echo "<div style='color:green;'>Formular wurde gespeichert unter: <code>$message</code></div>";
+  }
+  ?>
+  
+  
+  <div class="admin_box">
+      <h2>HTML generieren &amp; speichern</h2>
+      <form method="post">
+          <label>Formular auswählen:</label>
+          <select name="formular_id">
+              <option value="">-- Formular wählen --</option>
+              <?php foreach ($formulare as $form): ?>
+                  <option value="<?= $form['id'] ?>"><?= htmlspecialchars($form['label']) ?></option>
+              <?php endforeach; ?>
+          </select>
+          <button type="submit" name="generate_html">HTML generieren &amp; speichern</button>
+      </form>
+  </div>
+  
 
 <style>
 .admin_container { display: flex; flex-wrap: wrap; gap: 20px; }

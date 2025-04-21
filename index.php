@@ -86,9 +86,8 @@ if ($rec) {
 
 #$stmt->close();
  include $_SERVER['DOCUMENT_ROOT'] . '/function/language_selector.inc.php'
- ?>/
+ ?>
 
- 
     <navi>
     <div id="Navigation">
         <?php
