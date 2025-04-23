@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $type) {
         $stmt = $connection->prepare("DELETE FROM $type WHERE id = ?");
         $stmt->bind_param('s', $id);
         $stmt->execute();
-        $stmt->close();
+        #$stmt->close();
         $_POST = []; // Reset Auswahl
     }
 }

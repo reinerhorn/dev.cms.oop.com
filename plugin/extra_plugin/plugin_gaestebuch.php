@@ -58,7 +58,7 @@ if (isset($_POST['action'])) {
 } catch(Error $err){  
     echo PHP_EOL . '<br><b>ERROR: ' . $err . '</b>'; 
 }
-$connection->close();
+#$connection->close();
 ?>
 <style>
     .input_color{

@@ -1,26 +1,4 @@
-<!--  ===================================================================
-	  Urheberrechtshinweis / Copyright
-
-	  Die Gestaltung, Inhalte und Programmierung dieser Seiten
-	  unterliegen dem Urheberrecht. Urheber ist Reiner Horn
-	  Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
-	  Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
-	  wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
-	  unter Einsatz von Rechtsmitteln geahndet.
-      Verwndung von der leeren datenbank und code muss eine genehmigung
-      des Urhebers eingeholt werden.
-      Die Datenbank und der Code sind urheberrechtlich geschützt.
-      Die Verwendung der Datenbank und des Codes ist nur mit
-      ausdrücklicher Genehmigung des Urhebers gestattet.
-      Die Datenbank und der Code dürfen nicht ohne Genehmigung
-      des Urhebers kopiert, verbreitet oder veröffentlicht werden.
-
-	 Reiner Horn
-	 Huaptstr. 8
-	 40597 Düsseldorf
-     horm.it@t-online.de
-===================================================================  -->
-<?php
+ <?php
 $user_agent = $_SERVER['HTTP_USER_AGENT'];
 $browser = $_SERVER['HTTP_USER_AGENT'];
 $os = "Unbekanntes Betriebssystem";
@@ -58,5 +36,5 @@ if ($visitor_ip !== $server_ip && $server_ip1){
         $prepared_stmt->bind_param("sss", $browser, $os, $visitor_ip);
         $prepared_stmt->execute();
 }
-$stmt->close();
+#$stmt->close();
 ?>

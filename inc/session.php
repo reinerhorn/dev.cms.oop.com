@@ -1,30 +1,4 @@
-<!--  ===================================================================
-      CMS SYSTEM PLUGIN BASIC
-	  Urheberrechtshinweis / Copyright
-
-	  Die Gestaltung, Inhalte und Programmierung dieser Seiten
-	  unterliegen dem Urheberrecht. Urheber ist Reiner Horn
-	  Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
-	  Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
-	  wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
-	  unter Einsatz von Rechtsmitteln geahndet.
-      Verwndung von der leeren datenbank und code muss eine genehmigung
-      des Urhebers eingeholt werden.
-      Die Datenbank und der Code sind urheberrechtlich geschützt.
-      Die Verwendung der Datenbank und des Codes ist nur mit
-      ausdrücklicher Genehmigung des Urhebers gestattet.
-      Die Datenbank und der Code dürfen nicht ohne Genehmigung
-      des Urhebers kopiert, verbreitet oder veröffentlicht werden.
-      Drittanbieter-Plugins sind da von ausgeschlossen. 
-      phpmailer,Chats usw. ist ein Drittanbieter-Plugin und unterliegt
-      den Lizenzbedingungen des jeweiligen Autors.
-      Die CMS SYSTEM H & D ist ein Produkt von Reiner Horn.
-
-	 Reiner Horn
-	 Huaptstr. 8
-	 40597 Düsseldorf
-     horn.it@t-online.de
-===================================================================  -->
+ 
 <?php 
 session_start();
 ob_start();
@@ -69,7 +43,7 @@ function handle_login() {
 				}
 			}
 		} finally {
-			$db_connection->close();
+			#$db_connection->close();
 		}
 	}
 }

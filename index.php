@@ -17,8 +17,9 @@ if (!$main_db_connection) {
 <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/style.css" media="screen">
 <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/checkbox.css" media="screen">   
 <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/navi.css" media="screen">    
-    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/services.css" media="screen">
-    <link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/language_selector.css" media="screen">   
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/services.css" media="screen">
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/language_selector.css" media="screen">
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/admin.css" media="screen">
     
     <link rel="icon" href="/images/icon/favicon.ico" type="image/x-icon">
     <?php

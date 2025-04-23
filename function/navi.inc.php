@@ -100,6 +100,6 @@ if ($role === 1) {
         echo '</div>';
     }
 
-    $stmt->close();
+    #$stmt->close();
     ?>
 </div>

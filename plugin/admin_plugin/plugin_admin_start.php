@@ -1,77 +1,7 @@
 <script src="/function/js/chart.js"></script>
 <script src="/function/js/charts-loader.js"></script>
-<style>
-.admin_container {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    max-width: 1400px;
-    margin: auto;
-}
-
-.admin_box {
-    flex: 1;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    min-width: 100px;
-}
-
  
-
-form {
-    display: flex;
-    flex-direction: column;
-}
-
-label {
-    font-weight: bold;
-    margin-top: 10px;
-    display: block;
-}
-
-select, input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-button {
-    background: #007BFF;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 48%;
-    display: inline-block;
-}
-
-button[name="action"][value="delete"] {
-    background: #dc3545;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-.buttons {
-    display: flex;
-    justify-content: space-between;
-}
-
-img {
-    max-width: 100px;
-    height: auto;
-    display: block;
-    margin-top: 10px;
-}
-    </style>
+    
 <?php
  if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -256,8 +186,6 @@ $selected_footer = $footers[$selected_footer_id] ?? [
              </div>
          </form>
      </div>
-
-   </div>               
  
  
  

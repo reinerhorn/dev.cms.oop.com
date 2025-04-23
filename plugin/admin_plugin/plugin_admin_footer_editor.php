@@ -1,83 +1,4 @@
-<!--  ===================================================================
-	  Urheberrechtshinweis / Copyright
 
-	  Die Gestaltung, Inhalte und Programmierung dieser Seiten
-	  unterliegen dem Urheberrecht. Urheber ist Reiner Horn
-	  Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
-	  Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
-	  wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
-	  unter Einsatz von Rechtsmitteln geahndet.
-      Verwndung von der leeren datenbank und code muss eine genehmigung
-      des Urhebers eingeholt werden.
-      Die Datenbank und der Code sind urheberrechtlich geschützt.
-      Die Verwendung der Datenbank und des Codes ist nur mit
-      ausdrücklicher Genehmigung des Urhebers gestattet.
-      Die Datenbank und der Code dürfen nicht ohne Genehmigung
-      des Urhebers kopiert, verbreitet oder veröffentlicht werden.
-
-	 Reiner Horn
-	 Huaptstr. 8
-	 40597 Düsseldorf
-     horm.it@t-online.de
-===================================================================  -->
-<style>
- 
-
-form {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
-    margin: auto;
-}
-
-label {
-    font-weight: bold;
-    margin-top: 10px;
-    display: block;
-}
-
-select, input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-button {
-    background: #007BFF;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 48%;
-    display: inline-block;
-}
-
-button[name="action"][value="delete"] {
-    background: #dc3545;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-img.logo {
-    max-width: 100px;
-    height: auto;
-    display: block;
-    margin-bottom: 10px;
-}
-
-div {
-    margin-bottom: 10px;
-}
-</style>
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -147,5 +68,5 @@ echo '<form method="post" enctype="multipart/form-data">
   </div>
 </form>';
 
-$main_db_connection->close();
+#$main_db_connection->close();
 ?>
