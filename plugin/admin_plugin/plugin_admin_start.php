@@ -26,9 +26,6 @@ $datum="";
       die('<p>Fehler: Datenbankverbindung nicht gesetzt.</p>');
     }
 
-
- 
-
 // **Verarbeitung von POST-Daten nur für den jeweiligen Bereich**
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['type'])) {
     $type = $_POST['type'];
