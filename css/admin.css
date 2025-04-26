@@ -1,84 +1,119 @@
-
 .admin_container {
     display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    max-width: 1400px;
-    margin: auto;
+    flex-wrap: wrap;
+    gap: 20px;
 }
-
 .admin_box {
     flex: 1;
-    background: #ffffff;
+    min-width: 400px;
+    background: #fff;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    min-width: 100px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-
-form {
-    display: flex;
-    flex-direction: column;
-}
-
 label {
-    font-weight: bold;
-    margin-top: 10px;
     display: block;
+    margin-top: 10px;
 }
-
-select, input {
+input, select, textarea {
     width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    margin-bottom: 15px;
+    padding: 6px;
+    margin-top: 4px;
+    margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
 }
-
-button {
-    background: #007BFF;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 48%;
-    display: inline-block;
+textarea {
+    min-height: 100px;
 }
-
-button[name="action"][value="delete"] {
-    background: #dc3545;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
 .buttons {
     display: flex;
     justify-content: space-between;
 }
-
-img {
-    max-width: 100px;
-    height: auto;
-    display: block;
-    margin-top: 10px;
-}
-
-textarea {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
+button[class^="button-"], 
+button[class*=" button-"] {
+    padding: 8px 14px;
+    border: none;
     border-radius: 4px;
-    box-sizing: border-box;
-    resize: vertical;
-    min-height: 120px;
-    font-family: inherit;
-    font-size: 14px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, filter 0.2s ease;
 }
- 
+
+button.button-save {
+    background: #28a745;
+}
+button.button-save::before {
+    content: "💾 ";
+}
+
+button.button-delete {
+    background: #dc3545;
+}
+button.button-delete::before {
+    content: "🗑️ ";
+}
+
+button.button-cancel {
+    background: #6c757d;
+}
+button.button-cancel::before {
+    content: "↩️ ";
+}
+
+button.button-generate {
+    background: #17a2b8;
+}
+button.button-generate::before {
+    content: "⚙️ ";
+}
+
+button.button-new {
+    background: #ffc107;
+    color: black;
+}
+button.button-new::before {
+    content: "🆕 ";
+}
+
+button:hover {
+    filter: brightness(90%);
+}
+
+.file-label {
+    position: relative;
+    display: inline-block;
+    padding: 8px 14px;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.file-label:hover {
+    background-color: #0056b3;
+}
+
+.file-label input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+
+@media (max-width: 500px) {
+    .buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

@@ -69,8 +69,8 @@ handleAdminEditorRequests(getDbConnection());
         <input type="text" id="admin_page" name="role" class="input_color" value="<?php echo $admin_role ?>">
 
         <div class="buttons">
-            <button type="submit" name="action" value="save">Speichern</button>
-            <button type="submit" name="action" value="delete">Löschen</button>
+            <button class="button-save" name="action" value="save">Speichern</button>
+            <button class="button-delete" name="action" value="delete">Löschen</button>
         </div>
     </form>
 </div>
@@ -115,8 +115,8 @@ handleAdminEditorRequests(getDbConnection());
         <textarea name="text" id="text" class="input_color"><?php echo $text ?></textarea>
 
         <div class="buttons">
-            <button type="submit" name="action" value="save">Speichern</button>
-            <button type="submit" name="action" value="delete">Löschen</button>
+            <button class="button-save" name="action" value="save">Speichern</button>
+            <button class="button-delete" name="action" value="delete">Löschen</button>
         </div>
     </form>
 </div>
@@ -218,9 +218,9 @@ handleAdminEditorRequests(getDbConnection());
     ?>
     </select>
     <div class="buttons">
-        <button type="submit" name="action" value="save">Speichern</button>
-        <button type="submit" name="action" value="delete">Löschen</button>
-    </div> 
+        <button class="button-save" name="action" value="save">Speichern</button>
+        <button class="button-delete" name="action" value="delete">Löschen</button>
+    </div>
     </form>
 </div>
 <script>

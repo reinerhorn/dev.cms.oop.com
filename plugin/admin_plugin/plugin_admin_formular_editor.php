@@ -109,8 +109,8 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             <label>Extra Label:</label>
             <input type="number" name="label_enabled" value="<?= $selected_formular['use_extra_label'] ?? 0 ?>">
             <div class="buttons">
-                <button name="action" value="save">Speichern</button>
-                <button name="action" value="delete">Löschen</button>
+                <button class="button-save" name="action" value="save" title="Formular speichern">💾 Speichern</button>
+                <button class="button-delete" name="action" value="delete" title="Formular löschen">🗑️ Löschen</button>
             </div>
         </form>
     </div>
@@ -146,9 +146,11 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             <input type="number" name="label_enabled" value="<?= $selected_field['label_enabled'] ?? 0 ?>">
             <label>Ordner:</label>
             <input type="text" name="folder" value="<?= htmlspecialchars($selected_field['folder'] ?? '') ?>">
+             
             <div class="buttons">
-                 <button type="submit" name="action" value="save">Speichern</button>
-                 <button type="submit" name="action" value="delete">Löschen</button>
+                <button class="button-save" name="action" value="save" title="Formular speichern">💾 Speichern</button>
+                <button class="button-delete" name="action" value="delete" title="Formular löschen">🗑️ Löschen</button>
+            
              </div>
         </form>
     </div>
@@ -172,14 +174,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_html'])) {
                 <option value="<?= $form['id'] ?>"><?= htmlspecialchars($form['label']) ?></option>
             <?php endforeach; ?>
         </select>
-        <button type="submit" name="generate_html">HTML generieren &amp; speichern</button>
+        <button class="button-generate" type="submit" name="generate_html" title="HTML aus Formular generieren und speichern">⚙️ HTML generieren &amp; speichern</button>
     </form>
 </div>
 
-<style>
-.admin_container { display: flex; flex-wrap: wrap; gap: 20px; }
-.admin_box { width: 30%; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-label { display: block; margin-top: 10px; }
-input, select { width: 100%; padding: 6px; margin-top: 4px; }
-.buttons { margin-top: 10px; }
-</style>
+ 
+ 
+ 

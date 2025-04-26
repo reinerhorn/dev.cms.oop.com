@@ -1,6 +1,6 @@
 <script src="/function/js/chart.js"></script>
 <script src="/function/js/charts-loader.js"></script>
- 
+<link title="H & D Dienstleistungen SRL" rel="stylesheet" type="text/css" href="/css/admin.css" media="screen">
     
 <?php
  if (session_status() === PHP_SESSION_NONE) {
@@ -112,17 +112,14 @@ $selected_footer = $footers[$selected_footer_id] ?? [
     'label' => '', 'version' => '', 'css' => '', 'images' => '', 'role' => NULL
 ];
  ?>
- 
-  
-  
- 
+
  <div class="admin_container">
      <!-- HEADER -->
      <div class="admin_box">
          <h2>Header bearbeiten</h2>
          <form method="post" enctype="multipart/form-data">
              <input type="hidden" name="type" value="header">
- 
+
              <label>Header auswählen:</label>
              <select name="id" onchange="this.form.submit()">
                  <option value="0">Neuer Header</option>
@@ -132,7 +129,7 @@ $selected_footer = $footers[$selected_footer_id] ?? [
                      </option>
                  <?php endforeach; ?>
              </select>
- 
+
              <label>Text:</label>
              <input type="text" name="headline" value="<?= htmlspecialchars($selected_header['headline'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
  
@@ -143,21 +140,24 @@ $selected_footer = $footers[$selected_footer_id] ?? [
              <input type="text" name="language" value="<?= htmlspecialchars($selected_header['language'], ENT_QUOTES, 'UTF-8') ?>">
  
              <label>Bild-Upload:</label>
-             <input type="file" name="image">
- 
+             <label class="file-label">
+                 <span>Datei auswählen</span>
+                 <input type="file" name="image">
+             </label>
+
              <div class="buttons">
-                 <button type="submit" name="action" value="save">Speichern</button>
-                 <button type="submit" name="action" value="delete">Löschen</button>
-             </div>
+                <button class="button-save" name="action" value="save">Speichern</button>
+                <button class="button-delete" name="action" value="delete">Löschen</button>
+            </div>
          </form>
-     </div>
- 
+</div>
+
      <!-- FOOTER -->
      <div class="admin_box">
          <h2>Footer bearbeiten</h2>
          <form method="post" enctype="multipart/form-data">
              <input type="hidden" name="type" value="footer">
- 
+
              <label>Footer auswählen:</label>
              <select name="id" onchange="this.form.submit()">
                  <option value="0">Neuer Footer</option>
@@ -167,25 +167,25 @@ $selected_footer = $footers[$selected_footer_id] ?? [
                      </option>
                  <?php endforeach; ?>
              </select>
- 
+
              <label>Text:</label>
              <input type="text" name="headline" value="<?= htmlspecialchars($selected_footer['headline'], ENT_QUOTES, 'UTF-8') ?>">
- 
+
              <label>Link:</label>
              <input type="text" name="link" value="<?= htmlspecialchars($selected_footer['link'], ENT_QUOTES, 'UTF-8') ?>">
- 
+
              <label>Sprache:</label>
              <input type="text" name="language" value="<?= htmlspecialchars($selected_footer['language'], ENT_QUOTES, 'UTF-8') ?>">
  
              <label>Bild-Upload:</label>
-             <input type="file" name="image">
- 
+             <label class="file-label">
+                 <span>Datei auswählen</span>
+                 <input type="file" name="image">
+             </label>
+
              <div class="buttons">
-                 <button type="submit" name="action" value="save">Speichern</button>
-                 <button type="submit" name="action" value="delete">Löschen</button>
-             </div>
+                <button class="button-save" name="action" value="save">Speichern</button>
+                <button class="button-delete" name="action" value="delete">Löschen</button>
+            </div>
          </form>
      </div>
- 
- 
- 

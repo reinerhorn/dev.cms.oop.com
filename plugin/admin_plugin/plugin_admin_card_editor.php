@@ -139,8 +139,8 @@ $filtered_editors = $fk_cardstack_id
             <label>Label:</label>
             <input type="text" name="label" value="<?= htmlspecialchars($selected_stack['label'] ?? '') ?>">
             <div class="buttons">
-                <button name="action" value="save">Speichern</button>
-                <button name="action" value="delete">Löschen</button>
+                <button class="button-save" name="action" value="save">Speichern</button>
+                <button class="button-delete" name="action" value="delete">Löschen</button>
             </div>
         </form>
     </div>
@@ -165,8 +165,10 @@ $filtered_editors = $fk_cardstack_id
         <label>Label:</label>
         <input type="text" name="label" value="<?= htmlspecialchars($selected_editor['label'] ?? '') ?>">
 
+         
         <div class="buttons">
-            <button name="action" value="save">Speichern</button>
+            <button class="button-save" name="action" value="save">Speichern</button>
+            <button class="button-delete" name="action" value="delete">Löschen</button>
         </div>
     </form>
 </div>
@@ -201,16 +203,12 @@ $filtered_editors = $fk_cardstack_id
         <input type="text" name="link" value="<?= htmlspecialchars($selected_content['link'] ?? '') ?>">
 
         <div class="buttons">
-            <button type="submit" name="action" value="save">Speichern</button>
-            <button type="submit" name="action" value="delete">Löschen</button>
+             <button class="button-save" name="action" value="save">Speichern</button>
+             <button class="button-delete" name="action" value="delete">Löschen</button>
+        </div>
+
         </div>
     </form>
 </div>
 
-<style>
-.admin_container { display: flex; flex-wrap: wrap; gap: 20px; }
-.admin_box { width: 30%; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-label { display: block; margin-top: 10px; }
-input, select { width: 100%; padding: 6px; margin-top: 4px; }
-.buttons { margin-top: 10px; }
-</style>
+ 
