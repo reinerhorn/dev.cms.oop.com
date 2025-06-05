@@ -10,7 +10,7 @@ while ($row = $result->fetch_assoc()) {
     $data[] = $row;
 }
 
-
+#$db_connector->close();
 
 echo json_encode($data);
 ?>
