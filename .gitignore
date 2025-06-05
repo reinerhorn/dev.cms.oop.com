@@ -1,32 +1,24 @@
-# Verzeichnisse ignorieren
-node_modules/
-logs/
-tmp/
-private/
-dev/
-config/
-.vscode/
-.gitignore
-.env
-debug.log
- 
-
-# Alle .log-Dateien ignorieren
-*.log
-logs/
-private/
-tmp/
-# Alle .DS_STORE ignorieren
+# Systemdateien
 .DS_Store
-**/**/.DS_Store
-.history
+Thumbs.db
 
-# Alle .DEV ignorieren
-dev
-**/**/dev
-.history
+# PHP-Spezifisch
+vendor/
+*.log
+*.cache
+*.tmp
 
-# Alle .erd ignorieren
-handd.erd.json
-**/**/handd.erd.json
-.history
+# Editor- und IDE-Dateien
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node.js (falls npm verwendet wird)
+node_modules/
+
+# Composer
+composer.lock
+
+# Sonstiges
+.env
