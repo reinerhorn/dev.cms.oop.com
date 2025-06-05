@@ -1,0 +1,137 @@
+<?php
+// Datei: /dev/formular_generator_function.php
+
+include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
+$connection = getDbConnection();
+
+function generateAndSaveFormular(string $formular_id, bool $output_to_browser = true): void
+{
+    global $connection;
+
+    if (empty($formular_id)) {
+        if ($output_to_browser) {
+            echo "<div style='color:red;'>Kein Formular ausgewählt.</div>";
+        }
+        return;
+    }
+
+    // 1. Formular-Metadaten laden
+    $form_stmt = $connection->prepare("SELECT * FROM p_content_formular WHERE id = ?");
+    $form_stmt->bind_param("s", $formular_id);
+    $form_stmt->execute();
+    $form = $form_stmt->get_result()->fetch_assoc();
+
+    // 2. Felder laden
+    $field_stmt = $connection->prepare("SELECT * FROM p_content_formular_field WHERE fk_formular_id = ?");
+    $field_stmt->bind_param("s", $formular_id);
+    $field_stmt->execute();
+    $fields = $field_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // 3. Prüfen ob Login oder Register → existierende Tabelle nutzen
+    $is_login_or_register = in_array(strtolower($form['label']), ['login', 'register']);
+
+    // 4. Tabellen-Name
+    if (!$is_login_or_register) {
+        $table_name = 'generated_form_' . strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $formular_id));
+        $columns_sql = [];
+
+        foreach ($fields as $field) {
+            $column_name = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $field['label']));
+            $type = match ($field['type']) {
+                'text', 'email', 'form', 'action' => 'VARCHAR(255)',
+                'number' => 'INT',
+                'checkbox' => 'TINYINT(1)',
+                default => 'TEXT',
+            };
+            $columns_sql[] = "`$column_name` $type";
+        }
+        $columns_sql[] = "`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP";
+
+        $create_sql = "CREATE TABLE IF NOT EXISTS `$table_name` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            " . implode(",\n    ", $columns_sql) . "
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+        $connection->query($create_sql);
+    }
+
+    // 5. HTML erzeugen
+    $css_class = $form['css_form'] ?: 'formular_wrapper';
+    $html_output = "<div class=\"" . htmlspecialchars($css_class) . "\">\n";
+    $html_output .= "<form name=\"editor\" method=\"post\" action=\"\">\n";
+    $html_output .= "<input type=\"hidden\" name=\"form_label\" value=\"" . htmlspecialchars($form['label']) . "\">\n";
+
+    foreach ($fields as $field) {
+        $name = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $field['label']));
+        $label = htmlspecialchars($field['label']);
+        $type = strtolower($field['type']);
+        $is_required = !empty($field['form_role']) && $field['form_role'] == 1;
+        $required_attr = $is_required ? ' required' : '';
+        $required_star = $is_required ? ' *' : '';
+        $value = "";
+
+        if ($type === 'textarea') {
+            $html_output .= "    <label for=\"$name\">$label$required_star</label>\n";
+            $html_output .= "    <textarea id=\"$name\" name=\"$name\"$required_attr>$value</textarea>\n    <br><br>\n";
+        } elseif ($type === 'select') {
+            $html_output .= "    <label for=\"$name\">$label$required_star</label>\n";
+            $html_output .= "    <select id=\"$name\" name=\"$name\"$required_attr>\n        <option value=\"\">Bitte wählen</option>\n    </select>\n    <br><br>\n";
+        } else {
+            $html_output .= "    <label for=\"$name\">$label$required_star</label>\n";
+            $html_output .= "    <input type=\"$type\" id=\"$name\" name=\"$name\" value=\"$value\"$required_attr>\n    <br><br>\n";
+        }
+    }
+
+    $html_output .= "    <input type=\"submit\" value=\"Absenden\">\n";
+    $html_output .= "</form>\n</div>\n";
+
+    // 6. Datei speichern
+    $folder_path = '';
+    foreach ($fields as $field) {
+        if (!empty($field['folder'])) {
+            $folder_path = trim($field['folder'], '/');
+            break;
+        }
+    }
+
+    if (!empty($folder_path)) {
+        $base_path = $_SERVER['DOCUMENT_ROOT'] . "/" . $folder_path;
+        if (!is_dir($base_path)) {
+            if (!mkdir($base_path, 0777, true)) {
+                echo "<div style='color:red;'>Ordner konnte nicht erstellt werden: $base_path</div>";
+                return;
+            }
+        }
+
+        $filename = "formular_" . preg_replace('/[^a-zA-Z0-9_]/', '_', $form['label']) . ".html";
+        $file_path = "$base_path/$filename";
+
+        if (file_put_contents($file_path, $html_output) === false) {
+            echo "<div style='color:red;'>Fehler beim Speichern der Datei: $file_path</div>";
+        } else {
+            if ($output_to_browser) {
+                echo "<div style='color:green;'>Formular wurde gespeichert unter: <code>$file_path</code></div>\n";
+                echo $html_output;
+            }
+        }
+    } elseif ($output_to_browser) {
+        echo "<div style='color:orange;'>Hinweis: Kein Speicherpfad (folder) gesetzt – Formular wurde nicht gespeichert.</div>\n";
+    }
+}
+
+// Optional: Automatisch aus Navigation (page=...) generieren
+if (isset($_REQUEST['page'])) {
+    $page_id = $_REQUEST['page'];
+    $stmt = $connection->prepare("SELECT id FROM p_content_formular WHERE page_id = ?");
+    $stmt->bind_param("s", $page_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $formular = $result->fetch_assoc();
+
+    if ($formular) {
+        generateAndSaveFormular($formular['id'], true);
+    } else {
+        echo "<div style='color:red;'>Kein Formular für diese Seite gefunden.</div>";
+    }
+}
+?>
