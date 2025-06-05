@@ -1,33 +1,28 @@
+/* ========================
+   Language Selector Layout
+   ========================*/
 #LanguageSelector {
-  position: fixed;
-  top: 50px;
+  position: relative;
+  position: absolute;
+  top: 10px;
   right: 20px;
-  background-color: rgb(102, 102, 102);
-  border-radius: 8px;
+  display: flex;
+  justify-content: flex-end;
   font-family: "robotocondensed", sans-serif;
   font-weight: bold;
-  color: white;
-  padding: 8px 14px;
-  cursor: pointer;
-  z-index: 10;
-
-  display: inline-block;
-  white-space: nowrap;
-  font-size: 16px;          /* Lesbare Schriftgröße */
-  max-width: none;          /* KEIN Limit für Breite */
+  color: var(--normalcolorwhite);
+  font-size: 16px;
+  z-index: 1000;
 }
 
 .language-dropdown {
-  position: fixed;
-  top: 50px;
-  right: 20px;
-  z-index: 10;
+  position: relative;
   font-family: "robotocondensed", sans-serif;
 }
 
 .language-button {
-  background-color: rgb(102, 102, 102);
-  color: white;
+  background-color:  var(--background-transparent);
+  color:  var(--normalcolorwhite);
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
@@ -47,10 +42,10 @@
 .language-list {
   display: none;
   margin-top: 5px;
-  background-color: white;
+  background-color: var(--normalcolorwhite);
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px var(--normalcolorblack);
 }
 
 .language-list.show {
@@ -60,11 +55,11 @@
 .language-list a {
   display: block;
   padding: 8px 12px;
-  color: black;
+  color: var(--normalcolorblack);
   text-decoration: none;
   font-size: 14px;
 }
 
 .language-list a:hover {
-  background-color: #eeeeee;
+  background-color: var(--normalcolorwhite)
 }

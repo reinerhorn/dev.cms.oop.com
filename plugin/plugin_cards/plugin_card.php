@@ -41,7 +41,7 @@ if ($result->num_rows > 0) {
     $cards_three = "<p>Keine Karten verfügbar.</p>";
 }
 
-/*$result->close();*/
+
 ?>
 
 <div class="card_container">
@@ -51,6 +51,6 @@ if ($result->num_rows > 0) {
     <div class="one">
         <?= $cards_one ?>
     </div>
- 
+ </div>
     
  

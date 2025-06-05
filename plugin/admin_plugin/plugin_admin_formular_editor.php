@@ -15,6 +15,9 @@ $fk_formular_id = $_POST['fk_formular_id'] ?? ($_POST['id'] ?? '');
 $type_field = $_POST['type_field'] ?? '';
 $label = $_POST['label'] ?? '';
 $form_role = $_POST['form_role'] ?? '';
+if ($form_role === '') {
+    $form_role = 0;
+}
 $column = $_POST['column'] ?? '';
 $row = $_POST['row'] ?? '';
 $label_enabled = $_POST['label_enabled'] ?? '';
@@ -23,49 +26,51 @@ $css_form = $_POST['css_form'] ?? '';
 
 // Formular speichern
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($type === 'formular') {
-        if ($action === 'save') {
-            if ($id) {
-                $stmt = $connection->prepare("UPDATE p_content_formular SET label=?, css_form=?, columns=?, use_placeholder=?, use_extra_label=? WHERE id=?");
-                $stmt->bind_param("ssiiis", $label, $css_form, $column, $row, $label_enabled, $id);
-            } else {
-                $stmt = $connection->prepare("INSERT INTO p_content_formular (label, css_form, columns, use_placeholder, use_extra_label) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssiii", $label, $css_form, $column, $row, $label_enabled);
-            }
-            $stmt->execute();
-            $stmt->close();
-        } elseif ($action === 'delete' && $id) {
-            $stmt = $connection->prepare("DELETE FROM p_content_formular WHERE id=?");
-            $stmt->bind_param("s", $id);
-            $stmt->execute();
-            $stmt->close();
-        }
-    }
-    if ($type === 'field') {
-        if ($action === 'save') {
-            if (empty($fk_formular_id)) {
-                echo "<div style='color:red;'>Fehler: Kein gültiger fk_formular_id-Wert gesetzt!</div>";
-            } else {
+    try {
+        if ($type === 'formular') {
+            if ($action === 'save') {
                 if ($id) {
-                    $stmt = $connection->prepare("UPDATE p_content_formular_field 
-                        SET fk_formular_id=?, type=?, label=?, form_role=?, `column`=?, `row`=?, label_enabled=?, folder=? 
-                        WHERE id=?");
-                    $stmt->bind_param("ssssiisis", $fk_formular_id, $type_field, $label, $form_role, $column, $row, $label_enabled, $folder, $id);
+                    $stmt = $connection->prepare("UPDATE p_content_formular SET label=?, css_form=?, columns=?, use_placeholder=?, use_extra_label=? WHERE id=?");
+                    $stmt->bind_param("ssiiis", $label, $css_form, $column, $row, $label_enabled, $id);
                 } else {
-                    $stmt = $connection->prepare("INSERT INTO p_content_formular_field 
-                        (fk_formular_id, type, label, form_role, `column`, `row`, label_enabled, folder) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->bind_param("ssssiiss", $fk_formular_id, $type_field, $label, $form_role, $column, $row, $label_enabled, $folder);
+                    $stmt = $connection->prepare("INSERT INTO p_content_formular (label, css_form, columns, use_placeholder, use_extra_label) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->bind_param("ssiii", $label, $css_form, $column, $row, $label_enabled);
                 }
                 $stmt->execute();
                 $stmt->close();
+            } elseif ($action === 'delete' && $id) {
+                $stmt = $connection->prepare("DELETE FROM p_content_formular WHERE id=?");
+                $stmt->bind_param("s", $id);
+                $stmt->execute();
             }
-        } elseif ($action === 'delete' && $id) {
-            $stmt = $connection->prepare("DELETE FROM p_content_formular_field WHERE id=?");
-            $stmt->bind_param("s", $id);
-            #$stmt->execute();
-            #$stmt->close();
         }
+        if ($type === 'field') {
+            if ($action === 'save') {
+                if (empty($fk_formular_id)) {
+                    echo "<div style='color:red;'>Fehler: Kein gültiger fk_formular_id-Wert gesetzt!</div>";
+                } else {
+                    if ($id) {
+                        $stmt = $connection->prepare("UPDATE p_content_formular_field 
+                            SET fk_formular_id=?, type=?, label=?, form_role=?, `column`=?, `row`=?, label_enabled=?, folder=? 
+                            WHERE id=?");
+                        $stmt->bind_param("ssssiisis", $fk_formular_id, $type_field, $label, $form_role, $column, $row, $label_enabled, $folder, $id);
+                    } else {
+                        $stmt = $connection->prepare("INSERT INTO p_content_formular_field 
+                            (fk_formular_id, type, label, form_role, `column`, `row`, label_enabled, folder) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->bind_param("ssssiiss", $fk_formular_id, $type_field, $label, $form_role, $column, $row, $label_enabled, $folder);
+                    }
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            } elseif ($action === 'delete' && $id) {
+                $stmt = $connection->prepare("DELETE FROM p_content_formular_field WHERE id=?");
+                $stmt->bind_param("s", $id);
+                $stmt->execute();
+            }
+        }
+    } catch (Exception $e) {
+        echo "<div style='color:red;'>Fehler bei der Datenbankoperation: " . $e->getMessage() . "</div>";
     }
 }
 
@@ -133,7 +138,6 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
                 <?php endforeach; ?>
             </select>
             <label>Typ:</label>
-            <input type="text" name="type_field" value="<?= htmlspecialchars($selected_field['type'] ?? '') ?>">
             <label>Label:</label>
             <input type="text" name="label" value="<?= htmlspecialchars($selected_field['label'] ?? '') ?>">
             <label>Role:</label>
@@ -147,11 +151,18 @@ $selected_field = getSelected($felder, $_POST['id'] ?? '');
             <label>Ordner:</label>
             <input type="text" name="folder" value="<?= htmlspecialchars($selected_field['folder'] ?? '') ?>">
              
-            <div class="buttons">
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="type_field" value="textarea" <?= (isset($selected_field['type']) && $selected_field['type'] === 'textarea') ? 'checked' : '' ?>> Textarea
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="type_field" value="select" <?= (isset($selected_field['type']) && $selected_field['type'] === 'select') ? 'checked' : '' ?>> Select
+                </label>
+            </div>
+            <div class="buttons" style="margin-top: 20px; gap: 10px;">
                 <button class="button-save" name="action" value="save" title="Formular speichern">💾 Speichern</button>
                 <button class="button-delete" name="action" value="delete" title="Formular löschen">🗑️ Löschen</button>
-            
-             </div>
+            </div>
         </form>
     </div>
 </div>
@@ -180,4 +191,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_html'])) {
 
  
  
- 
+ </file>

@@ -1,18 +1,21 @@
 /* 🌍 Allgemeine Startseiten-Navigation (Waagerecht) */
-#generalNav {
+#generalNav{
+    width: 100vw;        /* volle Bildschirmbreite */
+    margin: 0px;
+    padding: 0;
     position: relative;
-    width: 100%;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: left;
-    background-color: rgb(3, 3, 3);
-   
+    left: 0;
+    right: 0;
+    
 }
 
-#generalNav > div {
+#generalNav > .nav-item {
     position: relative;
     display: inline-block;
+}
+
+.nav-item {
+    position: relative;
 }
 
 #generalNav a {
@@ -22,14 +25,14 @@
     color: var(--normalcolorwhite);
     font-size: 14px;
     line-height: 30px;
-    height: 30px;
-    background-color: rgb(3, 3, 3);
+    
+    background-color: rgb(6, 6, 6);
     transition: all 0.3s ease;
 }
 
 #generalNav a:hover {
-    background-color: #fae27f;
-    color: black;
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
 }
 
 /* 🏢 Admin Navigation (Waagerecht, ganz oben) */
@@ -37,9 +40,9 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width:100%;
     height: 30px;
-    background-color: rgb(11, 11, 11);
+    background-color: var(--normalcolorblack);
     display: flex;
     align-items: center;
     justify-content: left;
@@ -54,8 +57,6 @@
     text-decoration: none;
     color: var(--normalcolorwhite);
     font-size: 14px;
-    line-height: 30px;
-    height: 30px;
     transition: all 0.3s ease;
 }
 
@@ -64,7 +65,7 @@
     color: black;
 }
 
-/* 👤 Mitglieder Navigation (Senkrecht, links) */
+
 /* 👤 Mitglieder Navigation (Senkrecht, links) */
 #memberNav {
     position: absolute;
@@ -99,18 +100,22 @@
 
 /* 🌟 Dropdown-Menüs */
 .navigationDropDown {
-    display: none;
+    display: none; /* Standardmäßig ausgeblendet */
     position: absolute;
-    
+    top: 100%;
+    left: 0;
     min-width: 150px;
-    z-index: 10;
+    z-index: 1000;
     border-radius: 5px;
     margin-top: -1px; /* Verhindert Fokusverlust */
+    
+    
 }
 /* 🖱️ Dropdown-Menü anzeigen */
 #generalNav div:hover .navigationDropDown,
 #adminNav div:hover .navigationDropDown,
-#memberNav div:hover .navigationDropDown {
+#memberNav div:hover .navigationDropDown,
+nav .nav-item:hover .navigationDropDown {
     display: block;
 }
 
@@ -122,8 +127,8 @@
     color: var(--normalcolorwhite);
     font-size: 14px;
     line-height: 30px;
-    height: 30px;
-    background-color: rgb(102, 102, 102);
+    
+    background-color: rgb(11, 11, 11);
     transition: all 0.3s ease;
 }
 

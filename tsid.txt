@@ -1,1 +1,4 @@
 SELECT *, UNIX_TIMESTAMP(id) AS tsid FROM `page` WHERE 1
+SELECT *, UNIX_TIMESTAMP(id) AS tsid FROM p_content_plaintext WHERE 1
+
+sudo ~/generate-multidomain-ssl.sh

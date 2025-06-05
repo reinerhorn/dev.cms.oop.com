@@ -1,94 +1,135 @@
+/* =======================
+   Admin Container Layout
+   ======================= */
 .admin_container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
 }
+
+/* =======================
+   Admin Box Style
+   ======================= */
 .admin_box {
     flex: 1;
     min-width: 400px;
-    background: #fff;
+    background: var(--normalcolorwhite);
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-label {
+
+/* =======================
+   Labels im Admin-Bereich
+   ======================= */
+.admin_box label {
     display: block;
     margin-top: 10px;
+    color:  var(--normalcolorblack);
+    font-weight: bold;
 }
-input, select, textarea {
+
+/* =======================
+   Inputs, Selects und Textareas im Admin-Bereich
+   ======================= */
+.admin_box input,
+.admin_box select,
+.admin_box textarea {
     width: 100%;
-    padding: 6px;
+    padding: 8px;
     margin-top: 4px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 14px;
 }
-textarea {
+
+/* Spezielle Höhe für Textareas */
+.admin_box textarea {
     min-height: 100px;
 }
-.buttons {
+
+/* =======================
+   Button-Gruppierung
+   ======================= */
+.admin_box .buttons {
     display: flex;
     justify-content: space-between;
+    margin-top: 10px;
 }
-button[class^="button-"], 
-button[class*=" button-"] {
-    padding: 8px 14px;
+
+/* =======================
+   Buttons Styles
+   ======================= */
+.admin_box button[class^="button-"], 
+.admin_box button[class*=" button-"] {
+    padding: 10px 16px;
     border: none;
     border-radius: 4px;
-    color: white;
+    color: var(--normalcolorwhite);
+    background: var(--grey); /* Default background if none is specified */
     cursor: pointer;
     font-weight: bold;
     white-space: nowrap;
     transition: background-color 0.2s ease, filter 0.2s ease;
+    font-size: 14px;
 }
 
-button.button-save {
-    background: #28a745;
-}
-button.button-save::before {
-    content: "💾 ";
+.admin_box button.button-save {
+    background: var(--green);
+    color: var(--normalcolorwhite);
+    display: inline-flex;
+    align-items: center;
 }
 
-button.button-delete {
-    background: #dc3545;
+.admin_box button.button-delete {
+    background: var(--red);
+    color: var(--normalcolorwhite);
+    display: inline-flex;
+    align-items: center;
 }
-button.button-delete::before {
+
+.admin_box button.button-delete::before {
     content: "🗑️ ";
+    margin-right: 6px;
 }
 
-button.button-cancel {
-    background: #6c757d;
-}
-button.button-cancel::before {
-    content: "↩️ ";
-}
-
-button.button-generate {
-    background: #17a2b8;
-}
-button.button-generate::before {
-    content: "⚙️ ";
+.admin_box button.button-cancel {
+    background: var(--grey);
+    color: var(--normalcolorwhite);
+    display: inline-flex;
+    align-items: center;
 }
 
-button.button-new {
-    background: #ffc107;
-    color: black;
-}
-button.button-new::before {
-    content: "🆕 ";
+.admin_box button.button-generate {
+    background: var(--green);
+    color: var(--normalcolorwhite);
+    display: inline-flex;
+    align-items: center;
 }
 
-button:hover {
+.admin_box button.button-new {
+    background: var(--gold);
+    color: var(--normalcolorblack);
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Hover-Effekt auf Buttons */
+.admin_box button:hover {
     filter: brightness(90%);
 }
 
-.file-label {
+/* =======================
+   File-Upload Button
+   ======================= */
+.admin_box .file-label {
     position: relative;
     display: inline-block;
-    padding: 8px 14px;
-    background-color: #007BFF;
-    color: white;
+    padding: 10px 16px;
+    background-color: #007bff;
+    color:  var(--normalcolorwhite);
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
@@ -96,11 +137,11 @@ button:hover {
     transition: background-color 0.3s ease;
 }
 
-.file-label:hover {
+.admin_box .file-label:hover {
     background-color: #0056b3;
 }
 
-.file-label input[type="file"] {
+.admin_box .file-label input[type="file"] {
     position: absolute;
     left: 0;
     top: 0;
@@ -109,11 +150,205 @@ button:hover {
     height: 100%;
     cursor: pointer;
 }
-
-
+/* =======================
+   Responsive Design
+   ======================= */
 @media (max-width: 500px) {
-    .buttons {
+    .admin_box .buttons {
         flex-direction: column;
         gap: 10px;
     }
 }
+
+/* =======================
+   Header Editor Styling
+   ======================= */
+.admin_box form input[type="text"],
+.admin_box form input[type="number"],
+.admin_box form select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.admin_box form .buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.admin_box form .buttons button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease, filter 0.2s ease;
+}
+
+.admin_box form button.button-save {
+    background: var(--green);
+    color: var(--normalcolorwhite);
+}
+
+.admin_box form button.button-delete {
+    background: var(--red);
+    color: var(--normalcolorwhite);
+}
+
+.admin_box form button:hover {
+    filter: brightness(90%);
+}
+
+.dropzone-form {
+    border: 1px dashed #ccc;
+    padding: 20px;
+    border-radius: 6px;
+    background: #f9f9f9;
+    margin-bottom: 20px;
+}
+
+.dropzone {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    background: #f9f9f9;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.dropzone:hover {
+    background: #eef;
+}
+
+.dropzone input[type="file"] {
+    display: none;
+}
+
+.image-upload-box input[type="text"] {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+ul li {
+    margin-bottom: 10px;
+}
+
+ul li img {
+    display: block;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+ul li form {
+    margin-top: 5px;
+}
+
+.drop-zone {
+    width: 100%;
+    padding: 20px;
+    border: 2px dashed #ccc;
+    text-align: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+.drop-zone.dragover {
+    background-color: #f0f0f0;
+}
+ .admin-role-section {
+    margin-bottom: 40px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.admin-role-heading {
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.admin-role-table {
+    width: 100%;
+    min-width: 600px;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.admin-role-table thead {
+    background-color: #f5f5f5;
+    display: table-header-group;
+}
+
+.admin-role-table th,
+.admin-role-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.admin-role-table th {
+    font-weight: bold;
+}
+
+.role-select {
+    padding: 5px 8px;
+    font-size: 0.9rem;
+}
+
+.save-button {
+    padding: 5px 10px;
+    background-color: #0078D4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.save-button:hover {
+    background-color: #005fa3;
+}
+
+.success-message {
+    background-color: #e6ffed;
+    color: #2e7d32;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+}
+
+.admin-role-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.admin-role-section {
+    flex: 0 1 calc(50% - 10px);
+    min-width: 300px;
+}
+
+@media (max-width: 768px) {
+    .admin-role-section {
+        flex: 1 1 100%;
+    }
+}
+
+.admin-role-table td:last-child {
+    white-space: nowrap;
+}
+ 

@@ -55,7 +55,7 @@ if (!isset($_SESSION['admin_a'])) {
 <div class="container">
   <div class="column "></div>
   <div class="column "><?php echo $counter ?></div>
-<div class="column" ><button><div class="column"><a href="javascript:void(0);" onclick="location.href='/plugin/plugin_logout.php'">Logout</a></button></div>
+<div class="column" ></div>
 </div>
 <br><br>
 <div class="container">

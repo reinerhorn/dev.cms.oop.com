@@ -1,104 +1,195 @@
-  .group{
-    position:relative;
-    margin-bottom:20px;
-    color: aliceblue;
-  }
-  input {
-    margin-top:20px;
-    font-size:10px;
-    padding:4px 4px 4px 4px;
-    display:block;
-    width:200px;
-    color: rgb(238, 243, 243);
-    background-color: transparent;
-    border:none;
-    border-bottom:2px solid  rgb(250, 41, 4);
-  }
-  input:focus { outline:none;}
-  label{
-    top:0px ;
-    color:#f7ca06;
-    font-size:12px;
-    position:absolute;
-    pointer-events:none;
-    left:5px;
-    transition:0.2s ease all;
-    -moz-transition:0.2s ease all;
-    -webkit-transition:0.2s ease all;
-  }  
-  /* active state */
-  input:focus ~ label, input:valid ~ label {
-    top:-20px;
-    font-size:14px;
-    color: rgb(247, 190, 4);
-  }
-  textarea:focus ~ label, input:valid ~ label {
-    top:-20px;
-    font-size:14px;
-    color: rgb(247, 190, 4);
-  }
-
-  /* BOTTOM BARS ================================= */
-  .bar 	{
-    position:relative;
-    display:block;
-    width:210px;
+.login-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: auto;
+  max-width: 400px;
+  width: 100%;
+  padding: 40px;
+  margin: 40px auto;
+  background: #111;
+  box-shadow: 0 0 15px rgba(85, 84, 84, 0.3);
+  border-radius: 15px;
+  position: relative;
+  transform: translateY(-10px);
+  animation: floatLoginBox 1s ease-in-out infinite;
 }
-  .bar:before, .bar:after {
-    content:'';
-    height:3px; 
-    width:0;
-    bottom:1px; 
-    position:absolute;
-    background:#0350f5; 
-    transition:0.2s ease all;
-    -moz-transition:0.2s ease all;
-    -webkit-transition:0.2s ease all;
-  }
-  .bar:before {
-    left:50%;
-  }
-  .bar:after {
-    right:50%;
-  }
-  /* active state */
-  input:focus ~ .bar:before, input:focus ~ .bar:after {
-    width:50%;
-  }
-  textarea:focus ~ .bar:before, input:focus ~ .bar:after {
-    width:50%;
-  }
 
-  /* HIGHLIGHTER ================================== */
-  .highlight {
-    position:absolute;
-    height:80%;
-    width:100px;
-    top:40%;
-    left:0;
-    pointer-events:none;
-    opacity:0.5;
-  }
-  input:focus ~ .highlight {
-    -webkit-animation:inputHighlighter 0.3s ease;
-    -moz-animation:inputHighlighter 0.3s ease;
-    animation:inputHighlighter 0.3s ease;
-  }
-  textarea:focus ~ .highlight {
-    -webkit-animation:inputHighlighter 0.3s ease;
-    -moz-animation:inputHighlighter 0.3s ease;
-    animation:inputHighlighter 0.3s ease;
-  }
+.login-form .group {
+  position: relative;
+  margin-bottom: 30px;
+  height: 60px;
+}
 
-  @-webkit-keyframes inputHighlighter {
-    from { background:#4d6be1; }
-    to { width:0; background:transparent; }
+.login-form input {
+  font-size: 16px;
+  padding: 10px 10px 10px 5px;
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #757575;
+  color: #fff;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.login-form input:focus {
+  outline: none;
+}
+
+/* Label */
+.login-form label {
+  color: #f7ca06;
+  font-size: 16px;
+  font-weight: normal;
+  position: absolute;
+  pointer-events: none;
+  left: 5px;
+  top: 0;
+  transform: translateY(10px);
+  transition: 0.2s ease all;
+  background-color: transparent;
+  z-index: 2;
+}
+
+/* active state */
+.login-form input:focus ~ label,
+.login-form input:valid ~ label {
+  transform: translateY(-20px);
+  font-size: 12px;
+  color: orange;
+}
+
+/* Bar */
+.login-form .bar {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.login-form .bar:before, 
+.login-form .bar:after {
+  content: '';
+  height: 2px;
+  width: 0;
+  bottom: 1px;
+  position: absolute;
+  background: #0350f5;
+  transition: 0.2s ease all;
+}
+
+.login-form .bar:before {
+  left: 50%;
+}
+
+.login-form .bar:after {
+  right: 50%;
+}
+
+/* Bar Animation */
+.login-form input:focus ~ .bar:before,
+.login-form input:focus ~ .bar:after {
+  width: 50%;
+}
+
+/* Highlight */
+.login-form .highlight {
+  position: absolute;
+  height: 60%;
+  width: 100px;
+  top: 25%;
+  left: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.login-form input:focus ~ .highlight {
+  animation: inputHighlighter 0.3s ease;
+}
+
+.button-wrapper {
+  text-align: center;
+  margin-top: 30px;
+   
+}
+
+.login-submit {
+  background: linear-gradient(135deg, #0350f5, #4d6be1);
+  color: #fff;
+  font-size: 16px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(3, 80, 245, 0.3);
+  position: relative;
+  z-index: 10;
+}
+
+.login-submit:hover {
+  background: linear-gradient(135deg, #003cc7, #3b5de1);
+  box-shadow: 0 6px 14px rgba(3, 80, 245, 0.4);
+  transform: translateY(-3px);
+}
+
+.agb-wrapper {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+  color: #f7ca06;
+  font-size: 14px;
+}
+
+.agb-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: orange;
+  cursor: pointer;
+}
+/* AGB Label außerhalb der Floating-Inputs */
+.agb-wrapper label {
+  position: static;
+  transform: none;
+  font-size: 14px;
+  color: #f7ca06;
+  cursor: pointer;
+}
+.alert {
+    border: 1px solid var(--red);
+    background-color: var(--normalcolorwhite);
+    color: var(--darkred);
+    padding: 12px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+    font-size: 15px;
+    position: relative;
+}
+
+.alert::before {
+    content: "⚠️ ";
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+@keyframes inputHighlighter {
+  from { background: #4d6be1; }
+  to { width: 0; background: transparent; }
+}
+
+@keyframes floatLoginBox {
+  0% {
+    transform: translateY(0px);
   }
-  @-moz-keyframes inputHighlighter {
-    from { background:#3e5dd8; }
-    to 	{ width:0; background:transparent; }
+  50% {
+    transform: translateY(-10px);
   }
-  @keyframes inputHighlighter {
-    from { background:#4763d3; }
-    to 	{ width:0; background:transparent; }
+  100% {
+    transform: translateY(0px);
   }
+}

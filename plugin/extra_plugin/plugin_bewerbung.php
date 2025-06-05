@@ -1,88 +1,74 @@
-<!--  ===================================================================
-	  Urheberrechtshinweis / Copyright
-
-	  Die Gestaltung, Inhalte und Programmierung dieser Seiten
-	  unterliegen dem Urheberrecht. Urheber ist Reiner Horn
-	  Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
-	  Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
-	  wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
-	  unter Einsatz von Rechtsmitteln geahndet.
-      Verwndung von der leeren datenbank und code muss eine genehmigung
-      des Urhebers eingeholt werden.
-      Die Datenbank und der Code sind urheberrechtlich geschützt.
-      Die Verwendung der Datenbank und des Codes ist nur mit
-      ausdrücklicher Genehmigung des Urhebers gestattet.
-      Die Datenbank und der Code dürfen nicht ohne Genehmigung
-      des Urhebers kopiert, verbreitet oder veröffentlicht werden.
-
-	 Reiner Horn
-	 Huaptstr. 8
-	 40597 Düsseldorf
-     horm.it@t-online.de
-===================================================================  -->
-
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($_SESSION['admin_a'])) {
-	header('Location:/index.php');
+    header('Location:/index.php');
 } 
 
-    $id = "";
-    $vorname = "";
-    $nachname = "";
-    $strasse = "";
-    $ort ="";
-    $plz ="";
-    $telefon ="";
-    $beruf ="";
-    $gehalt ="";
-    $date ="";
-    if(isset($_POST['action'])){
-        $action = $_POST['action'];
-        $id = $_POST['id'];
-        if($action == "store") {
-            $action = $id == "" ? "add" : "update";
-        }
-        if($action == "add" || $action == "update") {
-            $vorname = $_POST['vorname'];
-            $nachname = $_POST['nachname'];
-            $strasse = $_POST['strasse'];
-            $ort = $_POST['ort'];
-            $plz = $_POST['plz'];
-            $telefon = $_POST['telefon'];
-            $beruf = $_POST['beruf'];
-            $gehalt = $_POST['gehalt'];
-            $date= $_POST['geburstag'];
-        }
-        $connection = getDbConnection();
-        if($action == "add") {
+$id = "";
+$vorname = "";
+$nachname = "";
+$strasse = "";
+$ort ="";
+$plz ="";
+$telefon ="";
+$beruf ="";
+$gehalt ="";
+$date ="";
+if (isset($_POST['action'])) {
+    $action = $_POST['action'];
+    $id = $_POST['id'];
+    if ($action == "store") {
+        $action = $id == "" ? "add" : "update";
+    }
+    if ($action == "add" || $action == "update") {
+        $vorname = $_POST['vorname'];
+        $nachname = $_POST['nachname'];
+        $strasse = $_POST['strasse'];
+        $ort = $_POST['ort'];
+        $plz = $_POST['plz'];
+        $telefon = $_POST['telefon'];
+        $beruf = $_POST['beruf'];
+        $gehalt = $_POST['gehalt'];
+        $date = $_POST['geburstag'];
+    }
+
+    $connection = getDbConnection();
+
+    try {
+        if ($action == "add") {
             $prepared_stmt = $connection->prepare(
-                "INSERT INTO plugin_bewerbung (vorname, nachname, strasse, ort, plz, telefon, beruf, gehalt, geburstag) VALUES (?, ?, ?, ? ,? ,?, ?, ?, ?)");
+                "INSERT INTO plugin_bewerbung (vorname, nachname, strasse, ort, plz, telefon, beruf, gehalt, geburstag) VALUES (?, ?, ?, ? ,? ,?, ?, ?, ?)"
+            );
             $prepared_stmt->bind_param("sssssssss", $vorname, $nachname, $strasse, $ort, $plz, $telefon, $beruf, $gehalt, $date);
             $prepared_stmt->execute();
             $result = $connection->query("SELECT id FROM plugin_bewerbung ORDER BY id DESC LIMIT 1");
-            if($page = $result->fetch_assoc()) {
+            if ($page = $result->fetch_assoc()) {
                 $id = $page['id'];
             }
-        } elseif($action == "update") {
+        } elseif ($action == "update") {
             $prepared_stmt = $connection->prepare(
-                "UPDATE plugin_bewerbung SET vorname=?, nachname=?, strasse=?, ort=?, plz=?, beruf=?, gehalt=?, telefon=?, geburstag=? WHERE id=?");
+                "UPDATE plugin_bewerbung SET vorname=?, nachname=?, strasse=?, ort=?, plz=?, beruf=?, gehalt=?, telefon=?, geburstag=? WHERE id=?"
+            );
             $prepared_stmt->bind_param("ssssssssss", $vorname, $nachname, $strasse, $ort, $plz, $beruf, $gehalt, $telefon, $date , $id);
             $prepared_stmt->execute();
-        } elseif($action == "delete") {
+        } elseif ($action == "delete") {
             $prepared_stmt = $connection->prepare(
-                "DELETE FROM plugin_bewerbung WHERE id=?" );
+                "DELETE FROM plugin_bewerbung WHERE id=?"
+            );
             $prepared_stmt->bind_param("s", $id);
             $prepared_stmt->execute();
             $id="";
             $action = "add";
-        }  elseif($action == "edit") {
+        } elseif ($action == "edit") {
             $prepared_stmt = $connection->prepare(
                 "SELECT * FROM plugin_bewerbung WHERE id=?"
             );
-            $prepared_stmt->bind_param("s",$id);
+            $prepared_stmt->bind_param("s", $id);
             $prepared_stmt->execute();
             $result = $prepared_stmt->get_result();
-            if($page = $result->fetch_assoc()) {
+            if ($page = $result->fetch_assoc()) {
                 $vorname = $page['vorname'];
                 $nachname = $page['nachname'];
                 $strasse = $page['strasse'];
@@ -94,7 +80,10 @@ if (!isset($_SESSION['admin_a'])) {
                 $date = $page['geburstag'];
             }
         }
+    } catch (mysqli_sql_exception $e) {
+        echo "Fehler bei der Datenbankoperation: " . $e->getMessage();
     }
+}
 ?>
        <div class="flex_container">
         <form id="editor" method="post" action="#">

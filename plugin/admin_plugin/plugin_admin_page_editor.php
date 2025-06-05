@@ -5,34 +5,94 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['admin_a'])) {
     header('Location:/index.php');
 }
-include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
- 
+
+include_once $_SERVER['DOCUMENT_ROOT'] . "/class/admin/admin_editor_handler.inc.php";
+include_once $_SERVER['DOCUMENT_ROOT'] . "/class/helper/SelectGenerator.php";
 $connection = getDbConnection();
-include_once $_SERVER['DOCUMENT_ROOT'] . "/function/admin_editor_handler.inc.php";
-handleAdminEditorRequests(getDbConnection());
+
+$handler = new AdminEditorHandler($connection);
+error_log("🔧 POST=" . print_r($_POST, true));
+$handler->handle();
+extract($handler->exportVariables());
+if (!isset($_POST['form_name'])) {
+    $_POST['form_name'] = '';
+}
+
+// Plaintext edit fallback
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['record_selection']) || isset($_POST['id'])) && !isset($_POST['action'])) {
+    $_POST['action'] = 'edit';
+}
 ?>
 <div class="admin_container">
 
 <!-- Admin Box 1 -->
 <div class="admin_box">
     <h2>Page Editor</h2>
+    <?php
+    // Workaround: Wenn nur ein Datensatz ausgewählt wird, soll nicht fälschlich gelöscht werden
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
+        $_POST['action'] = 'edit';
+    }
+
+    // Page Editor: Felder initialisieren und ggf. laden
+    $name = '';
+    $css = '';
+    $type = '';
+    $parent_id = '';
+    $fk_translation_placeholder = '';
+    $meta_keywords = '';
+    $meta_description = '';
+    $idx = '';
+    $enabled = '';
+    $print_all = '';
+    $admin_role = '';
+
+    if (isset($_POST['record_selection']) && ($_POST['form_name'] ?? '') === 'editor_page') {
+        $selectedId = $_POST['record_selection'];
+        $stmt = $connection->prepare("SELECT * FROM page WHERE id = ?");
+        $stmt->bind_param("s", $selectedId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($record = $result->fetch_assoc()) {
+            $name = $record['name'];
+            $css = $record['css'];
+            $type = $record['type'];
+            $parent_id = $record['parent_id'];
+            $fk_translation_placeholder = $record['fk_translation_placeholder'];
+            $meta_keywords = $record['meta_keywords'];
+            $meta_description = $record['meta_description'];
+            $idx = $record['idx'];
+            $enabled = $record['enabled'];
+            $print_all = $record['print_all'];
+            $admin_role = $record['role'];
+        }
+    }
+    ?>
     <form name="editor_page" action="" method="post">
-        <input type="hidden" name="action" value="edit">
-        <input type="hidden" name="id" value="<?php echo isset($_POST['id']) ? $_POST['id'] : 'neu' ?>">
-        <select name="record_selection" onchange="selectRecord()">
-            <option value="">auswählen...</option>
-            <option value="neu" <?= ($_POST['record_selection'] ?? '') === 'neu' ? 'selected' : '' ?>>neu</option>
-            <option value="-" disabled>────────────</option>
-            <?php
-            $stmt = $connection->prepare("SELECT * FROM page");
-            $stmt->execute();
-            $result = $stmt->get_result();
-            while ($page = $result->fetch_assoc()) {
-                $selected = ($page['id'] == ($_POST['record_selection'] ?? '')) ? 'selected' : '';
-                echo "<option value=\"{$page['id']}\" $selected>" . htmlspecialchars($page['name']) . "</option>";
-            }
-            ?>
-        </select>
+        <input type="hidden" name="form_name" value="editor_page">
+        <input type="hidden" name="action" value="<?php echo htmlspecialchars($_POST['action'] ?? 'store'); ?>">
+        <input type="hidden" name="id" value="<?php echo htmlspecialchars($_POST['record_selection'] ?? $id ?? '') ?>">
+        <?php
+        $stmt = $connection->prepare("SELECT * FROM page");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $pages = [];
+        while ($page = $result->fetch_assoc()) {
+            $pages[] = $page;
+        }
+        array_unshift($pages, ['id' => 'neu', 'name' => 'neu']);
+        echo SelectGenerator::render(
+            'record_selection',
+            $pages,
+            (($_POST['form_name'] ?? '') === 'editor_page') ? ($_POST['record_selection'] ?? $id ?? '') : '',
+            'auswählen...',
+            'id',
+            'name',
+            [
+                'onchange' => "selectRecord()"
+            ]
+        );
+        ?>
 
         <!-- Felder -->
         <label for="name">Name</label>
@@ -69,8 +129,8 @@ handleAdminEditorRequests(getDbConnection());
         <input type="text" id="admin_page" name="role" class="input_color" value="<?php echo $admin_role ?>">
 
         <div class="buttons">
-            <button class="button-save" name="action" value="save">Speichern</button>
-            <button class="button-delete" name="action" value="delete">Löschen</button>
+            <button type="button" class="button-save" onclick="setActionAndSubmit(this.form, 'store')">Speichern</button>
+            <button type="button" class="button-delete" onclick="setActionAndSubmit(this.form, 'delete')">Löschen</button>
         </div>
     </form>
 </div>
@@ -78,52 +138,99 @@ handleAdminEditorRequests(getDbConnection());
 <!-- Admin Box 2 -->
 <div class="admin_box">
     <h2>Plaintext Editor</h2>
+    <?php
+    // Plaintext edit fallback
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['record_selection']) || isset($_POST['id'])) && !isset($_POST['action'])) {
+        $_POST['action'] = 'edit';
+    }
+    ?>
+    <?php
+    // Plaintext-Editor: id aus record_selection_plaintext übernehmen (nur für das richtige Formular)
+    if (isset($_POST['record_selection_plaintext']) && (!isset($_POST['form_name']) || $_POST['form_name'] === 'editor_plaintext')) {
+        $_POST['id'] = $_POST['record_selection_plaintext'];
+        $_POST['form_name'] = 'editor_plaintext';
+        $_POST['action'] = 'edit';
+    }
+    ?>
     <form name="editor_plaintext" action="" method="post">
-        <input type="hidden" name="action" value="<?php echo htmlspecialchars($action ?? '') ?>">
-        <input type="hidden" name="id" value="<?php echo $id ?>">
-        <select name="id" onchange="this.form.querySelector('[name=action]').value='edit'; this.form.submit();">
-            <option value="">auswählen...</option>
-            <option value="neu" <?= ($id ?? '') === 'neu' ? 'selected' : '' ?>>neu</option>
-            <option value="-" disabled>────────────</option>
-            <?php
-            $stmt = $connection->prepare("SELECT * FROM p_content_plaintext");
+        <input type="hidden" name="form_name" value="editor_plaintext">
+        <input type="hidden" name="action" value="<?php echo htmlspecialchars($action ?? 'store') ?>">
+        <input type="hidden" name="id" id="plaintext_id" value="<?php echo htmlspecialchars($_POST['record_selection_plaintext'] ?? $id ?? '') ?>">
+        <?php
+        $plaintextOptions = [];
+        $stmt = $connection->prepare("SELECT * FROM p_content_plaintext");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($rec = $result->fetch_assoc()) {
+            $plaintextOptions[] = $rec;
+        }
+        array_unshift($plaintextOptions, ['id' => 'neu', 'label' => 'neu']);
+        echo SelectGenerator::render(
+            'record_selection_plaintext',
+            $plaintextOptions,
+            $_POST['record_selection_plaintext'] ?? $id ?? '',
+            'auswählen...',
+            'id',
+            'label',
+            [
+                'onchange' => "document.getElementById('plaintext_id').value=this.value; this.form.querySelector('[name=action]').value='edit'; this.form.submit();"
+            ]
+        );
+
+        $selectedId = $_POST['record_selection_plaintext'] ?? $id ?? '';
+        $headline = '';
+        $image_path = '';
+        $link = '';
+        $image_description = '';
+        $label = '';
+        $text = '';
+        $idx = '';
+
+        if ($selectedId !== '') {
+            $stmt = $connection->prepare("SELECT * FROM p_content_plaintext WHERE id = ?");
+            $stmt->bind_param("s", $selectedId);
             $stmt->execute();
             $result = $stmt->get_result();
-            while ($rec = $result->fetch_assoc()) {
-                $selected = ($rec['id'] == $id) ? 'selected' : '';
-                echo "<option value=\"{$rec['id']}\" $selected>" . htmlspecialchars($rec['label']) . "</option>\n";
+            if ($record = $result->fetch_assoc()) {
+                $headline = $record['headline'];
+                $image_path = $record['image_path'];
+                $link = $record['link'];
+                $image_description = $record['image_description'];
+                $label = $record['label'];
+                $text = $record['text'];
+                $idx = $record['idx'];
             }
-            ?>
-        </select>
+        }
+        ?>
 
         <label for="headline">Title</label>
-        <input type="text" id="headline" name="headline" class="input_color" value="<?php echo $headline ?>" required>
+        <input type="text" id="headline" name="headline" class="input_color" value="<?= htmlspecialchars($headline) ?>" required>
 
         <label for="image_path">Image Path</label>
-        <input type="text" name="image_path" class="input_color" value="<?php echo $image_path ?>" required>
+        <input type="text" name="image_path" class="input_color" value="<?= htmlspecialchars($image_path) ?>" >
 
         <label for="link">Link</label>
-        <input type="text" name="link" class="input_color" value="<?php echo $link ?>" required>
+        <input type="text" name="link" class="input_color" value="<?= htmlspecialchars($link) ?>">
 
         <label for="image_description">Image Description</label>
-        <input type="text" name="image_description" class="input_color" value="<?php echo $image_description ?>" required>
+        <input type="text" name="image_description" class="input_color" value="<?= htmlspecialchars($image_description) ?>">
 
-        <label for="label">Label</label>
-        <input type="text" name="idx" class="input_color" value="<?php echo $idx ?>" required>
+        <label for="idx">Index</label>
+        <input type="text" name="idx" class="input_color" value="<?= htmlspecialchars($idx) ?>" >
 
         <label for="text">Text</label>
-        <textarea name="text" id="text" class="input_color"><?php echo $text ?></textarea>
+        <textarea name="text" id="text" class="input_color"><?= htmlspecialchars($text) ?></textarea>
 
         <div class="buttons">
-            <button class="button-save" name="action" value="save">Speichern</button>
-            <button class="button-delete" name="action" value="delete">Löschen</button>
+        <button type="button" class="button-save" onclick="setActionAndSubmit(this.form, 'store')">Speichern</button>
+        <button type="button" class="button-delete" onclick="setActionAndSubmit(this.form, 'delete')">Löschen</button>
         </div>
     </form>
 </div>
 <div class="admin_box">
     <h2>Page Config Editor</h2>
     <form name="editor" action="" method="post">
-    <input type="hidden" name="action" value="">
+    <input type="hidden" name="action" value="<?php echo htmlspecialchars($_POST['action'] ?? 'store'); ?>">
     <select onchange="if(this.options[this.selectedIndex].value=='reset') {resetForm(this.form)} else {this.form.elements['action'].value='load_config'; this.form.submit()}" name="page_config_id" onchange="">
         <option value="">Konfiguration auswählen...</option>
         <option value="reset">neu</option>
@@ -143,40 +250,53 @@ handleAdminEditorRequests(getDbConnection());
     </select>
     <br><br>
   <!--  <label for="page_id">Page</label>-->
-    <select name="page_id">
-        <option value="">auswählen...</option>
-        <option value="-" disabled=disabled></option>
+
     <?php
-        $stmt = $connection->prepare("SELECT * FROM page ORDER BY name ASC");
+    // Seiten vorbereiten
+    $pages = [];
+    $stmt = $connection->prepare("SELECT * FROM page ORDER BY name ASC");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while($row = $result->fetch_assoc()) {
+        $pages[] = $row;
+    }
+
+    // Plugins vorbereiten
+    $plugins = [];
+    $stmt = $connection->prepare("SELECT * FROM plugin WHERE enabled=1 ORDER BY name ASC");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while($row = $result->fetch_assoc()) {
+        $plugins[] = $row;
+    }
+
+    // Content vorbereiten (wenn plugin_id gesetzt ist)
+    $pluginContentOptions = [];
+    if (isset($_POST['plugin_id']) && $_POST['plugin_id'] !== '') {
+        $stmt = $connection->prepare('SELECT table_name FROM plugin WHERE id=? LIMIT 1');
+        $stmt->bind_param('s', $_POST['plugin_id']);
         $stmt->execute();
-        $result = $stmt->get_result();
-        while($page = $result->fetch_assoc()) {
-            $selected = '';
-            if(isset($_POST['page_id']) && $_POST['page_id'] == $page['id']) {
-                $selected = ' selected="selected"';
+        $res = $stmt->get_result();
+        if ($plugin = $res->fetch_assoc()) {
+            $stmt = $connection->prepare("SELECT * FROM " . $plugin['table_name'] . " ORDER BY idx ASC");
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $pluginContentOptions[] = $row;
             }
-            echo '<option' . $selected . ' value="' . $page['id'] . '">' . $page['name'] . '</option>' . PHP_EOL; 
         }
+    }
+
+    echo SelectGenerator::render('page_id', $pages, $_POST['page_id'] ?? '', 'Seite auswählen...', 'id', 'name');
     ?>
-    </select>
+
     <br><br>
-  <!--  <label for="plugin_id">Plug-In</label>-->
-    <select name="plugin_id" onchange="this.form.submit()">
-        <option value="">auswählen...</option> 
-        <option value="-" disabled=disabled></option>
+<!--  <label for="plugin_id">Plug-In</label>-->
+
     <?php
-        $stmt = $connection->prepare("SELECT * FROM plugin WHERE enabled=1 ORDER BY name ASC");
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while($plugin = $result->fetch_assoc()) {
-            $selected = '';
-            if(isset($_POST['plugin_id']) && $plugin['id'] == $_POST['plugin_id']) {
-                $selected = ' selected="selected"';
-            }
-            echo '<option' . $selected . ' value="' . $plugin['id'] . '">' . $plugin['name'] . '</option>' . PHP_EOL; 
-        }
+    echo SelectGenerator::render('plugin_id', $plugins, $_POST['plugin_id'] ?? '', 'Plugin auswählen...', 'id', 'name');
     ?>
-    </select> 
+
     <br><br>
     <div class="group">
     <input class="input_color" data-default="0" type="text" id="idx" name="idx" value="<?php echo isset($_POST['idx']) ? $_POST['idx'] : '0' ?>">
@@ -186,40 +306,14 @@ handleAdminEditorRequests(getDbConnection());
 </div>
     <br><br>
  <!--   <label type="text" for="plugin_content_id">Content</label>-->
-    <select name="plugin_content_id">
-        <option value="">auswählen...</option>
-        <option value="-" disabled=disabled></option>
+
     <?php
-        if(isset($_POST['plugin_id']) && $_POST['plugin_id'] != '') {
-            $stmt = $connection->prepare(
-                'SELECT table_name FROM plugin WHERE id=? LIMIT 1'
-            );
-            $stmt->bind_param('s', $_POST['plugin_id']);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if($plugin=$result->fetch_assoc()) {
-                $stmt = $connection->prepare(
-                    "SELECT * FROM " . $plugin['table_name'] . " ORDER BY idx ASC"
-                );
-                $stmt->execute();
-                $result = $stmt->get_result();
-                while($content=$result->fetch_assoc()) {
-                    $selected = '';
-                    if(isset($_POST['plugin_content_id']) && $_POST['plugin_content_id'] == $content['id']) {
-                        $selected = ' selected="selected"';
-                    }
-                    echo PHP_EOL . '<option' . $selected . ' value="' . $content['id'] . '">' . $content['label'] . '</option>';
-                }
-            } else {
-                echo '<option>keine Tabelle zugewiesen</option>';
-            }
-        }
-        #$connection->close();
+    echo SelectGenerator::render('plugin_content_id', $pluginContentOptions, $_POST['plugin_content_id'] ?? '', 'Content auswählen...', 'id', 'label');
     ?>
-    </select>
+
     <div class="buttons">
-        <button class="button-save" name="action" value="save">Speichern</button>
-        <button class="button-delete" name="action" value="delete">Löschen</button>
+    <button type="button" class="button-save" onclick="setActionAndSubmit(this.form, 'store')">Speichern</button>
+    <button type="button" class="button-delete" onclick="setActionAndSubmit(this.form, 'delete')">Löschen</button>
     </div>
     </form>
 </div>
@@ -237,12 +331,18 @@ function resetForm(form) {
             select.selectedIndex = 0;
         }
     });
-}
- 
+} 
 function selectRecord() {
-  const select = document.querySelector('select[name="record_selection"]');
-  const form = document.forms['editor_page'];
-  form.id.value = select.value;
-  form.submit();
+    const select = document.querySelector('select[name="record_selection"]');
+    const form = document.forms['editor_page'];
+    form.id.value = select.value;
+
+    // Action auf 'edit' setzen, damit die Daten korrekt geladen werden
+    form.action.value = 'edit';
+    form.submit();
+}
+function setActionAndSubmit(form, actionValue) {
+    form.action.value = actionValue;
+    form.submit();
 }
 </script>
