@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
     static $connection = null;
 
     if ($connection === null) {
-        $config = require '/private/conf/h-d_config.php';
+        $config = require '/private/conf/cms_oop-config.php';
 
         $connection = new mysqli(
             $config['db_host'],
