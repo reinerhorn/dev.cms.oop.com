@@ -19,4 +19,22 @@ class UserSession
         $datum .= 'Einen schönen, guten Tag: ' . htmlspecialchars($user);
         return $datum;
     }
+
+    public static function getUserId(): ?string
+    {
+        return $_SESSION['user_id'] ?? null;
+    }
+
+    public static function getUserRoleId(): ?string
+    {
+        return $_SESSION['role_id'] ?? null;
+    }
+
+    public static function logout(): void
+    {
+        $_SESSION = [];
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+    }
 }

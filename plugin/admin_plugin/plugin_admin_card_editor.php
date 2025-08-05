@@ -2,7 +2,8 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . "/class/helper/SelectGenerator.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . "/class/helper/ButtonGenerator.php";
- 
+require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/auth_helpers.php";
+requireAdmin();
  
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -43,6 +44,24 @@ class CardAdminManager {
                         } else {
                             $stmt = $this->db->prepare("INSERT INTO p_card_editor (fk_cardstack_id, label) VALUES (?, ?)");
                             $stmt->bind_param('ss', $fk_cardstack_id, $label);
+                        }
+                        $stmt->execute();
+                        $_POST = [];
+                        $stmt->close();
+                        return;
+                    } elseif ($type === 'p_card_content') {
+                        $headline = $post['headline'] ?? '';
+                        $text = $post['text'] ?? '';
+                        $link = $post['link'] ?? '';
+                        $fk_card_id = $post['fk_card_id'] ?? '';
+
+                        if ($id) {
+                            $stmt = $this->db->prepare("UPDATE p_card_content SET headline=?, text=?, link=? WHERE id=?");
+                            $stmt->bind_param('ssss', $headline, $text, $link, $id);
+                        } else {
+                            $id = uniqid('', true);
+                            $stmt = $this->db->prepare("INSERT INTO p_card_content (id, fk_card_id, headline, text, link) VALUES (?, ?, ?, ?, ?)");
+                            $stmt->bind_param('sssss', $id, $fk_card_id, $headline, $text, $link);
                         }
                         $stmt->execute();
                         $_POST = [];

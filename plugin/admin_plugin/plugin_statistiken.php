@@ -4,8 +4,8 @@
 if (!isset($_SESSION['admin_a'])) {
 	header('Location:/index.php');
 }
-
-
+require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/auth_helpers.php";
+requireAdmin();
 // besucher ip   Zeile 3 spalte 3
     $db_connector = getDbConnection();
     $stmt = $db_connector->prepare('SELECT * FROM plugin_besucher');

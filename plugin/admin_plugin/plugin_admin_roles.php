@@ -92,7 +92,8 @@
 
 include_once $_SERVER['DOCUMENT_ROOT'] . "/CMSApp.php"; 
 $db = CMSApp::getDb();
-
+require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/auth_helpers.php";
+requireAdmin();
 // Verarbeitung des Formulars
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'], $_POST['page_id'])) {
     foreach ($_POST['page_id'] as $pageId) {

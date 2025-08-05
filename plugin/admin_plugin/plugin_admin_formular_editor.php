@@ -5,7 +5,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/function/formular_generator.php";
-
+require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/auth_helpers.php";
+requireAdmin();
 $connection = getDbConnection();
 
 $action = $_POST['action'] ?? '';

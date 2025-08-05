@@ -1,14 +1,8 @@
 <?php
 CMSLoginSession::initSession();
-// Statt erneutem require_once:
-#require_once '/private/lib/CMSApp.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . "/CMSApp.php"; 
 require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
  
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
 class CMSLoginSession {
     public static function initSession() {
         session_start();
@@ -19,10 +13,11 @@ class CMSLoginSession {
             return;
         }
         if(self::sessionExists()) {
-            $role = $_SESSION['role'] ?? 0;
-            $name = $role == 1 ? 'ADMIN-START' : 'MEMBER_BEREICH';
-            /* $name = $role == 1 ? 'ADMIN-BEREICH' : 'MEMBER_BEREICH'; */
-            $page_id = $role == 1 ? '1695451523' : '1741942625';
+            $role_id = $_SESSION['role_id'] ?? '';
+            $is_admin = in_array($role_id, ['admin-role-001', 'admin-role-002']);
+            $forceMember = isset($_GET['force']) && $_GET['force'] === 'member';
+            $name = ($is_admin && !$forceMember) ? 'ADMIN-START' : 'MEMBER_BEREICH';
+            $page_id = ($is_admin && !$forceMember) ? '1695451523' : '1741942625';
             self::redirect($page_id);
         } elseif(isset($_REQUEST['email']) && isset($_REQUEST['password'])) {
             $db_connection = CMSApp::getDb();
@@ -36,9 +31,19 @@ class CMSLoginSession {
                         $_SESSION['userid'] = $rec['id'];
                         $_SESSION['user_id'] = $rec['id']; // Für MemberProfile-Zugriff
                         $_SESSION['name'] = $rec['username'];
-                        $_SESSION['role'] = $rec['role'];
-                        $_SESSION['admin_a'] = ($rec['role'] == 1) ? 1 : 0;
+                        $_SESSION['role_id'] = $rec['role_id'];
                         $_SESSION['email'] = $rec['email'];
+                        $_SESSION['user_id'] = $rec['id'];
+
+                        // Rolle aus user_roles-Tabelle prüfen
+                        require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/UserRoleManager.php";
+                        $roleManager = new UserRoleManager($db_connection, $rec['id']);
+                        $_SESSION['admin'] = ($rec['role_id'] === 'admin-role-001' || $rec['role_id'] === 'admin-role-002') ? 1 : 0;
+                        $_SESSION['admin_a'] = $_SESSION['admin'];
+                        // Protokollierung zur Analyse von admin/admin_a
+                        error_log("🔍 DB role_id-Wert: " . var_export($rec['role_id'], true));
+                        error_log("🧠 SESSION admin: " . ($_SESSION['admin'] ?? 'nicht gesetzt'));
+                        error_log("✅ SESSION admin_a: " . ($_SESSION['admin_a'] ?? 'nicht gesetzt'));
 
                         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
                         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -214,39 +219,6 @@ class CMSLoginSession {
         
         return true;
     }
-
-    private static function sendConfirmationEmail($email, $username, $token = '') {       
-        require_once dirname(__DIR__) . '/vendor/autoload.php';
-
-        // SMTP-Konfiguration laden
-        $smtpConfig = require('/private/conf/smtp_config.php'); // Pfad zur Konfigurationsdatei
-
-        $mail = new PHPMailer(true);         
-        try {
-            // SMTP-Serverdaten setzen
-            $mail->isSMTP();
-            $mail->Host = $smtpConfig['host'];
-            $mail->SMTPAuth = true;
-            $mail->Username = $smtpConfig['username'];
-            $mail->Password = $smtpConfig['password']; 
-            $mail->SMTPSecure = $smtpConfig['smtp_secure'];
-            $mail->Port = $smtpConfig['port'];
-            $mail->CharSet = $smtpConfig['charset'];
-
-            $mail->setFrom('hdserviceprovider25@gmail.com', 'H & D');
-            $mail->addAddress($email, $username);
-
-            $mail->isHTML(true);
-            $mail->Subject = 'Bestätigung deiner Anmeldung';
-            $mail->Body    = "Hallo $username,<br>Bitte klicke auf den folgenden Link, um deine Anmeldung zu bestätigen:<br><a href='https://dev.staffingservices.de/verify.php?token=$token'>Konto bestätigen</a>";
-
-            $mail->send();
-            return true;
-        } catch (Exception $e) {
-            return "Fehler beim Senden: {$mail->ErrorInfo}";
-        }
-    }
-
     public static function logout(): void {
         error_log("🔓 Logout-Funktion wurde aufgerufen.");
         file_put_contents(__DIR__ . '/logout.log', "Logout aufgerufen am " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);

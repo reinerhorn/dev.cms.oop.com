@@ -6,6 +6,8 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!defined('CONFIG_INC_LOADED')) {
     require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 }
+require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/auth_helpers.php";
+requireAdmin();
 class FooterManager {
     private mysqli $db;
 

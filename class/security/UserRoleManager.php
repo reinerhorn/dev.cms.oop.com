@@ -55,4 +55,17 @@ class UserRoleManager {
     public function getAllPermissions(): array {
         return $this->getPermissions();
     }
+
+    public function hasRoleId(string $roleId): bool {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) 
+            FROM user_roles 
+            WHERE user_id = ? AND role_id = ?
+        ");
+        $stmt->bind_param("ss", $this->userId, $roleId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_row();
+        return ($row[0] ?? 0) > 0;
+    }
 }

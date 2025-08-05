@@ -1,7 +1,24 @@
 <?php
-include_once $_SERVER['DOCUMENT_ROOT'] . "/inc/session.php";
-include_once $_SERVER['DOCUMENT_ROOT'] . "/class/navi/navi.inc.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/class/navi/navi.inc.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/UserRoleManager.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/class/dev/DebugHelper.php';
+
+class AccessControl {
+    public static function userHasRoleId(string $expectedRoleId): bool {
+        if (empty($_SESSION['user_id'])) {
+            return false;
+        }
+
+        $db = CMSAppFrontend::getDb();
+        $stmt = $db->prepare("SELECT role_id FROM login_users WHERE id = ? LIMIT 1");
+        $stmt->bind_param("s", $_SESSION['user_id']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        return $row && $row['role_id'] === $expectedRoleId;
+    }
+}
 // Sicherstellen, dass keine Ausgabe vor der Umleitung erfolgt
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     include_once $_SERVER['DOCUMENT_ROOT'] . '/inc/session.php';
@@ -77,15 +94,34 @@ class CMSAppFrontend {
             #$html .= '<div id="LanguageSelector" class="language-selector">';
             $html .= self::getLanguageSelectorHtml($_SESSION['language'] ?? self::$language);
             #$html .= '</div>';
+            // Debug-Schalter direkt vor dem return ins Header-HTML einfügen
+            if (AccessControl::userHasRoleId('admin-role-001')) {
+                $debugStatus = \DebugHelper::$enabled ? 'on' : 'off';
+                $toggleLink = $_SERVER['PHP_SELF'] . '?' . http_build_query(array_merge($_GET, ['debug' => \DebugHelper::$enabled ? 'off' : 'on']));
+                $html .= "<div class='debug-toggle'>
+                    🛠️ Debug: <strong>$debugStatus</strong>
+                    <a href=\"$toggleLink\">[umschalten]</a>
+                </div>";
+            }
             return $html;
         }
         error_log("❌ Kein passender Header gefunden für Sprache $language und Rolle $role");
         error_log("ℹ️ Fallback-Header wird angezeigt.");
-        return '<div class="header">
+        $html = '<div class="header">
     <a title="Home" href="/"><img class="logo" src="/images/hd-logo.webp" alt="logo"></a>
     <a class="companyname" title="Home" href="/">HD Staffing Services</a>'
     . self::getLanguageSelectorHtml($_SESSION['language'] ?? self::$language) .
     '</div>';
+        // Debug-Schalter auch im Fallback-Header ausgeben
+        if (AccessControl::userHasRoleId('admin-role-001')) {
+            $debugStatus = \DebugHelper::$enabled ? 'on' : 'off';
+            $toggleLink = $_SERVER['PHP_SELF'] . '?' . http_build_query(array_merge($_GET, ['debug' => \DebugHelper::$enabled ? 'off' : 'on']));
+            $html .= "<div class='debug-toggle'>
+                🛠️ Debug: <strong>$debugStatus</strong>
+                <a href=\"$toggleLink\">[umschalten]</a>
+            </div>";
+        }
+        return $html;
     }
     public static function getFooterHtml(): string {
         ob_start();
@@ -130,6 +166,7 @@ class CMSAppFrontend {
         $_REQUEST['page'] = $pageId;
         ob_start();
         self::renderMain();
+        DebugHelper::log("renderMain() gestartet mit page = " . ($_REQUEST['page'] ?? 'nicht gesetzt'));
         return ob_get_clean();
     }
     public static function getLanguageSelectorHtml($language): string {
@@ -151,9 +188,9 @@ class CMSAppFrontend {
         return $navHtml;
     }
     public static function render(): void {
-        self::getHeaderHtml();
-        // DEBUG: Aktuelle Rolle ist: " . var_export(self::$role, true)
-        #echo "<!-- DEBUG: Aktuelle Rolle ist: " . var_export(self::$role, true) . " -->";
+        // Header ganz oben ausgeben
+        echo self::getHeaderHtml();
+        // Debug-Schalter ist jetzt im Header-HTML enthalten
         echo self::getNavigationHtml(
             self::getDb(),
             self::$language,
@@ -161,12 +198,30 @@ class CMSAppFrontend {
         );
         self::renderMain();
         echo self::getFooterHtml();
+        // Admin-Plugins dynamisch laden
+        // (Debug-Switch Plugin wird nicht mehr hier geladen, da direkt im Header ausgegeben)
+        if (!empty($_SESSION['admin_a']) && $_SESSION['admin_a'] == 1) {
+            $adminPlugins = []; // Weitere Plugins hier ergänzen
+            foreach ($adminPlugins as $pluginName) {
+                $path = $_SERVER['DOCUMENT_ROOT'] . "/plugin/plugin_{$pluginName}.php";
+                if (file_exists($path)) {
+                    include_once $path;
+                }
+            }
+        }
+       
     }
     public static function run(): void {
         self::init();
         self::render();
     }
     public static function init(): void {
+        // Debugging über URL aktivieren/deaktivieren
+        if (isset($_GET['debug']) && $_GET['debug'] === 'on') {
+            DebugHelper::enable();
+        } else {
+            DebugHelper::disable();
+        }
         self::getDb();
         if (isset($_GET['language'])) {
             $_SESSION['language'] = $_GET['language'];
@@ -193,6 +248,7 @@ class CMSAppFrontend {
         require_once $_SERVER['DOCUMENT_ROOT'] . "/class/security/PageIntegrityChecker.php";
         $checker = new PageIntegrityChecker(self::$db);
         $checker->ensurePublicStartPageExists();
+        // Plugin Debug Switch wird nicht mehr automatisch geladen, da im Header-HTML enthalten
     }
     public static function getStartPageId(): ?int {
         $result = self::$db->query("SELECT UNIX_TIMESTAMP(id) AS ts FROM page WHERE fk_translation_placeholder='PAGE_START_LABEL' LIMIT 1");
@@ -226,30 +282,60 @@ class CMSAppFrontend {
             $_REQUEST['page'] = $startId;
         }
 
+        // pageId sofort nach der Prüfung initialisieren
         $pageId = filter_var($_REQUEST['page'], FILTER_VALIDATE_INT);
-        if (!$pageId) {
-            die("⚠️ Ungültige Seiten-ID.");
-        }
+
+        // SQL-Abfrage ohne LEFT JOINs für Karten-Plugins
         $stmt = self::$db->prepare("
-            SELECT *, plugin.name AS plugin_label, UNIX_TIMESTAMP(page.id) AS page_id
-            FROM page_config
-            JOIN page ON page_config.fk_page_id = page.id
-            JOIN plugin ON page_config.fk_plugin_id = plugin.id
+            SELECT 
+                *, 
+                plugin.name AS plugin_label, 
+                UNIX_TIMESTAMP(page.id) AS page_id, 
+                page.id AS page_raw_id 
+            FROM page_config 
+            JOIN page ON page_config.fk_page_id = page.id 
+            JOIN plugin ON page_config.fk_plugin_id = plugin.id 
+            LEFT JOIN p_content_plaintext ON (
+                plugin.name = 'plaintext' AND 
+                page_config.plugin_content_id = p_content_plaintext.id
+            )
             WHERE UNIX_TIMESTAMP(page.id) = ?
+              AND (
+                  (plugin.name != 'plaintext' AND plugin.name != 'card') OR
+                  (plugin.name = 'plaintext' AND p_content_plaintext.fk_language_id = ?)
+              )
             ORDER BY page_config.idx ASC
         ");
-        $stmt->bind_param('i', $pageId);
+        $language = self::$language ?? 'de';
+        $stmt->bind_param('is', $pageId, $language);
         $stmt->execute();
         $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            DebugHelper::log("⚠️ Keine Einträge für page_id = $pageId in page_config gefunden", 'orange');
+        } else {
+            DebugHelper::log("✅ page_config Trefferanzahl: " . $result->num_rows, 'limegreen');
+        }
         $page_output_all = [];
 
         while ($record = $result->fetch_assoc()) {
-            $page_plugin = $record['page_id'] . '_' . $record['plugin_label'];
-            if ($record['print_all'] == 1 && in_array($page_plugin, $page_output_all)) {
-                continue;
+            DebugHelper::log("Plugin: {$record['plugin_label']}, Content-ID: {$record['plugin_content_id']}", 'deepskyblue');
+            if (DebugHelper::$enabled) {
+                echo "<pre style='background:#111;color:#0f0;padding:10px;'>";
+                echo "▶️ page_id: " . htmlspecialchars($record['page_id']) . "\n";
+                echo "▶️ plugin_label: " . htmlspecialchars($record['plugin_label']) . "\n";
+                echo "▶️ plugin_content_id: " . htmlspecialchars($record['plugin_content_id']) . "\n";
+                echo "▶️ print_all: " . htmlspecialchars($record['print_all']) . "\n";
+                echo "</pre>";
             }
-            if ($record['plugin_label'] === 'plaintext') {
-                error_log("🔍 PLAINTEXT Plugin erkannt. Content-ID: " . $record['plugin_content_id']);
+
+            $pluginContentId = $record['plugin_content_id'];
+            $pluginLabel = $record['plugin_label'];
+            $currentPageId = $record['page_id'];
+            $language = self::$language ?? 'de';
+            $printAll = (bool)$record['print_all'];
+
+            if ($pluginLabel === 'plaintext') {
+                error_log("🔍 PLAINTEXT Plugin erkannt. Content-ID: " . $pluginContentId);
                 if (!class_exists('PluginPlaintext')) {
                     foreach ((new PluginLoader('plaintext'))->pluginPaths as $path) {
                         $pluginFile = $_SERVER['DOCUMENT_ROOT'] . $path . 'plugin_plaintext.php';
@@ -260,32 +346,19 @@ class CMSAppFrontend {
                     }
                 }
                 if (class_exists('PluginPlaintext')) {
-                    $page_plugin = $record['page_id'] . '_' . $record['plugin_label'];
-
-                    if ($record['print_all'] == 1 && in_array($page_plugin, $page_output_all)) {
-                        continue;
-                    }
-                    if ($record['print_all'] == 1) {
-                        $page_output_all[] = $page_plugin;
-                    }
-                    $pluginContentId = (string) $record['plugin_content_id'];
-                    if ($pluginContentId === false) {
-                        echo "<div class=\"warning\">⚠️ Fehler: Ungültiges plugin_content_id-Datum: {$record['plugin_content_id']}</div>";
-                        continue;
-                    }
-                    error_log("📄 Rendering PluginPlaintext mit Sprache: " . (self::$language ?? 'de'));
                     PluginPlaintext::render(
                         self::$db,
                         $pluginContentId,
-                        $record['page_id'],
-                        self::$language ?? 'de',
-                        (bool)$record['print_all']
+                        $currentPageId,
+                        $language,
+                        $printAll
                     );
                     continue;
                 }
             }
-            error_log("🧩 PluginLoader wird aufgerufen mit Plugin: " . $record['plugin_label'] . ", plugin_content_id: " . $record['plugin_content_id']);
-            $loader = new PluginLoader($record['plugin_label']);
+
+            error_log("🧩 PluginLoader wird aufgerufen mit Plugin: $pluginLabel, plugin_content_id: $pluginContentId");
+            $loader = new PluginLoader($pluginLabel);
             $loader->render();
         }
     }
@@ -306,6 +379,7 @@ class PluginLoader {
         '/plugin/plugin_member/',
         '/plugin/plugin_cards/',
         '/plugin/extra_plugin/',
+        '/plugin/formulare/',
     ];
     public function __construct(string $pluginName) {
         $this->pluginName = $pluginName;
@@ -319,5 +393,10 @@ class PluginLoader {
             }
         }
         echo "<section><h2>{$this->pluginName}</h2><p>⚠️ Plugin \"{$this->pluginName}\" nicht gefunden.</p></section>";
+    }
+    public static function includeDebugSwitch(): void {
+        if (!empty($_SESSION['admin_a']) && $_SESSION['admin_a'] == 1) {
+            include_once $_SERVER['DOCUMENT_ROOT'] . "/plugin/plugin_debug_switch.php";
+        }
     }
 }

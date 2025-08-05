@@ -1,22 +1,14 @@
 <?php 
-require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/UserRoleManager.php';
-$userData = CMSLoginSession::handleUserAction($_POST);
-if (isset($_SESSION['user_id'])) {
-    $db = CMSAppFrontend::getDb(); // Oder getDbConnection() je nach Struktur
-    $permissionGate = new UserRoleManager($db, $_SESSION['user_id']);
-    if (method_exists($permissionGate, 'getAllPermissions')) {
-        $_SESSION['permissions'] = $permissionGate->getAllPermissions();
-    }
+require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/LoginHandler.php';
+if (!class_exists('LoginHandler')) {
+    die("Fehler: Klasse LoginHandler nicht gefunden. Bitte prüfen Sie den Pfad und die Datei LoginHandler.php");
 }
-    $id = "";
-    $password = isset($_REQUEST['password']) ? $_REQUEST['password'] : "";
-    $email = isset($_REQUEST['email']) ? $_REQUEST['email'] : "";
-    
- if (!empty($_SESSION['user_id'])) {
-    $permissionGate = new UserRoleManager($db, $_SESSION['user_id']);
-    $_SESSION['permissions'] = $permissionGate->getAllPermissions();
-} 
-
+$handler = LoginHandler::getInstance();
+$handler->handleUserAction();
+$userData = $_SESSION['login_result'] ?? ['message' => ''];
+unset($_SESSION['login_result']);
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 ?>
 <div class="flex_container">
     <div id="login-button login-button-text">
@@ -27,6 +19,7 @@ if (isset($_SESSION['user_id'])) {
   <div class="login-form">
       <h2> LoginSysten</h2>
     <form method="post">
+      <input type="hidden" name="login" value="1">
       <div class="group">
         <input type="text" id="email" name="email" value="<?php echo $email ?>" required>
         <label for="email">E-Mail-Adresse</label>
