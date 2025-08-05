@@ -2,9 +2,9 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-/*if (!isset($_SESSION['admin_a'])) {
+if (!isset($_SESSION['admin_a'])) {
     header('Location:/index.php');
-}*/
+}
 
 include_once $_SERVER['DOCUMENT_ROOT'] . "/class/admin/admin_editor_handler.inc.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/class/helper/SelectGenerator.php";
