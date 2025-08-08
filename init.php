@@ -1,4 +1,12 @@
 <?php
+// PSR-4 Autoloader für Klassen
+spl_autoload_register(function ($class) {
+    $baseDir = $_SERVER['DOCUMENT_ROOT'] . '/class/';
+    $file = $baseDir . str_replace('\\', '/', $class) . '.php';
+    if (file_exists($file)) {
+        require $file;
+    }
+});
 include_once $_SERVER['DOCUMENT_ROOT'] . "/inc/session.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/class/navi/navi.inc.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/UserRoleManager.php';
@@ -31,6 +39,20 @@ class CMSAppFrontend {
     }
     public static function getRole(): ?int {
         return self::$role ?? 0;
+    }
+
+    public static function isAdmin(): bool {
+        // Prüfen, ob die Rolle explizit auf 1 (Admin) gesetzt ist
+        if (self::getRole() === 1) {
+            return true;
+        }
+
+        // Falls zusätzlich ein Berechtigungssystem mit Permissions existiert
+        if (!empty($_SESSION['permissions']) && in_array('admin_access', $_SESSION['permissions'], true)) {
+            return true;
+        }
+
+        return false;
     }
     public static function getPageTitle(): string {
         return "HD Staffing Services";

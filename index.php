@@ -19,7 +19,7 @@ CMSAppFrontend::init();
   <link rel="stylesheet" href="/css/admin.css">
   <link rel="stylesheet" href="/css/cards.css">
    <link rel="stylesheet" href="/css/login.css">
-     
+    
   <link rel="icon" href="/images/icon/favicon.ico" type="image/x-icon">
  
   <title>HD Staffing Services</title>

@@ -11,25 +11,53 @@ class ButtonGenerator {
             htmlspecialchars($label)
         );
     }
-    public static function renderToggleSwitch(string $name, bool $checked = false, string $onLabel = 'ON', string $offLabel = 'OFF', string $id = '', string ...$extraClasses): string {
+
+    public static function renderToggleSwitch(
+        string $name,
+        bool $checked = false,
+        string $onLabel = 'An',
+        string $offLabel = 'Aus',
+        string $id = '',
+        string ...$extraClasses
+    ): string {
         $id = $id ?: 'toggle_' . uniqid();
-        $classes = implode(' ', array_merge(['toggle-switch'], $extraClasses));
+        $classes = array_merge(['toggle-switch'], $extraClasses);
+
+        // Template einbinden
+        ob_start();
+        $templatePath = $_SERVER['DOCUMENT_ROOT'] . '/templates/component/ToggleSwitch.tpl.php';
+        include $templatePath;
+        return ob_get_clean();
+    }
+
+    public static function renderCheckbox(string $name, bool $checked = false, string $label = '', string $id = '', string ...$extraClasses): string {
+        $id = $id ?: 'checkbox_' . uniqid();
+        $classes = implode(' ', array_merge(['form-checkbox'], $extraClasses));
         return sprintf(
-            '<div class="%s">
+            '<label class="%s">
                 <input type="checkbox" id="%s" name="%s" %s>
-                <label for="%s" class="switch-label">
-                    <span class="switch-inner" data-on="%s" data-off="%s"></span>
-                    <span class="switch-switch"></span>
-                </label>
-            </div>',
+                %s
+            </label>',
             htmlspecialchars($classes),
             htmlspecialchars($id),
             htmlspecialchars($name),
             $checked ? 'checked' : '',
+            htmlspecialchars($label)
+        );
+    }
+
+    public static function renderSwitch(string $name, bool $checked = false, string $id = '', string ...$extraClasses): string {
+        $id = $id ?: 'switch_' . uniqid();
+        $classes = implode(' ', array_merge(['form-switch'], $extraClasses));
+        return sprintf(
+            '<label class="%s">
+                <input type="checkbox" id="%s" name="%s" %s>
+                <span class="slider"></span>
+            </label>',
+            htmlspecialchars($classes),
             htmlspecialchars($id),
-            htmlspecialchars($onLabel),
-            htmlspecialchars($offLabel)
+            htmlspecialchars($name),
+            $checked ? 'checked' : ''
         );
     }
 }
-?>
