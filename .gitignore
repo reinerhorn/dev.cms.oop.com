@@ -22,3 +22,4 @@ composer.lock
 
 # Sonstiges
 .env
+.dev
