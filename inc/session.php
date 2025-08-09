@@ -1,12 +1,12 @@
 <?php
 CMSLoginSession::initSession();
 // Statt erneutem require_once:
-#require_once '/private/lib/CMSApp.php';
+
 require_once $_SERVER['DOCUMENT_ROOT'] . "/CMSApp.php"; 
 require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
  
-
-
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class CMSLoginSession {
     public static function initSession() {
@@ -38,6 +38,55 @@ class CMSLoginSession {
                         $_SESSION['role'] = $rec['role'];
                         $_SESSION['admin_a'] = ($rec['role'] == 1) ? 1 : 0;
                         $_SESSION['email'] = $rec['email'];
+
+                        // Primäre role_id des Benutzers ermitteln und speichern
+                        $stmt_role_id = $db_connection->prepare("SELECT role_id FROM user_roles WHERE user_id = ? LIMIT 1");
+                        $stmt_role_id->bind_param("s", $rec['id']);
+                        $stmt_role_id->execute();
+                        $res_role_id = $stmt_role_id->get_result();
+                        if ($roleIdRow = $res_role_id->fetch_assoc()) {
+                            $_SESSION['role_id'] = $roleIdRow['role_id'];
+                        }
+                        $stmt_role_id->close();
+
+                        // Rollen und Berechtigungen aus der DB laden
+                        $stmt_roles = $db_connection->prepare("
+                            SELECT r.id 
+                            FROM user_roles ur
+                            JOIN roles r ON ur.role_id = r.id
+                            WHERE ur.user_id = ?
+                        ");
+                        $stmt_roles->bind_param("s", $rec['id']);
+                        $stmt_roles->execute();
+                        $result_roles = $stmt_roles->get_result();
+                        $_SESSION['roles'] = [];
+                        $firstRoleId = null;
+                        while ($roleRow = $result_roles->fetch_assoc()) {
+                            $_SESSION['roles'][] = $roleRow['id'];
+                            if ($firstRoleId === null) {
+                                $firstRoleId = $roleRow['id'];
+                            }
+                        }
+                        // Falls $_SESSION['role_id'] noch nicht gesetzt, hier setzen
+                        if (!isset($_SESSION['role_id']) && $firstRoleId !== null) {
+                            $_SESSION['role_id'] = $firstRoleId;
+                        }
+                        $stmt_roles->close();
+
+                        $stmt_perms = $db_connection->prepare("
+                            SELECT rp.permission_id 
+                            FROM user_roles ur
+                            JOIN role_permissions rp ON ur.role_id = rp.role_id
+                            WHERE ur.user_id = ?
+                        ");
+                        $stmt_perms->bind_param("s", $rec['id']);
+                        $stmt_perms->execute();
+                        $result_perms = $stmt_perms->get_result();
+                        $_SESSION['permissions'] = [];
+                        while ($permRow = $result_perms->fetch_assoc()) {
+                            $_SESSION['permissions'][] = $permRow['permission_id'];
+                        }
+                        $stmt_perms->close();
 
                         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
                         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -125,11 +174,11 @@ class CMSLoginSession {
         $email = $postData['email'] ?? "";
         $password = $postData['password'] ?? "";
         $username = $postData['username'] ?? "";
-        $admin = $postData['admin'] ?? "";
+        $role = $postData['role'] ?? "";
         $message = "";
 
         if (!isset($postData['action'])) {
-            return compact('id', 'email', 'password', 'username', 'admin', 'message');
+            return compact('id', 'email', 'password', 'username', 'role', 'message');
         }
 
         $action = $postData['action'];
@@ -139,7 +188,7 @@ class CMSLoginSession {
 
         if (!self::isValidEmail($email)) {
             $message = "Ungültige E-Mail-Adresse. Bitte eine echte Adresse verwenden.";
-            return compact('id', 'email', 'password', 'username', 'admin', 'message');
+            return compact('id', 'email', 'password', 'username', 'role', 'message');
         }
 
         try {
@@ -154,7 +203,7 @@ class CMSLoginSession {
 
             if ($count > 0) {
                 $message = "❌ Diese E-Mail-Adresse ist bereits registriert.";
-                return compact('id', 'email', 'password', 'username', 'admin', 'message');
+                return compact('id', 'email', 'password', 'username', 'role', 'message');
             }
             // Prüfen, ob Benutzername bereits existiert
             $stmt_check_username = $connection->prepare("SELECT COUNT(*) FROM login_users WHERE username = ?");
@@ -167,22 +216,27 @@ class CMSLoginSession {
 
             if ($username_count > 0) {
                 $message = "❌ Dieser Benutzername ist bereits vergeben.";
-                return compact('id', 'email', 'password', 'username', 'admin', 'message');
+                return compact('id', 'email', 'password', 'username', 'role', 'message');
             }
             if ($action == "add") {
                 $password = password_hash($password, PASSWORD_DEFAULT);
                 $id = uniqid('', true);
-                $stmt = $connection->prepare("INSERT INTO login_users (id, email, password, username, admin) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssi", $id, $email, $password, $username, $admin);
+                $verifyToken = uniqid('', true);
+                $roleInt = (int)$role;
+                $stmt = $connection->prepare("INSERT INTO login_users (id, email, password, username, role, verify_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, 0)");
+                $stmt->bind_param("ssssis", $id, $email, $password, $username, $roleInt, $verifyToken);
                 if ($stmt->execute()) {
                     $message = "Benutzer erfolgreich hinzugefügt. Bitte überprüfen Sie Ihre E-Mails zur Bestätigung.";
-                   # self::sendConfirmationEmail($email, $username, $id);
+                    $emailResult = self::sendConfirmationEmail($email, $username, $verifyToken);
+                    if ($emailResult !== true) {
+                        $message .= " " . $emailResult;
+                    }
                 } else {
                     $message = "Fehler beim Hinzufügen des Benutzers.";
                 }
             } elseif ($action == "update") {
-                $stmt = $connection->prepare("UPDATE login_users SET email=?, username=?, admin=? WHERE id=?");
-                $stmt->bind_param("sssi", $email, $username, $admin, $id);
+                $stmt = $connection->prepare("UPDATE login_users SET email=?, username=?, role=? WHERE id=?");
+                $stmt->bind_param("sssi", $email, $username, $role, $id);
                 if ($stmt->execute()) {
                     $message = "Benutzerdaten erfolgreich aktualisiert.";
                 } else {
@@ -193,7 +247,7 @@ class CMSLoginSession {
             $message = "Fehler bei der Datenbankoperation: " . $e->getMessage();
         }
 
-        return compact('id', 'email', 'password', 'username', 'admin', 'message');
+        return compact('id', 'email', 'password', 'username', 'role', 'message');
     }
 
     private static function isValidEmail($email) {
@@ -214,7 +268,51 @@ class CMSLoginSession {
         return true;
     }
 
-   
+    private static function sendConfirmationEmail($email, $username, $token = '') {       
+        $resultMessage = "";
+        require_once dirname(__DIR__) . '/vendor/autoload.php';
+        $smtpConfig = require '/private/conf/smtp_config.php';
+
+        $mail = new PHPMailer(true);         
+ 
+// ... Autoloader laden und $smtpConfig vorbereiten
+
+$mail = new PHPMailer(true);
+
+try {
+    // SMTP-Serverdaten setzen
+    $mail->isSMTP();
+    $mail->Host       = $smtpConfig['host'];
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $smtpConfig['username'];
+    $mail->Password   = $smtpConfig['password'];
+    $mail->SMTPSecure = $smtpConfig['smtp_secure'];
+    $mail->Port       = $smtpConfig['port'];
+    $mail->CharSet    = $smtpConfig['charset'];
+    #$mail->SMTPDebug = 2; // oder 3 für noch mehr Debug-Ausgaben
+    #$mail->Debugoutput = 'html'; // macht die Ausgabe lesbar im Browser
+    // Absender
+    $mail->setFrom('horn.it@t-online.de', 'horn.it');
+
+    // Empfänger dynamisch
+    $mail->addAddress($email, $username);
+
+    // Inhalt
+    $mail->isHTML(true);
+    $mail->Subject = 'Bestätigung deiner Anmeldung';
+    $mail->Body    = "Hallo $username,<br>Bitte klicke auf den folgenden Link, um deine Anmeldung zu bestätigen:<br><a href='https://dev.cms-oop.com/protected/verify.php?token=$token'>Konto bestätigen</a>";
+    $mail->AltBody = "Hallo $username,\nBitte klicke auf den folgenden Link, um deine Anmeldung zu bestätigen:\nhttps://dev.cms-oop.com/protected/verify.php?token=$token";
+
+    // Mail senden
+    $mail->send();
+    $resultMessage = "Bestätigungsmail wurde gesendet an $email";
+    return $resultMessage;
+} catch (Exception $e) {
+    $resultMessage = "Fehler beim Versenden der Bestätigungsmail: {$mail->ErrorInfo}";
+    return $resultMessage;
+}
+    
+ }
     public static function logout(): void {
         error_log("🔓 Logout-Funktion wurde aufgerufen.");
         file_put_contents(__DIR__ . '/logout.log', "Logout aufgerufen am " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);

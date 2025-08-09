@@ -16,8 +16,12 @@ if (isset($_SESSION['user_id'])) {
     $permissionGate = new UserRoleManager($db, $_SESSION['user_id']);
     $_SESSION['permissions'] = $permissionGate->getAllPermissions();
 } 
+ if (isset($_GET['already_verified']) && $_GET['already_verified'] == 1): ?>
+    <div class="alert alert-info">
+        Dein Konto wurde bereits bestätigt.
+    </div>
+<?php endif; ?>
 
-?>
 <div class="flex_container">
     <div id="login-button login-button-text">
     <button class="button" onclick="location.href='?page=1692886141';">Datenschutzerklärung</button>
