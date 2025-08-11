@@ -33,8 +33,8 @@ if (!UserSession::isLoggedIn()) {
     exit;
 }
 
-// Admin-Prüfung
-if (!isset($_SESSION['admin_a']) || $_SESSION['admin_a'] != 1) {
+// Admin-Prüfung (rollenbasiert)
+if (!UserSession::isAdmin()) {
     http_response_code(403);
     echo json_encode([
         'success' => false,
@@ -79,8 +79,17 @@ if ($userId === null) {
     exit;
 }
 
-$repo->setStatus($userId, $key, $value === 'on');
-$newState = $repo->getStatus($userId, $key);
+// Prüfen, ob ein benutzerspezifischer Datensatz existiert
+$currentStatus = $repo->getStatus($userId, $key);
+if ($currentStatus !== null && $currentStatus !== false) {
+    // Benutzerspezifischer Datensatz existiert, wie bisher speichern
+    $repo->setStatus($userId, $key, $value === 'on');
+    $newState = $repo->getStatus($userId, $key);
+} else {
+    // Kein benutzerspezifischer Datensatz, globalen Fallback aktualisieren
+    $repo->setStatus(0, $key, $value === 'on');
+    $newState = $repo->getStatus(0, $key);
+}
 
 // Auch in Session setzen
 $_SESSION[$key] = $newState;

@@ -1,4 +1,5 @@
 <?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/class/repository/ToggleFlagRepository.php';
 
 class UserSession
 {
@@ -37,13 +38,32 @@ class UserSession
     public static function showGreeting(): string
     {
         $user = self::getUserName();
-        $datum = date('d.m.Y l H:i:s') . '<br>';
-        $datum .= 'Einen schönen, guten Tag: ' . htmlspecialchars($user);
+        $date = date('d.m.Y l H:i:s');
         if (self::isAdmin()) {
-            $datum .= '<br><strong>Du bist als Admin angemeldet</strong>';
+            return '✅ Du bist als Admin angemeldet – ' . $date . '<br>Einen schönen, guten Tag: ' . htmlspecialchars($user);
         } else {
-            $datum .= '<br><strong>Du bist als Mitglied angemeldet</strong>';
+            return '👤 Du bist als Mitglied angemeldet – ' . $date . '<br>Einen schönen, guten Tag: ' . htmlspecialchars($user);
         }
-        return $datum;
+    }
+
+    /**
+     * Prüft, ob der Debug-Modus für den aktuellen Benutzer oder global aktiviert ist.
+     * @return bool
+     */
+    public static function isDebugMode(): bool
+    {
+        $db = \CMSApp::getDb();
+        $userId = self::getUserId();
+        $toggleRepo = new \ToggleFlagRepository($db);
+        // Erst Benutzertoggle prüfen
+        if ($userId !== null) {
+            $userDebug = $toggleRepo->getStatus($userId, 'debug_toggle');
+            if ($userDebug !== null) {
+                return (bool)$userDebug;
+            }
+        }
+        // Dann globalen Toggle prüfen (user_id = 0)
+        $globalDebug = $toggleRepo->getStatus(0, 'debug_toggle');
+        return (bool)$globalDebug;
     }
 }

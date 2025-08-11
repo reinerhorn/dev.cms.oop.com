@@ -19,16 +19,27 @@ if (!UserSession::isLoggedIn()) {
 $greeting = UserSession::showGreeting();
 echo "<div class='admin-greeting'>$greeting</div>";
 
-// Debug-Schalter anzeigen
+// Check debug toggle status from database and include debug_mode.tpl.php if enabled
+require_once $_SERVER['DOCUMENT_ROOT'] . '/class/repository/ToggleFlagRepository.php';
+$repo = new ToggleFlagRepository(CMSApp::getDb());
+$userId = UserSession::getUserId();
+$debugEnabled = false;
+if ($userId !== null) {
+    $debugEnabled = $repo->getStatus($userId, 'debug_toggle');
+}
+
 echo ToggleSwitch::render(
     id: 'debug-toggle',
     name: 'debug_toggle',
     labelOn: 'An',
     labelOff: 'Aus',
-    isChecked: $_SESSION['debug_enabled'] ?? false,
+    isChecked: $debugEnabled,
     extraClasses: ['debug-toggle'],
     attributes: ['data-toggle' => 'debug']
 );
 
- 
+if ($debugEnabled) {
+    require $_SERVER['DOCUMENT_ROOT'] . '/templates/debug_mode.tpl.php';
+}
+
 ?>

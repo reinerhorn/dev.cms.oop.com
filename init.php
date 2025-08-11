@@ -34,11 +34,19 @@ class CMSAppFrontend {
     private static $db;
     private static $language = 'de';
     private static $role = null;
-    public static function setRole(?int $role): void {
+    private static $role_id = null;
+
+    public static function setRole($role): void {
         self::$role = $role;
     }
-    public static function getRole(): ?int {
+    public static function getRole() {
         return self::$role ?? 0;
+    }
+    public static function setRoleId($role_id): void {
+        self::$role_id = $role_id;
+    }
+    public static function getRoleId() {
+        return self::$role_id ?? null;
     }
 
     public static function isAdmin(): bool {
@@ -46,13 +54,21 @@ class CMSAppFrontend {
         if (self::getRole() === 1) {
             return true;
         }
-
+        // Prüfen auf bekannte Admin-Rollen-IDs
+        $role_id = self::getRoleId();
+        if ($role_id === 'admin-role-001' || $role_id === 'admin-role-002') {
+            return true;
+        }
         // Falls zusätzlich ein Berechtigungssystem mit Permissions existiert
         if (!empty($_SESSION['permissions']) && in_array('admin_access', $_SESSION['permissions'], true)) {
             return true;
         }
-
         return false;
+    }
+
+    public static function isSuperAdmin(): bool {
+        // Prüfen auf spezielle Super-Admin-Rolle
+        return self::getRoleId() === 'admin-role-001';
     }
     public static function getPageTitle(): string {
         return "HD Staffing Services";
@@ -195,16 +211,22 @@ class CMSAppFrontend {
         }
         self::$language = $_SESSION['language'] ?? 'de';
         error_log("🌐 SESSION LANGUAGE = " . self::$language);
-        
+
         // Korrigierte Rollenzuweisung
         if (isset($_SESSION['admin_a'])) {
             self::$role = $_SESSION['admin_a'] == 1 ? 1 : 2;
         } else {
             self::$role = 0; // Gastrolle setzen, nicht null
         }
-
+        // Rollenzuweisung für role_id (stringbasierte Rollen)
+        if (isset($_SESSION['role_id'])) {
+            self::$role_id = $_SESSION['role_id'];
+        } else {
+            self::$role_id = null;
+        }
         $_SESSION['role'] = self::$role;
         self::setRole(self::$role);
+        self::setRoleId(self::$role_id);
 
         // Benutzerrechte laden (UserRoleManager)
         require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/UserRoleManager.php';

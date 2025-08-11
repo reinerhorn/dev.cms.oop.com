@@ -1,33 +1,48 @@
-console.log('Debug-Toggle-Script geladen');
+console.log('🔌 Debug-Toggle-Script geladen');
 
 document.addEventListener('DOMContentLoaded', () => {
     const toggles = document.querySelectorAll('input[type="checkbox"][data-toggle-key]');
+
+    if (toggles.length === 0) {
+        console.warn("⚠️ Kein Debug-Toggle gefunden.");
+        return;
+    }
+
     toggles.forEach(toggle => {
-        toggle.addEventListener('change', () => {
-            const key = toggle.getAttribute('data-toggle-key') || toggle.name;
-            const value = toggle.checked ? 'on' : 'off';
+        toggle.addEventListener('change', async (e) => {
+            const isChecked = e.target.checked;
+            const key = e.target.dataset.toggleKey || e.target.name;
+            const endpoint = e.target.dataset.endpoint || '/function/post_toggle_flag.php';
 
-            console.log(`Umschalten erkannt für ${key}: ${value}`);
+            console.log(`🔄 Umschalten erkannt für ${key}: ${isChecked ? 'on' : 'off'}`);
 
-            const formData = new FormData();
-            formData.append('key', key);
-            formData.append('value', value);
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        key: key,
+                        value: isChecked ? 'on' : 'off'
+                    })
+                });
 
-            fetch('/function/post_toggle_flag.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
+                const data = await response.json();
+
                 if (data.success) {
-                    console.log(`${key} ist jetzt ${data.state ? 'aktiviert' : 'deaktiviert'}`);
+                    console.log(`✅ ${key} ist jetzt ${data.state ? 'aktiviert' : 'deaktiviert'}`);
+                    location.reload();
                 } else {
-                    console.warn(`Fehler beim Umschalten für ${key}:`, data.message);
+                    console.warn(`❌ Fehler beim Umschalten für ${key}: ${data.message}`);
+                    alert(`Fehler: ${data.message}`);
+                    e.target.checked = !isChecked; // zurücksetzen bei Fehler
                 }
-            })
-            .catch(error => {
-                console.error(`Verbindungsfehler bei ${key}:`, error);
-            });
+            } catch (error) {
+                console.error(`🚨 Verbindungsfehler bei ${key}:`, error);
+                alert("⚠️ Netzwerkfehler beim Speichern des Schalters.");
+                e.target.checked = !isChecked; // zurücksetzen bei Netzwerkfehler
+            }
         });
     });
 });

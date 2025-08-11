@@ -33,4 +33,23 @@ class ToggleFlagRepository
         $stmt->bind_param("isi", $userId, $key, $intEnabled);
         $stmt->execute();
     }
+
+    /**
+     * Gibt den Status des Flags für den User zurück, falls gesetzt, sonst den globalen Status (user_id = 0).
+     * Falls für beide kein Eintrag existiert, wird false zurückgegeben.
+     *
+     * @param string $key
+     * @param int|null $userId
+     * @return bool
+     */
+    public function getGlobalOrUserStatus(string $key, ?int $userId): bool
+    {
+        // Zuerst versuchen, den User-spezifischen Status zu laden
+        $userStatus = $this->getStatus($userId, $key);
+        if ($userStatus) {
+            return true;
+        }
+        // Falls nicht existiert oder false, globalen Status prüfen (user_id = 0)
+        return $this->getStatus(0, $key);
+    }
 }
