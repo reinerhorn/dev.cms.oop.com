@@ -1,5 +1,9 @@
 user-agent: *
 disallow: /login
 disallow: /mitglieder
+disallow: /admin
 disallow: /php
 disallow: /form
+disallow: /plugin
+disallow: /config
+disallow: /.vscode

@@ -3,23 +3,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- Pfad zur externen Config (außerhalb des Webroots) ---
-$configFile = '/private/conf/cms_oop-config.php';
-
-if (!file_exists($configFile)) {
-    die("Konfigurationsdatei nicht gefunden: {$configFile}");
-}
-
-// --- Config laden ---
-$config = require $configFile;
-
-// --- Datenbank-Verbindung herstellen ---
-function getDbConnection() {
+ function getDbConnection() {
     static $connection = null;
 
-    global $config;
-
     if ($connection === null) {
+        $config = require '/private/conf/cms_oop-config.php';
+
         $connection = new mysqli(
             $config['db_host'],
             $config['db_user'],
@@ -31,10 +20,12 @@ function getDbConnection() {
             die("Verbindung fehlgeschlagen: " . $connection->connect_error);
         }
     }
+
     return $connection;
 }
+ 
 
-// --- CMSApp-Klasse ---
+
 if (!class_exists('CMSApp', false)) {
     class CMSApp {
         private static $db = null;

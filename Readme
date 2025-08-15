@@ -1,13 +1,13 @@
 <!--  ===================================================================
       CMS SYSTEM PLUGIN BASIC
-	  Urheberrechtshinweis / Copyright
+	Urheberrechtshinweis / Copyright
 
-	  Die Gestaltung, Inhalte und Programmierung dieser Seiten
-	  unterliegen dem Urheberrecht. Urheber ist Reiner Horn
-	  Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
-	  Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
-	  wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
-	  unter Einsatz von Rechtsmitteln geahndet.
+	Die Gestaltung, Inhalte und Programmierung dieser Seiten
+	unterliegen dem Urheberrecht. Urheber ist Reiner Horn
+	Eine Verwendung der Inhalte außerhalb der vom Urheber betriebenen
+	Domains ist nicht gestattet. Ein Verstoß gegen diese Bestimmungen
+	wird als Urheberrechtsverletzung betrachtet und bei Bekanntwerdung 
+	unter Einsatz von Rechtsmitteln geahndet.
       Verwndung von der leeren datenbank und code muss eine genehmigung
       des Urhebers eingeholt werden.
       Die Datenbank und der Code sind urheberrechtlich geschützt.
@@ -24,8 +24,42 @@
       Anfragen zur gemenigung nur per mail möglich   
       horm.it@t-online.de
 
-	 Reiner Horn
-	 Huaptstr. 8
-	 40597 Düsseldorf
-     horm.it@t-online.de
+	Reiner Horn
+	Hauptstr. 8
+	40597 Düsseldorf
+      horm.it@t-online.de
 ===================================================================  -->
+ Anfragen für die Kompette Datenbank  horn.it@t-online.de, so das man dan auch gleich loslegen kann.
+ Install Anweisung für Sql 
+ Einen Unterordner Anlegen zb. .env oder ähnlicbhes sollte ausserhaltp des webbereich sein nuss ein geschützer ordner sein. Sites/
+└── dev.cms-oop.com/
+    ├── index.php
+    ├── config/               ← enthält generelle App-Konfiguration
+    ├── function/             ← PHP-Funktionen / Klassen
+    ├── plugin/
+    ├── inc/
+    ├── css/
+    ├── ...
+    └── /.env/             ← geschützt, unterordber eingebunden 
+        └── conf/
+            ├──  h-d_config.php    Für den PHPMAULER conf
+            └─-  cms_oop-config    Für die config.onc.php
+## Für den PHPMAULER conf
+ <?php
+return [
+    'host' => 'smtp ',
+    'username'    => 'deine email',
+    'password'    => 'dein password',
+    'smtp_secure' => 'tls',
+    'port'        => 587,
+    'charset'     => 'UTF-8',
+];     
+
+## Für die config.onc.php
+<?php
+return [
+    'db_host' => '127.0.0.1',
+    'db_user' => 'dein user Name ',
+    'db_pass' => 'dein password',
+    'db_name' => 'deine Datenbank Name',
+];

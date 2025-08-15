@@ -87,7 +87,7 @@ Sites/
     ├── inc/
     ├── css/
     ├── ...
-    └── /private/             ← geschützt, nur lokal eingebunden
+    └── /.env/             ← geschützt, nur lokal eingebunden
         └── conf/
             └── h-d_config.php
 
