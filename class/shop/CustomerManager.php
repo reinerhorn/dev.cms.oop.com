@@ -109,6 +109,16 @@ class CustomerManager
         }
     }
 
+    public function setBillingAddress(string $userId, array $addressData): bool
+    {
+        return $this->setAddress($userId, 'billing', $addressData);
+    }
+
+    public function setShippingAddress(string $userId, array $addressData): bool
+    {
+        return $this->setAddress($userId, 'shipping', $addressData);
+    }
+
     private function generateUuid()
     {
         $data = random_bytes(16);
