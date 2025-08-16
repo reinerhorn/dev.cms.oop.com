@@ -1,5 +1,5 @@
 <?php
-include $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 $db_connector = getDbConnection();
 $stmt = $db_connector->prepare('SELECT besucherdatum as datum, id as besucherzahl FROM plugin_besucher');
 $stmt->execute();

@@ -6,8 +6,9 @@ if (!isset($_SESSION['admin_a'])) {
     header('Location:/index.php');
     exit;
 }
+ 
+require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 
-include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 $connection = getDbConnection();
 
 function handlePlaintextContentEditor($connection) {

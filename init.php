@@ -350,6 +350,7 @@ class PluginLoader {
         '/plugin/plugin_member/',
         '/plugin/plugin_cards/',
         '/plugin/extra_plugin/',
+        '/plugin/plugin_shop/',
     ];
     public function __construct(string $pluginName) {
         $this->pluginName = $pluginName;

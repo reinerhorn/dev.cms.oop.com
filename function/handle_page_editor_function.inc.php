@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['admin_a'])) {
     header('Location:/index.php');
 }
-include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 $connection = getDbConnection();
 
 // Sicherstellen, dass die Variablen auch dann gesetzt sind, wenn die Funktion später aufgerufen wird

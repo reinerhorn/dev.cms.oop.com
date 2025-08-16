@@ -1,5 +1,5 @@
 <?php
-include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . "/class/helper/SelectGenerator.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . "/class/helper/ButtonGenerator.php";
  

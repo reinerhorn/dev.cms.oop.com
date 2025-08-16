@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-include_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
-include_once $_SERVER['DOCUMENT_ROOT'] . "/function/formular_generator.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/config/config.inc.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/function/formular_generator.php";
 
 $connection = getDbConnection();
 

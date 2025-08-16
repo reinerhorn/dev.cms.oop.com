@@ -5,9 +5,13 @@ require_once __DIR__ . '/CheckoutService.php';
 // DB Verbindung
 $db = CMSApp::getDb();
 
+$stmt = $db->prepare("SELECT COUNT(*) AS cnt FROM orders WHERE user_id = ?");
+$stmt->bind_param("s", $userId);
 $userId = 'user-admin-001'; // muss in login_users existieren
+$stmt->execute();
+$countOrdersBefore = $stmt->get_result()->fetch_assoc()['cnt'] ?? 0;
+$stmt->close();
 
-$countOrdersBefore = $db->query("SELECT COUNT(*) AS cnt FROM orders WHERE user_id = '{$db->real_escape_string($userId)}'")->fetch_assoc()['cnt'] ?? 0;
 echo "Vor Checkout: {$countOrdersBefore} Bestellungen für User {$userId}\n";
 
 // Testdaten
@@ -46,15 +50,26 @@ $productIdsList = implode(",", $productIds);
 
 // Filter: nur Bewegungen der letzten 5 Minuten
 $timeLimit = date('Y-m-d H:i:s', strtotime('-5 minutes'));
+// Prepared Statement Version
+$productIds = array_column($cartItems, 'product_id');
+$placeholders = implode(',', array_fill(0, count($productIds), '?'));
+
 $query = "
     SELECT * 
     FROM stock_movements 
-    WHERE product_id IN ($productIdsList) 
-      AND created_at >= '{$db->real_escape_string($timeLimit)}'
+    WHERE product_id IN ($placeholders) 
+      AND created_at >= ?
     ORDER BY created_at DESC
     LIMIT 5
 ";
-$movementsRes = $db->query($query);
+
+$stmt = $db->prepare($query);
+$types = str_repeat('s', count($productIds)) . 's';
+$params = array_merge($productIds, [$timeLimit]);
+$stmt->bind_param($types, ...$params);
+$stmt->execute();
+$movementsRes = $stmt->get_result();
+$stmt->close();
 
 echo "--- Stock Movements (letzte 5 Minuten, max. 5 Einträge) ---\n";
 if ($movementsRes->num_rows === 0) {
@@ -80,9 +95,6 @@ $shippingAddress = [
 $paymentMethod = 'credit_card';
 $paymentAmount = 1699.98;
 
-// Aktuelle Zeit als Referenz für neue Lagerbewegungen nach Checkout
-$preCheckoutTime = date('Y-m-d H:i:s');
-
 echo "=== Test: Checkout ===\n";
 
 $checkout = new CheckoutService($db);
@@ -97,24 +109,39 @@ try {
         $paymentMethod
     );
 
+    // Aktuelle Zeit als Referenz für neue Lagerbewegungen nach Checkout
+    $preCheckoutTime = date('Y-m-d H:i:s');
+
     echo "Bestellung erfolgreich abgeschlossen!\n";
     echo "Order-ID: {$result['order_id']}\n";
     echo "Payment-ID: {$result['payment_id']}\n";
     echo "Status: {$result['status']}\n";
 
     // Bestellung auslesen
-    $orderData = $db->query("SELECT * FROM orders WHERE id = '{$db->real_escape_string($result['order_id'])}'")->fetch_assoc();
+    $stmt = $db->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->bind_param("s", $result['order_id']);
+    $stmt->execute();
+    $orderData = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
     echo "Bestelldaten: " . print_r($orderData, true) . "\n";
 
     // Order-Items
-    $itemsRes = $db->query("SELECT * FROM order_items WHERE order_id = '{$db->real_escape_string($result['order_id'])}'");
+    $stmt = $db->prepare("SELECT * FROM order_items WHERE order_id = ?");
+    $stmt->bind_param("s", $result['order_id']);
+    $stmt->execute();
+    $itemsRes = $stmt->get_result();
+    $stmt->close();
     echo "--- Produkte ---\n";
     while ($row = $itemsRes->fetch_assoc()) {
         echo "- Produkt-ID: {$row['product_id']} | Menge: {$row['quantity']} | Preis: {$row['price']}\n";
     }
 
     // Zahlungen
-    $payRes = $db->query("SELECT * FROM payments WHERE order_id = '{$db->real_escape_string($result['order_id'])}'");
+    $stmt = $db->prepare("SELECT * FROM payments WHERE order_id = ?");
+    $stmt->bind_param("s", $result['order_id']);
+    $stmt->execute();
+    $payRes = $stmt->get_result();
+    $stmt->close();
     echo "--- Zahlungen ---\n";
     while ($pay = $payRes->fetch_assoc()) {
         echo "- Payment-ID: {$pay['id']} | Betrag: {$pay['amount']} | Status: {$pay['status']} | Methode: {$pay['method']}\n";
@@ -130,12 +157,11 @@ try {
             ON sm.product_id = oi.product_id
            AND oi.order_id = '{$db->real_escape_string($result['order_id'])}'
         WHERE sm.reason = 'sale'
-          AND sm.created_at > '{$db->real_escape_string($preCheckoutTime)}'
         ORDER BY sm.created_at DESC
     ";
     $movementsPostRes = $db->query($queryPost);
 
-    echo "--- Lagerbewegungen nach Checkout (seit {$preCheckoutTime}) ---\n";
+    echo "--- Lagerbewegungen dieser Bestellung ---\n";
     if ($movementsPostRes->num_rows === 0) {
         echo "Keine neuen Lagerbewegungen nach dem Checkout gefunden.\n";
     } else {
@@ -154,8 +180,12 @@ echo "=== Test abgeschlossen ===\n";
 echo "---\n";
 
 // Zusammenfassung: Anzahl aller Bestellungen und Summe aller Bestellbeträge
-$summaryRes = $db->query("SELECT COUNT(*) AS total_orders, SUM(total) AS total_amount FROM orders WHERE user_id = '{$db->real_escape_string($userId)}'");
-$summary = $summaryRes->fetch_assoc();
+$stmt = $db->prepare("SELECT COUNT(*) AS total_orders, SUM(total) AS total_amount FROM orders WHERE user_id = ?");
+$stmt->bind_param("s", $userId);
+$stmt->execute();
+$summary = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
 echo "--- Bestellübersicht ---\n";
 echo "Anzahl Bestellungen: {$summary['total_orders']} | Gesamtumsatz: " . number_format((float)$summary['total_amount'], 2) . " EUR\n";
 echo "---\n";
