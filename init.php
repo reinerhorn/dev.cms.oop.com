@@ -1,12 +1,4 @@
 <?php
-// PSR-4 Autoloader für Klassen
-spl_autoload_register(function ($class) {
-    $baseDir = $_SERVER['DOCUMENT_ROOT'] . '/class/';
-    $file = $baseDir . str_replace('\\', '/', $class) . '.php';
-    if (file_exists($file)) {
-        require $file;
-    }
-});
 include_once $_SERVER['DOCUMENT_ROOT'] . "/inc/session.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/class/navi/navi.inc.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/UserRoleManager.php';
@@ -34,41 +26,11 @@ class CMSAppFrontend {
     private static $db;
     private static $language = 'de';
     private static $role = null;
-    private static $role_id = null;
-
-    public static function setRole($role): void {
+    public static function setRole(?int $role): void {
         self::$role = $role;
     }
-    public static function getRole() {
+    public static function getRole(): ?int {
         return self::$role ?? 0;
-    }
-    public static function setRoleId($role_id): void {
-        self::$role_id = $role_id;
-    }
-    public static function getRoleId() {
-        return self::$role_id ?? null;
-    }
-
-    public static function isAdmin(): bool {
-        // Prüfen, ob die Rolle explizit auf 1 (Admin) gesetzt ist
-        if (self::getRole() === 1) {
-            return true;
-        }
-        // Prüfen auf bekannte Admin-Rollen-IDs
-        $role_id = self::getRoleId();
-        if ($role_id === 'admin-role-001' || $role_id === 'admin-role-002') {
-            return true;
-        }
-        // Falls zusätzlich ein Berechtigungssystem mit Permissions existiert
-        if (!empty($_SESSION['permissions']) && in_array('admin_access', $_SESSION['permissions'], true)) {
-            return true;
-        }
-        return false;
-    }
-
-    public static function isSuperAdmin(): bool {
-        // Prüfen auf spezielle Super-Admin-Rolle
-        return self::getRoleId() === 'admin-role-001';
     }
     public static function getPageTitle(): string {
         return "HD Staffing Services";
@@ -211,22 +173,16 @@ class CMSAppFrontend {
         }
         self::$language = $_SESSION['language'] ?? 'de';
         error_log("🌐 SESSION LANGUAGE = " . self::$language);
-
+        
         // Korrigierte Rollenzuweisung
         if (isset($_SESSION['admin_a'])) {
             self::$role = $_SESSION['admin_a'] == 1 ? 1 : 2;
         } else {
             self::$role = 0; // Gastrolle setzen, nicht null
         }
-        // Rollenzuweisung für role_id (stringbasierte Rollen)
-        if (isset($_SESSION['role_id'])) {
-            self::$role_id = $_SESSION['role_id'];
-        } else {
-            self::$role_id = null;
-        }
+
         $_SESSION['role'] = self::$role;
         self::setRole(self::$role);
-        self::setRoleId(self::$role_id);
 
         // Benutzerrechte laden (UserRoleManager)
         require_once $_SERVER['DOCUMENT_ROOT'] . '/class/security/UserRoleManager.php';
@@ -271,18 +227,52 @@ class CMSAppFrontend {
         }
 
         $pageId = filter_var($_REQUEST['page'], FILTER_VALIDATE_INT);
+        $filterContentId = $_REQUEST['plugin_content_id'] ?? null;
+
         if (!$pageId) {
             die("⚠️ Ungültige Seiten-ID.");
         }
-        $stmt = self::$db->prepare("
-            SELECT *, plugin.name AS plugin_label, UNIX_TIMESTAMP(page.id) AS page_id
-            FROM page_config
-            JOIN page ON page_config.fk_page_id = page.id
-            JOIN plugin ON page_config.fk_plugin_id = plugin.id
-            WHERE UNIX_TIMESTAMP(page.id) = ?
-            ORDER BY page_config.idx ASC
-        ");
-        $stmt->bind_param('i', $pageId);
+        // Neue Filterlogik: Nur wenn plugin_content_id als gültiger Timestamp übergeben wurde
+        if (!empty($filterContentId) && is_numeric($filterContentId)) {
+            $stmt = self::$db->prepare("
+                SELECT *, plugin.name AS plugin_label, UNIX_TIMESTAMP(page.id) AS page_id
+                FROM page_config
+                JOIN page ON page_config.fk_page_id = page.id
+                JOIN plugin ON page_config.fk_plugin_id = plugin.id
+                WHERE UNIX_TIMESTAMP(page_config.plugin_content_id) = ?
+                LIMIT 1
+            ");
+            $stmt->bind_param('i', $filterContentId);
+            $stmt->execute();
+            $record = $stmt->get_result()->fetch_assoc();
+
+            if ($record) {
+                // DEBUG-Ausgabe direkt nach if ($record)
+                echo "<pre style='background:#f8f8f8;padding:1em;border:1px solid #ccc'>";
+                echo "DEBUG plugin_content_id: {$record['plugin_content_id']}\n";
+                echo "TS (datenbank): " . strtotime($record['plugin_content_id']) . "\n";
+                echo "TS (url param): " . htmlspecialchars((string)$filterContentId) . "\n";
+                echo "</pre>";
+                error_log("🎯 Direktes Rendering plugin_content_id={$record['plugin_content_id']}, Plugin={$record['plugin_label']}");
+                $loader = new PluginLoader($record['plugin_label']);
+                $loader->render();
+            } else {
+                echo "<div class='error'>❌ Kein passender Plugin-Eintrag gefunden.</div>";
+            }
+            return;
+        }
+        // Ab hier nur ausführen, wenn kein gezielter plugin_content_id-Filter verwendet wurde
+        else {
+            $stmt = self::$db->prepare("
+                SELECT *, plugin.name AS plugin_label, UNIX_TIMESTAMP(page.id) AS page_id
+                FROM page_config
+                JOIN page ON page_config.fk_page_id = page.id
+                JOIN plugin ON page_config.fk_plugin_id = plugin.id
+                WHERE UNIX_TIMESTAMP(page.id) = ?
+                ORDER BY page_config.idx ASC
+            ");
+            $stmt->bind_param('i', $pageId);
+        }
         $stmt->execute();
         $result = $stmt->get_result();
         $page_output_all = [];
@@ -305,7 +295,6 @@ class CMSAppFrontend {
                 }
                 if (class_exists('PluginPlaintext')) {
                     $page_plugin = $record['page_id'] . '_' . $record['plugin_label'];
-
                     if ($record['print_all'] == 1 && in_array($page_plugin, $page_output_all)) {
                         continue;
                     }
@@ -329,8 +318,15 @@ class CMSAppFrontend {
                 }
             }
             error_log("🧩 PluginLoader wird aufgerufen mit Plugin: " . $record['plugin_label'] . ", plugin_content_id: " . $record['plugin_content_id']);
+            // Neuer Log-Eintrag für Erfolg bei gesetztem Filter
+            if ($filterContentId !== null) {
+                error_log("🎯 Lade gezielten plugin_content_id=$filterContentId");
+            }
             $loader = new PluginLoader($record['plugin_label']);
             $loader->render();
+            if ($filterContentId !== null) {
+                break;
+            }
         }
     }
     public static function getDb(): mysqli {
@@ -353,7 +349,7 @@ class PluginLoader {
         '/plugin/plugin_shop/',
     ];
     public function __construct(string $pluginName) {
-        $this->pluginName = $pluginName;
+        $this->pluginName = strtolower($pluginName);
     }
     public function render(): void {
         foreach ($this->pluginPaths as $relativePath) {
@@ -363,6 +359,6 @@ class PluginLoader {
                 return;
             }
         }
-        echo "<section><h2>{$this->pluginName}</h2><p>⚠️ Plugin \"{$this->pluginName}\" nicht gefunden.</p></section>";
+        echo "<section><h2>{$this->pluginName}</h2><p>⚠️ Plugin \"{$this->pluginName}\" nicht gefunden.<br>Pfad geprüft: {$pluginFile}</p></section>";
     }
 }

@@ -1,5 +1,6 @@
 <?php
 include_once $_SERVER['DOCUMENT_ROOT'] . "/init.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/session.php';
 CMSAppFrontend::init();
  
  

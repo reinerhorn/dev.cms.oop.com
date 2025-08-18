@@ -1,10 +1,19 @@
 <?php
 
 class ButtonGenerator {
-    public static function render(string $name, string $value, string $label, string ...$extraClasses): string {
-        $classes = array_merge([$value === 'save' ? 'button-save' : 'button-delete'], $extraClasses);
+    public static function render(
+        string $name,
+        string $value,
+        string $label,
+        string $type = 'button',
+        string ...$extraClasses
+    ): string {
+        // Standardklassen für Buttons
+        $classes = array_merge(['btn'], $extraClasses);
+
         return sprintf(
-            '<button class="%s" name="%s" value="%s">%s</button>',
+            '<button type="%s" class="%s" name="%s" value="%s">%s</button>',
+            htmlspecialchars($type),
             htmlspecialchars(implode(' ', $classes)),
             htmlspecialchars($name),
             htmlspecialchars($value),

@@ -24,9 +24,33 @@ class FrontendShopController {
     }
 
     public function cart() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
-        require_once $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_shop/templates/frontend/product_detail.tpl.php'; 
-        #require __DIR__ . '/../templates/frontend/cart.tpl.php';
+        $action = $_GET['action'] ?? null;
+        $productId = $_GET['id'] ?? null;
+
+        if ($action && $productId) {
+            switch ($action) {
+                case 'add':
+                    $_SESSION['cart'][$productId] = ($_SESSION['cart'][$productId] ?? 0) + 1;
+                    break;
+                case 'remove':
+                    if (!empty($_SESSION['cart'][$productId])) {
+                        $_SESSION['cart'][$productId]--;
+                        if ($_SESSION['cart'][$productId] <= 0) {
+                            unset($_SESSION['cart'][$productId]);
+                        }
+                    }
+                    break;
+                case 'delete':
+                    unset($_SESSION['cart'][$productId]);
+                    break;
+            }
+        }
+
+        require_once $_SERVER['DOCUMENT_ROOT'] . '/plugin/plugin_shop/templates/frontend/cart.tpl.php'; 
     }
 
     public function checkout() {
