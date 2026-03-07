@@ -1,0 +1,25 @@
+{% for block in content_data %}
+    {% if block.type == 'login_form' %}
+        <section class="form-block">
+            {% if block.headline %}
+                <h1>{{ block.headline }}</h1>
+            {% endif %}
+            {% if block.text %}
+                <div>{{ block.text|raw }}</div>
+            {% endif %}
+            {% set fields = block.config.fields is defined ? block.config.fields : [] %}
+            <form method="post" class="dynamic-form">
+                {% if 'email' in fields %}
+                    <input type="email" name="email" placeholder="E-Mail" required>
+                {% endif %}
+                {% if 'password' in fields %}
+                    <input type="password" name="password" placeholder="Passwort" required>
+                {% endif %}
+                {% if 'agree' in fields %}
+                    <label><input type="checkbox" name="agree"> Ich stimme zu</label>
+                {% endif %}
+                <button type="submit">Einloggen</button>
+            </form>
+        </section>
+    {% endif %}
+{% endfor %}

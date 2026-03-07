@@ -1,0 +1,45 @@
+{% set role_numeric = 0 %}
+{% if session.role_id is defined %}
+    {% set r = session.role_id %}
+    {% if r starts with('admin') %}
+        {% set role_numeric = 1 %}
+    {% elseif r starts with('member') %}
+        {% set role_numeric = 2 %}
+    {% else %}
+        {% set role_numeric = 0 %}
+    {% endif %}
+{% endif %}
+
+<header class="{{ header.css|default('header') }}">
+    <div class="header-top">
+
+        <div class="header-left">
+            {# Header-Elemente nach Rolle filtern #}
+            {% for h in header.data if (h.role is not defined or h.role == '' or (h.role is defined and h.role|int == role_numeric)) %}
+
+                {% if h.images is defined and h.images is iterable and h.images|length > 0 %}
+                    {% for image in h.images %}
+                        <a href="{{ image.link_url }}">
+                            <img class="logo" src="{{ asset_path }}/{{ image.image_url }}" alt="{{ image.alt_text }}">
+                        </a>
+                    {% endfor %}
+                {% endif %}
+
+            {% endfor %}
+        </div>
+
+        <div class="header-center">
+            {% set activeHeader = header.data|filter(h => (h.role is not null and h.role|int == role_numeric))|first %}
+            {% if activeHeader %}
+                <span class="companyname">{{ activeHeader.headline }}</span>
+            {% else %}
+                <span class="companyname">{{ header.headline|default('') }}</span>
+            {% endif %}
+        </div>
+
+        <div class="header-right">
+            {% include 'partials/language_selector.twig' %}
+        </div>
+
+    </div>
+</header>

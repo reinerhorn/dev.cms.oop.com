@@ -1,0 +1,70 @@
+{% set blocks = data.content_data is defined ? data.content_data : [] %}
+
+<main id="content">
+
+    {% if blocks is empty %}
+        <p class="content-text">Keine Inhalte vorhanden.</p>
+    {% endif %}
+
+    {% for blockGroup in blocks %}
+        {% for block in blockGroup %}
+
+            {# ---------- PLAIN TEXT BLOCK ---------- #}
+            {% if block.type is not defined or block.type == 'plaintext' %}
+                <article class="content-block">
+                    {% if block.headline %}
+                        <h1 class="content-headline">{{ block.headline }}</h1>
+                    {% endif %}
+                    {% if block.text %}
+                        <div class="content-text">{{ block.text|raw }}</div>
+                    {% endif %}
+                </article>
+            {% endif %}
+
+            {# ---------- FORMULAR BLOCK (login_form, register_form, etc.) ---------- #}
+            {% if block.type is defined and (block.type ends with '_form' or block.type == 'form') %}
+                {% set config = block.config is defined ? block.config : {} %}
+                {% set fields = config.fields is defined ? config.fields : [] %}
+                <section class="form-block">
+                    {% if block.headline %}
+                        <h1 class="content-headline">{{ block.headline }}</h1>
+                    {% endif %}
+                    {% if block.text %}
+                        <div class="content-text">{{ block.text|raw }}</div>
+                    {% endif %}
+
+                    <form method="post" class="dynamic-form">
+                        {% if 'email' in fields %}
+                            <input type="email" name="email" placeholder="E-Mail" required>
+                        {% endif %}
+                        {% if 'password' in fields %}
+                            <input type="password" name="password" placeholder="Passwort" required>
+                        {% endif %}
+                        {% if 'agree' in fields %}
+                            <label>
+                                <input type="checkbox" name="agree"> Ich stimme zu
+                            </label>
+                        {% endif %}
+
+                        {# Extra dynamische Felder aus config.extra_fields #}
+                        {% if config.extra_fields is defined %}
+                            {% for field in config.extra_fields %}
+                                <input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.placeholder }}">
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if fields is empty %}
+                            <p class="content-text" style="color:red;">
+                                ⚠️ Keine Formularfelder definiert. Bitte im Adminbereich konfigurieren.
+                            </p>
+                        {% endif %}
+
+                        <button type="submit">Absenden</button>
+                    </form>
+                </section>
+            {% endif %}
+
+        {% endfor %}
+    {% endfor %}
+
+</main>

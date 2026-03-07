@@ -1,0 +1,73 @@
+<section class="page-content">
+
+    {% if content_data is empty %}
+        <section class="error">
+            <h2>Keine Inhalte gefunden</h2>
+            <p class="content-text">Diese Seite enthält keine Inhalte oder Plugin-Daten.</p>
+        </section>
+    {% endif %}
+
+    {% for block in content_data %}
+
+        <article class="content-block">
+
+            {# ---------- SIMPLE PLAINTEXT BLOCK ---------- #}
+            {% if block.type == 'plaintext' %}
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+            {% endif %}
+
+            {# ---------- FORM PLUGIN BLOCK ---------- #}
+            {% if block.config is defined %}
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+
+                <section class="form-section">
+                    <form method="post" class="dynamic-form">
+
+                        {% for field in block.config.fields %}
+                            {% set label = field %}
+                            {% set type =
+                                field == 'email'    ? 'email' :
+                                field == 'password' ? 'password' :
+                                field == 'agree'    ? 'checkbox' :
+                                'text'
+                            %}
+
+                            <div class="form-row">
+
+                                {% if type == 'checkbox' %}
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="{{ field }}"> Ich stimme zu
+                                    </label>
+                                {% else %}
+                                    <label for="{{ field }}">{{ label|capitalize }}</label>
+                                    <input id="{{ field }}" type="{{ type }}" name="{{ field }}">
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <div class="form-actions">
+                            <button type="submit">Absenden</button>
+                        </div>
+
+                    </form>
+                </section>
+
+            {% endif %}
+
+        </article>
+
+    {% endfor %}
+
+</section>

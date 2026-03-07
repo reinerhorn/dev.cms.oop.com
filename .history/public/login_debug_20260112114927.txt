@@ -1,0 +1,69 @@
+
+=== LOGIN START ===
+DB USER:
+
+ERROR: Benutzer nicht gefunden
+=== LOGIN START ===
+INPUT:
+Array
+(
+    [action] => login
+    [email] => admin@cms-oop.com
+    [password] => DEIN_ECHTES_PASSWORT
+)
+
+DB USER:
+
+ERROR: Benutzer nicht gefunden
+=== LOGIN START ===
+INPUT:
+Array
+(
+    [action] => login
+    [email] => ECHTEMAIL
+    [password] => ECHTPASSWORT
+)
+
+DB USER:
+
+ERROR: Benutzer nicht gefunden
+=== LOGIN START ===
+INPUT:
+Array
+(
+    [action] => login
+    [email] => ECHTEMAIL
+    [password] => ECHTPASSWORT
+)
+
+DB USER:
+
+ERROR: Benutzer nicht gefunden
+=== LOGIN START ===
+INPUT:
+Array
+(
+    [action] => login
+    [email] => admin@h-and-d.eu
+    [password] => 101TanZen101
+)
+
+DB USER:
+Array
+(
+    [id] => user-admin-001
+    [password] => $2y$12$Odn2aCJGWn4rf34ecDFKJeMrNjgZHE3JFOZQJRZxd86NRxrhGPHle
+    [role_id] => admin-role-001
+    [is_verified] => 1
+)
+
+SESSION AFTER LOGIN:
+Array
+(
+    [user_id] => user-admin-001
+    [role_id] => admin-role-001
+)
+
+SESSION ID: 9e5c1b18b7c58505d8f8843e222aa459
+=== LOGIN END ===
+

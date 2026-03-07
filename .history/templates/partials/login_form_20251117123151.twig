@@ -1,0 +1,17 @@
+ <section class="login-form-block">
+    {% if headline is defined and headline|trim != '' %}
+        <h1 class="content-headline">{{ headline }}</h1>
+    {% endif %}
+
+    {% if text is defined and text|trim != '' %}
+        <div class="content-text">{{ text|raw }}</div>
+    {% endif %}
+    <form method="post" action="" class="login-form">
+        <input type="email" name="email" value="{{ email|default('') }}" placeholder="E-Mail" required>
+        <input type="password" name="password" placeholder="Passwort" required>
+        <label class="login-checkbox">
+            <input type="checkbox" name="agree" {% if agree %}checked{% endif %}> Ich stimme zu
+        </label>
+        <button type="submit" class="login-button">Einloggen</button>
+    </form>
+</section>

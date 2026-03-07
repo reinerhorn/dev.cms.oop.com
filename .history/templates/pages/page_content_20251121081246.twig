@@ -1,0 +1,26 @@
+{% set blocks = data.content_data is defined ? data.content_data : content_data %}
+
+<section class="page-content">
+
+    {% if blocks is empty %}
+        <p class="content-text">Keine Inhalte vorhanden.</p>
+    {% endif %}
+
+    {% for block in blocks %}
+
+        {# ---------- PLAIN TEXT BLOCK ---------- #}
+        {% if block.type is not defined or block.type == 'plaintext' %}
+            <article class="content-block">
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+            </article>
+        {% endif %}
+
+        
+
+    {% endfor %}
+</section>

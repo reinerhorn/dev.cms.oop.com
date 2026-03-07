@@ -1,0 +1,151 @@
+{# pages/page_content.twig — LOGIN + PLAINTEXT kompatibel #}
+
+{% set blocks = data.content_data is defined ? data.content_data : content_data %}
+
+<section class="page-content">
+
+    {% if blocks is empty %}
+        <section class="error">
+            <h2>Keine Inhalte gefunden</h2>
+            <p class="content-text">Diese Seite enthält keine Inhalte oder Plugin-Daten.</p>
+        </section>
+    {% endif %}
+
+    {% for block in blocks %}
+        
+        {# ============================
+           PLAINTEXT BLOCK
+           ============================ #}
+        {% if block.type == 'plaintext' %}
+            <article class="content-block">
+
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+
+            </article>
+        {% endif %}
+
+        {# ============================
+           FORMULAR BLOCK (forms)
+           ============================ #}
+        {% set is_form =
+            block.type is defined and (
+                block.type|lower ends with '_form' or
+                block.type|lower starts with 'form_' or
+                block.type|lower in ['forms','login-form','register','register-form']
+            )
+        %}
+
+        {% if is_form %}
+
+            {% set actionValue =
+                (block.type|lower == 'forms' and block.style == 'login') ? 'login' :
+                (block.type|lower starts with 'login') ? 'login' :
+                (block.type|lower starts with 'register') ? 'register' :
+                block.type
+            %}
+            {% set redirectUrl = block.redirect|default(
+                (block.type|lower starts with 'login' ? '/de/admin' :
+                 block.type|lower starts with 'register' ? '/de/member' :
+                 '/de/')) %}
+
+            <div class="form-box {{ block.style }}-box form-style-{{ block.style }} form-type-{{ block.type }}">
+                <form method="post" class="login-form" action="/de/login">
+                    <input type="hidden" name="action" value="{{ actionValue }}">
+                    <input type="hidden" name="redirect" value="{{ redirectUrl }}">
+
+                    {# Headline über dem Formular #}
+                    {% if block.headline %}
+                        <h1 class="content-headline">{{ block.headline }}</h1>
+                    {% endif %}
+
+                    {% if block.text %}
+                        <div class="content-text">{{ block.text|raw }}</div>
+                    {% endif %}
+
+                    {% if block.config is iterable and block.config|length > 0 %}
+                        {% for field in block.config %}
+
+                            {% set name  = field.name %}
+                            {% set type  = field.type %}
+                            {% set label = field.label %}
+                            {% set required = field.required ? 'required' : '' %}
+
+                            {# ===== Checkbox ===== #}
+                            {% if type == 'checkbox' %}
+                                <div class="agb-wrapper">
+                                    <input type="checkbox" name="{{ name }}" {{ required }}>
+                                    <label for="{{ name }}">{{ label }}</label>
+                                </div>
+
+                            {# ===== Textarea ===== #}
+                            {% elseif type == 'textarea' %}
+                                <div class="group">
+                                    <textarea name="{{ name }}" {{ required }}></textarea>
+                                    <span class="highlight"></span>
+                                    <span class="bar"></span>
+                                    <label>{{ label }}</label>
+                                </div>
+
+                            {# ===== Select ===== #}
+                            {% elseif type == 'select' %}
+                                <div class="group">
+                                    <select name="{{ name }}" {{ required }}>
+                                        {% for option in field.options %}
+                                            <option value="{{ option.value }}">{{ option.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label>{{ label }}</label>
+                                </div>
+
+                            {# ===== Radio Group ===== #}
+                            {% elseif type == 'radio' %}
+                                <div class="radio-group">
+                                    <label class="group-label">{{ label }}</label>
+                                    {% for option in field.options %}
+                                        <label class="radio-option">
+                                            <input type="radio" name="{{ name }}" value="{{ option.value }}" {{ required }}>
+                                            {{ option.label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+
+                            {# ===== File Upload ===== #}
+                            {% elseif type == 'file' %}
+                                <div class="group">
+                                    <input type="file" name="{{ name }}" {{ required }}>
+                                    <label>{{ label }}</label>
+                                </div>
+
+                            {# ===== Standard Inputs ===== #}
+                            {% else %}
+                                <div class="group">
+                                    <input type="{{ type }}" name="{{ name }}" {{ required }}>
+                                    <span class="highlight"></span>
+                                    <span class="bar"></span>
+                                    <label>{{ label }}</label>
+                                </div>
+                            {% endif %}
+
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="button-wrapper">
+                        <button type="submit" class="login-submit">
+                            Absenden
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        {% endif %}
+
+    {% endfor %}
+
+</section>

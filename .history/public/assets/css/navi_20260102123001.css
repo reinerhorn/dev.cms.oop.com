@@ -1,0 +1,203 @@
+/* =====================================================
+   🌍 GENERAL / GUEST NAVIGATION
+   ===================================================== */
+ 
+.main-nav .nav-list {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#generalNav {
+    position: relative;   /* bleibt im Header */
+    width: 100%;
+}
+
+#generalNav > .nav-list {
+    display: flex ;
+    flex-direction: row ;
+}
+
+#generalNav .nav-item {
+    display: block;
+    position: relative;
+}
+
+#generalNav .nav-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+
+#generalNav a,
+#generalNav .nav-title {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 8px 14px;
+    line-height: 30px;
+    font-size: 15px;
+
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+
+    background-color: rgb(6, 6, 6);
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+#generalNav a:hover,
+#generalNav .nav-title:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+#generalNav .marked {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+/* ---------- Dropdown Pfeil (Guest) ---------- */
+#generalNav .dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Pfeil anzeigen */
+#generalNav .dropdown-toggle::after {
+    content: "▼";
+    margin-left: 6px;
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+/* Pfeil dreht sich beim Hover */
+#generalNav .nav-item:hover > .dropdown-toggle::after {
+    transform: rotate(180deg);
+}
+
+/* ---------- Dropdown (Guest) ---------- */
+
+#generalNav .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: max-content;
+    width: max-content;
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+    background: rgba(15, 15, 15, 0.97);
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    z-index: 999;
+}
+
+#generalNav .nav-item:hover > .dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#generalNav .dropdown-menu li a {
+   white-space: nowrap;
+    padding: 8px 16px;
+}
+
+#generalNav .dropdown-menu li a:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+
+/* =========================
+   ADMIN NAV – FIX FINAL
+   ========================= */
+
+#adminNav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 30px;
+    width: 100%;
+    background-color: var(--normalcolorblack);
+    z-index: 10000;
+}
+
+/* eine horizontale Leiste */
+#adminNav .nav-list {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0 10px;
+    list-style: none;
+}
+
+#adminNav .nav-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+/* alle Items */
+#adminNav .nav-item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* ❗ verhindert Umbruch */
+}
+
+/* Links */
+#adminNav .nav-left {
+    display: flex;
+}
+
+#adminNav .nav-right {
+    display: flex;
+    margin-left: auto;
+}
+
+/* Links */
+#adminNav a,
+#adminNav .nav-title {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+}
+
+#adminNav a:hover,
+#adminNav .nav-title:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+#adminNav .marked {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+#adminNav .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+
+    background-color: var(--normalcolorblack);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 200px;
+    z-index: 10001;
+}
+

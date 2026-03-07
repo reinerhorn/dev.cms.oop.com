@@ -1,0 +1,16 @@
+<header class="header">
+    <div class="header-top">
+        {% for h in header %}
+            <div class="{{ h.css }}">
+                <a href="{{ h.link }}">
+                    {% if h.images %}
+                        {% for img in h.images %}
+                            <img src="{{ img.image_url }}" alt="{{ img.alt_text }}">
+                        {% endfor %}
+                    {% endif %}
+                    <span>{{ h.headline }}</span>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</header>

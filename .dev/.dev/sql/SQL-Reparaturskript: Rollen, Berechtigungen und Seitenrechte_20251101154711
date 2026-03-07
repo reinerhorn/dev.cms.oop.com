@@ -1,0 +1,97 @@
+-- =========================================
+-- 🔧 CMS OOP: Rollen- und Berechtigungs-Reparatur
+-- =========================================
+
+-- 🔹 1. Permissions (nur anlegen, wenn sie fehlen)
+INSERT INTO permissions (id, name)
+SELECT 'perm-view-guest', 'view_guest'
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE id = 'perm-view-guest');
+
+INSERT INTO permissions (id, name)
+SELECT 'perm-view-member', 'view_member'
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE id = 'perm-view-member');
+
+INSERT INTO permissions (id, name)
+SELECT 'perm-view-admin', 'view_admin'
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE id = 'perm-view-admin');
+
+-- =========================================
+-- 🔹 2. Rollen (nur anlegen, wenn sie fehlen)
+INSERT INTO roles (id, name)
+SELECT 'guest-role-000', 'Gast'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE id = 'guest-role-000');
+
+INSERT INTO roles (id, name)
+SELECT 'member-role-002', 'Mitglied'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE id = 'member-role-002');
+
+INSERT INTO roles (id, name)
+SELECT 'admin-role-001', 'Administrator'
+WHERE NOT EXISTS (SELECT 1 FROM roles WHERE id = 'admin-role-001');
+
+-- =========================================
+-- 🔹 3. Rollen → Berechtigungen (role_permissions)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 'guest-role-000', 'perm-view-guest'
+WHERE NOT EXISTS (
+    SELECT 1 FROM role_permissions
+    WHERE role_id = 'guest-role-000' AND permission_id = 'perm-view-guest'
+);
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 'member-role-002', 'perm-view-member'
+WHERE NOT EXISTS (
+    SELECT 1 FROM role_permissions
+    WHERE role_id = 'member-role-002' AND permission_id = 'perm-view-member'
+);
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 'admin-role-001', 'perm-view-admin'
+WHERE NOT EXISTS (
+    SELECT 1 FROM role_permissions
+    WHERE role_id = 'admin-role-001' AND permission_id = 'perm-view-admin'
+);
+
+-- Admin darf auch Member- und Gastrechte (optional)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 'admin-role-001', 'perm-view-member'
+WHERE NOT EXISTS (
+    SELECT 1 FROM role_permissions
+    WHERE role_id = 'admin-role-001' AND permission_id = 'perm-view-member'
+);
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT 'admin-role-001', 'perm-view-guest'
+WHERE NOT EXISTS (
+    SELECT 1 FROM role_permissions
+    WHERE role_id = 'admin-role-001' AND permission_id = 'perm-view-guest'
+);
+
+-- =========================================
+-- 🔹 4. Page Permissions (seitenbasiert)
+-- Startseite → Gäste
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6be54-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-guest'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6be54-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-guest'
+);
+
+-- Profilseite → Member
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6d240-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-member'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6d240-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-member'
+);
+
+-- Admin-Startseite → Admin
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-admin'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-admin'
+);

@@ -1,0 +1,12 @@
+{% for label, blocks in contents %}
+    {% for block in blocks %}
+        <section class="content-block">
+            {% if block.headline is defined and block.headline %}
+                <h2>{{ block.headline }}</h2>
+            {% endif %}
+            {% if block.text is defined and block.text %}
+                <p>{{ block.text|raw }}</p>
+            {% endif %}
+        </section>
+    {% endfor %}
+{% endfor %}

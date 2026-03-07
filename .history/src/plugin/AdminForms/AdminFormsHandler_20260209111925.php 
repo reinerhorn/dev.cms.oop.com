@@ -1,0 +1,10 @@
+ <?php
+ class AdminHeaderHandler
+{
+    public function saveHeader(array $data): void {}
+    public function deleteHeader(string $id): void {}
+
+    public function saveHeaderImage(array $data): void {}
+    public function deleteHeaderImage(string $id): void {}
+}
+

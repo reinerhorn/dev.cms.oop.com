@@ -1,0 +1,93 @@
+-- =========================================
+-- 🔧 CMS OOP – Reparatur fehlender Seiten und Berechtigungen
+-- =========================================
+
+-- 1️⃣ Admin-Startseite hinzufügen, falls nicht vorhanden
+INSERT INTO page (page_uuid, slug, name, template, enabled, sort_order, created_at)
+SELECT '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6', 'admin-start', 'Admin-Startseite', 'default', 1, 0, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM page WHERE page_uuid = '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6'
+);
+
+-- 2️⃣ Member-Startseite hinzufügen, falls nicht vorhanden
+INSERT INTO page (page_uuid, slug, name, template, enabled, sort_order, created_at)
+SELECT '73a6d196-7bf6-11f0-be30-c26cf33f6ee6', 'member-start', 'Member-Startseite', 'default', 1, 0, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM page WHERE page_uuid = '73a6d196-7bf6-11f0-be30-c26cf33f6ee6'
+);
+
+-- 3️⃣ Profilseite hinzufügen, falls nicht vorhanden
+INSERT INTO page (page_uuid, slug, name, template, enabled, sort_order, created_at)
+SELECT '73a6d240-7bf6-11f0-be30-c26cf33f6ee6', 'profil', 'Profilseite', 'default', 1, 0, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM page WHERE page_uuid = '73a6d240-7bf6-11f0-be30-c26cf33f6ee6'
+);
+
+-- =========================================
+-- 🔹 Page Permissions prüfen / anlegen
+-- =========================================
+
+-- Startseite → Gäste
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6be54-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-guest'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6be54-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-guest'
+);
+
+-- Profilseite → Member
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6d240-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-member'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6d240-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-member'
+);
+
+-- Admin-Startseite → Admin
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-admin'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-admin'
+);
+
+-- Member-Startseite → Member
+INSERT INTO page_permissions (page_permission_id, fk_page_uuid, permission_id)
+SELECT UUID(), '73a6d196-7bf6-11f0-be30-c26cf33f6ee6', 'perm-view-member'
+WHERE NOT EXISTS (
+    SELECT 1 FROM page_permissions
+    WHERE fk_page_uuid = '73a6d196-7bf6-11f0-be30-c26cf33f6ee6'
+      AND permission_id = 'perm-view-member'
+);
+
+-- =========================================
+-- 🔹 Navigation prüfen
+-- =========================================
+
+-- Admin-Start in navigation korrigieren (falls falsche UUID)
+UPDATE navigation
+SET fk_page_uuid = '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6'
+WHERE seo_slug = 'admin-start'
+  AND fk_page_uuid <> '73a6cd7c-7bf6-11f0-be30-c26cf33f6ee6';
+
+-- Member-Start in navigation korrigieren
+UPDATE navigation
+SET fk_page_uuid = '73a6d196-7bf6-11f0-be30-c26cf33f6ee6'
+WHERE seo_slug = 'member-start'
+  AND fk_page_uuid <> '73a6d196-7bf6-11f0-be30-c26cf33f6ee6';
+
+-- Profilseite in navigation korrigieren
+UPDATE navigation
+SET fk_page_uuid = '73a6d240-7bf6-11f0-be30-c26cf33f6ee6'
+WHERE seo_slug = 'profil'
+  AND fk_page_uuid <> '73a6d240-7bf6-11f0-be30-c26cf33f6ee6';
+
+-- =========================================
+-- ✅ Abschlusskontrolle
+-- =========================================
+-- Nach Ausführung prüfen:
+-- SELECT p.name, pp.permission_id FROM page p
+-- LEFT JOIN page_permissions pp ON pp.fk_page_uuid = p.page_uuid;

@@ -1,0 +1,14 @@
+ 
+
+ 
+
+    {# Plugin-Formular #}
+    <form method="post" action="" class="login-form">
+      <input type="email" name="email" value="{{ email|default('') }}" placeholder="E-Mail" required>
+      <input type="password" name="password" placeholder="Passwort" required>
+      <label><input type="checkbox" name="agree" {% if agree %}checked{% endif %}> Ich stimme zu</label>
+      <button type="submit">Einloggen</button>
+    </form>
+  </section>
+</main>
+ 

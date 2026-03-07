@@ -1,0 +1,12 @@
+.language-list {
+    display: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.language-dropdown.open .language-list {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}

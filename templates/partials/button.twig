@@ -1,0 +1,18 @@
+{# =========================================================
+   UNIVERSAL BUTTON
+   ========================================================= #}
+
+{% set type  = type  | default('submit') %}
+{% set style = style | default('primary') %}
+{% set label = label | default('Absenden') %}
+{% set name  = name  | default(null) %}
+{% set value = value | default(null) %}
+
+<button
+    type="{{ type }}"
+    class="btn btn-{{ style }}"
+    {% if name %}name="{{ name }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+>
+    {{ label }}
+</button>

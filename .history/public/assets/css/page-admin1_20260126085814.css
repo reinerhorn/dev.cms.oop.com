@@ -1,0 +1,98 @@
+ /* =========================
+   ADMIN NAV – FIX FINAL
+   ========================= */
+
+#adminNav {
+    display: flex;          /* 🔥 DAS FEHLT */
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    background-color: var(--normalcolorblack);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+}
+
+/* eine horizontale Leiste */
+#adminNav .nav-list {
+     display: flex;          /* 🔥 DAS FEHLT */
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0 10px;
+    list-style: none;
+}
+
+#adminNav .nav-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+/* alle Items */
+#adminNav .nav-item {
+    position: relative;   /* 🔑 extrem wichtig */
+}
+
+/* Links */
+#adminNav .nav-left {
+    display: flex;
+}
+
+#adminNav .nav-right {
+    display: flex;
+    margin-left: auto;
+}
+
+/* Links */
+#adminNav a,
+#adminNav .nav-title {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+}
+
+#adminNav .nav-item:hover > .dropdown-menu {
+    display: block;
+}
+
+#adminNav .marked {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+#adminNav .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+    background-color: var(--normalcolorblack);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 200px;
+    z-index: 10001;
+}
+#adminNav button,
+#adminNav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    background: none;
+    border: none;
+    color: var(--normalcolorwhite);
+    cursor: pointer;
+   
+}

@@ -1,0 +1,5 @@
+{% set actionValue =
+    block.type in ['login-form','login','forms'] ? 'login' :
+    block.type in ['register_form','register','register-form'] ? 'register' :
+    block.type
+%}

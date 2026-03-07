@@ -1,0 +1,74 @@
+{% set blocks = data.content_data is defined ? data.content_data : content_data %}
+
+<section class="page-content">
+    {% if blocks %}
+        {% for block in blocks %}
+
+            {# Plaintext #}
+            {% if (block.type is not defined or block.type == 'plaintext')
+                and (
+                    (block.headline is defined and block.headline|trim != '')
+                    or (block.text is defined and block.text|trim != '')
+                )
+            %}
+                <article class="content-block">
+                    {% if block.headline is defined %}
+                        <h1 class="content-headline">{{ block.headline }}</h1>
+                    {% endif %}
+                    {% if block.text is defined %}
+                        <div class="content-text">
+                            {{ block.text|raw }}
+                        </div>
+                    {% endif %}
+                </article>
+            {% endif %}
+
+            {# FORMULAR BLOCK (login_form, register_form, usw.) #}
+            {% if block.type is defined and block.type starts with 'login' %}
+                <section class="login-form-block">
+                    {% if block.headline is defined and block.headline|trim != '' %}
+                        <h1 class="content-headline">{{ block.headline }}</h1>
+                    {% endif %}
+
+                    {% if block.text is defined and block.text|trim != '' %}
+                        <div class="content-text">{{ block.text|raw }}</div>
+                    {% endif %}
+
+                    {% set fields = block.config.fields is defined ? block.config.fields : [] %}
+
+                    <form method="post" action="" class="login-form">
+                        {% if 'email' in fields %}
+                            <input type="email" name="email" placeholder="E-Mail" required>
+                        {% endif %}
+
+                        {% if 'password' in fields %}
+                            <input type="password" name="password" placeholder="Passwort" required>
+                        {% endif %}
+
+                        {% if 'agree' in fields %}
+                            <label class="login-checkbox">
+                                <input type="checkbox" name="agree">
+                                Ich stimme zu
+                            </label>
+                        {% endif %}
+
+                        {% if block.config.extra_fields is defined %}
+                            {% for field in block.config.extra_fields %}
+                                <input type="{{ field.type }}" name="{{ field.name }}" placeholder="{{ field.placeholder }}">
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if fields is empty %}
+                            <p class="content-text" style="color:red;">
+                                ⚠️ Keine Formularfelder definiert.
+                            </p>
+                        {% endif %}
+
+                        <button type="submit" class="login-button">Einloggen</button>
+                    </form>
+                </section>
+            {% endif %}
+
+        {% endfor %}
+    {% endif %}
+</section>

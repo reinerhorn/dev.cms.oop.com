@@ -1,0 +1,144 @@
+<?php
+declare(strict_types=1);
+
+namespace CMS\Core\Service;
+
+use mysqli;
+
+class RoleService
+{
+    private mysqli $db;
+
+    /** Cache für Permissions pro Rolle */
+    private array $permissionCache = [];
+
+    public function __construct(mysqli $db)
+    {
+        $this->db = $db;
+    }
+
+    /**
+     * Liefert alle Permissions einer Rolle
+     */
+    public function getPermissionsForRole(string $roleId): array
+    {
+        if (isset($this->permissionCache[$roleId])) {
+            return $this->permissionCache[$roleId];
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT p.id
+            FROM role_permissions rp
+            JOIN permissions p ON p.id = rp.permission_id
+            WHERE rp.role_id = ?
+        ");
+
+        $stmt->bind_param('s', $roleId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $permissions = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $permissions[] = $row['id'];
+        }
+
+        $this->permissionCache[$roleId] = $permissions;
+
+        return $permissions;
+    }
+
+    /**
+     * Prüft ob eine Rolle eine Permission besitzt
+     */
+    public function roleHasPermission(string $roleId, string $permissionId): bool
+    {
+        return in_array(
+            $permissionId,
+            $this->getPermissionsForRole($roleId),
+            true
+        );
+    }
+
+    /**
+     * Prüft mehrere Permissions (AND)
+     */
+    public function roleHasAllPermissions(string $roleId, array $permissionIds): bool
+    {
+        $permissions = $this->getPermissionsForRole($roleId);
+
+        foreach ($permissionIds as $permissionId) {
+            if (!in_array($permissionId, $permissions, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Prüft mehrere Permissions (OR)
+     */
+    public function roleHasAnyPermission(string $roleId, array $permissionIds): bool
+    {
+        $permissions = $this->getPermissionsForRole($roleId);
+
+        foreach ($permissionIds as $permissionId) {
+            if (in_array($permissionId, $permissions, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    /**
+     * Liefert die effektive role_id aus der Session oder Guest-Fallback
+     */
+    public function getCurrentRoleId(): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        return $_SESSION['role_id'] ?? 'guest-role-000';
+    }
+
+    /**
+     * Leitet aus der Rolle den UI-Context ab
+     * frontend | admin | member
+     */
+    public function resolveContext(): string
+    {
+        $roleId = $this->getCurrentRoleId();
+
+        return match (true) {
+            str_starts_with($roleId, 'admin')  => 'admin',
+            str_starts_with($roleId, 'member') => 'member',
+            default                            => 'frontend',
+        };
+    }
+
+    /**
+     * Prüft, ob die aktuelle Rolle Admin ist
+     */
+    public function isAdmin(): bool
+    {
+        return $this->resolveContext() === 'admin';
+    }
+
+    /**
+     * Prüft, ob die aktuelle Rolle Member ist
+     */
+    public function isMember(): bool
+    {
+        return $this->resolveContext() === 'member';
+    }
+
+    /**
+     * Prüft, ob die aktuelle Rolle Guest ist
+     */
+    public function isGuest(): bool
+    {
+        return $this->resolveContext() === 'frontend';
+    }
+}

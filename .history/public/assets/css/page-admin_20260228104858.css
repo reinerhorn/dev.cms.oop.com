@@ -1,0 +1,209 @@
+ /* =========================
+   ADMIN CONTEBT – FIX FINAL
+   ========================= */
+.context-backend main {
+    padding-top: 140px;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
+ 
+ /* =========================
+   ADMIN NAV – FIX FINAL
+   ========================= */
+
+#adminNav {
+    display: flex;          /* 🔥 DAS FEHLT */
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    background-color: var(--normalcolorblack);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+}
+
+/* eine horizontale Leiste */
+#adminNav .nav-list {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    align-items: center; /* doppelt */
+}
+
+#adminNav .nav-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+/* alle Items */
+#adminNav .nav-item {
+    position: relative;   /* 🔑 extrem wichtig */
+}
+
+/* Links */
+#adminNav .nav-left {
+    display: flex;
+}
+
+#adminNav .nav-right {
+    display: flex;
+    margin-left: auto;
+}
+
+/* Links */
+#adminNav a,
+#adminNav .nav-title {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+}
+
+#adminNav .nav-item:hover > .dropdown-menu {
+    display: block;
+}
+
+#adminNav .marked {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+#adminNav .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+    background-color: var(--normalcolorblack);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 200px;
+    z-index: 10001;
+}
+#adminNav button,
+#adminNav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    background: none;
+    border: none;
+    color: var(--normalcolorwhite);
+    cursor: pointer;
+   
+}
+/* ============================= */
+/* Admin Form Layout */
+/* ============================= */
+
+
+.admin-form-wrapper {
+    flex: 1;
+    margin: 40px 0;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.admin-form-wrapper h2 {
+    margin-bottom: 25px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* ============================= */
+/* Form Groups */
+/* ============================= */
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #34495e;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #dcdcdc;
+    transition: 0.2s ease;
+    background: #fafafa;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* ============================= */
+/* Select */
+/* ============================= */
+
+select.form-control {
+    cursor: pointer;
+}
+
+/* ============================= */
+/* Buttons */
+/* ============================= */
+
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 18px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-primary {
+    background: #4a90e2;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #357abd;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-secondary {
+    background: #bdc3c7;
+    color: #2c3e50;
+}
+
+.btn-secondary:hover {
+    background: #a7b1b6;
+}

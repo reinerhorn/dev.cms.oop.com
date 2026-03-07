@@ -1,0 +1,36 @@
+{% if contents is defined and contents is not empty %}
+    {% if constant('CMS_DEBUG') %}
+        <div class="content-debug">
+            <h3>🧩 Gefundene Inhalte: {{ contents|length }}</h3>
+            <ul>
+                {% for label, blocks in contents %}
+                    <li>
+                        <strong>{{ label }}</strong>
+                        {% for block in blocks %}
+                            <div>
+                                <p><strong>Headline:</strong> {{ block.headline|default('—') }}</p>
+                                <p><strong>Text:</strong> {{ block.text|default('—') }}</p>
+                            </div>
+                        {% endfor %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        {# --- Normale Ausgabe --- #}
+        <section class="page-content">
+            {% for label, blocks in contents %}
+                {% for block in blocks %}
+                    {% if block.headline is not empty %}
+                        <h2>{{ block.headline }}</h2>
+                    {% endif %}
+                    {% if block.text is not empty %}
+                        <p>{{ block.text|raw }}</p>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </section>
+    {% endif %}
+{% else %}
+    <p>⚠️ Kein Inhalt gefunden (Twig-Testausgabe).</p>
+{% endif %}

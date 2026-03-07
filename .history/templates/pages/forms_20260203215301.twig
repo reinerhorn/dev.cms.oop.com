@@ -1,0 +1,77 @@
+{% set config      = block.config is iterable ? block.config : {} %}
+{% set fields      = config.fields ?? [] %}
+{% set form_class  = block.form_class ?? config.form_class ?? null %}
+
+{% if block.wrapper_class is defined %}
+<div class="{{ block.wrapper_class }}">
+{% endif %}
+
+{# Formular-Feedback (zentral aus CMSAppFrontend) #}
+{% if form_result is defined %}
+    {% if form_result.message %}
+        <div class="form-message {{ form_result.status == 'ok' ? 'form-success' : 'form-error' }}">
+            {{ form_result.message }}
+        </div>
+    {% endif %}
+
+    {% if form_result.errors is defined and form_result.errors is iterable and form_result.errors|length > 0 %}
+        <ul class="form-errors">
+            {% for error in form_result.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endif %}
+
+<form
+    method="post" action="{{ '/' ~ language ~ '/' ~ page_css_id }}"
+    {% if form_class is not empty %}class="{{ form_class }}"{% endif %}
+>
+    {% if block.headline %}
+        <h1>{{ block.headline }}</h1>
+    {% endif %}
+
+    {% if block.text %}
+        <div data-form-text>
+            {{ block.text|raw }}
+        </div>
+    {% endif %}
+
+    {% for field in fields %}
+        {% set type = field.type|default('text') %}
+
+        {% if type == 'checkbox' %}
+            <label>
+                <input
+                    type="checkbox"
+                    name="{{ field.name }}"
+                    {% if field.required %}required{% endif %}
+                >
+                {{ field.label }}
+            </label>
+
+        {% elseif type == 'textarea' %}
+            <textarea
+                name="{{ field.name }}"
+                placeholder="{{ field.label }}"
+                {% if field.required %}required{% endif %}
+            ></textarea>
+
+        {% else %}
+            <input
+                type="{{ type }}"
+                name="{{ field.name }}"
+                placeholder="{{ field.label }}"
+                {% if field.required %}required{% endif %}
+            >
+        {% endif %}
+    {% endfor %}
+
+    <button type="submit">
+        {{ config.submit_label }}
+    </button>
+</form>
+
+{% if block.wrapper_class is defined %}
+</div>
+{% endif %}

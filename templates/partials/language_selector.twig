@@ -1,0 +1,45 @@
+{% set current = null %}
+{% for lang in languages %}
+    {% if lang.id == current_lang %}
+        {% set current = lang %}
+    {% endif %}
+{% endfor %}
+
+<div id="LanguageSelector" class="language-dropdown">
+
+    <button type="button" class="language-button" id="lang-toggle">
+        {% if current and current.flag_path %}
+            <img
+                src="{{ current.flag_path }}"
+                alt="{{ current.label }}"
+                class="language-flag"
+            >
+        {% endif %}
+
+        <span class="language-label">
+            {{ current.label|default(current_lang|upper) }}
+        </span>
+
+      <span class="arrow">
+          {{ lang_selector_label|default('Sprache wählen') }} ▼
+      </span>
+    </button>
+
+    <ul class="language-list" id="lang-list">
+        {% for lang in languages %}
+            <li
+                class="language-option{% if lang.id == current_lang %} active{% endif %}"
+                data-lang="{{ lang.id }}"
+            >
+                {% if lang.flag_path %}
+                    <img
+                        src="{{ lang.flag_path }}"
+                        alt="{{ lang.label }}"
+                        class="language-flag"
+                    >
+                {% endif %}
+                <span class="language-label">{{ lang.label }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+</div>

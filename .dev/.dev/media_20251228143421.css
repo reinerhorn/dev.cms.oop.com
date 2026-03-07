@@ -1,0 +1,184 @@
+/*login media anfang */
+@media screen and (max-width: 768px) {
+    main.content {
+        padding: 2rem 4%;
+    }
+
+    article.content-block {
+        padding: 1.5rem;
+    }
+
+    article.content-block .content-text:not(:empty) {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-top: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    article.content-block .content-headline {
+        font-size: 1.5rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    main.content {
+        padding: 1.5rem 3%;
+    }
+
+    article.content-block {
+        padding: 1rem;
+    }
+
+    article.content-block .content-text:not(:empty) {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-top: 0.6rem;
+        margin-bottom: 0.8rem;
+    }
+
+    article.content-block .content-headline {
+        font-size: 1.3rem;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .login-box {
+      padding: 30px 20px;
+      width: 90%;
+      max-width: 100%;
+      margin: 20px auto;
+      box-shadow: 0 0 10px rgba(85, 84, 84, 0.25);
+      animation: none; /* Option: Animation auf kleinen Geräten deaktivieren */
+    }
+  
+    .login-form input {
+      font-size: 14px;
+      padding: 8px 8px 8px 5px;
+    }
+  
+    .login-form label {
+      font-size: 14px;
+    }
+  
+    .login-submit {
+      font-size: 14px;
+      padding: 10px 20px;
+    }
+  
+    .agb-wrapper {
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+  
+    .agb-wrapper label {
+      font-size: 13px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .login-box {
+      padding: 20px 15px;
+      margin: 10px auto;
+    }
+  
+    .login-form .group {
+      height: auto;
+      margin-bottom: 25px;
+    }
+  
+    .login-submit {
+      width: 100%;
+    }
+  }
+  /* Login media Ende */
+   /* Navi media Anfang mit Role*/
+  @media (max-width: 768px) {
+    #generalNav, #adminNav {
+      flex-wrap: wrap;
+      justify-content: center;
+      height: auto;
+      padding: 5px;
+    }
+  
+    #generalNav a,
+    #adminNav a {
+      font-size: 13px;
+      padding: 6px 10px;
+      line-height: 22px;
+      height: auto;
+    }
+  
+    #memberNav {
+      position: static;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  
+    #memberNav a {
+      padding: 8px;
+      font-size: 13px;
+      border: none;
+      border-bottom: 1px solid #ccc;
+    }
+  
+    .navigationDropDown {
+      position: static;
+      box-shadow: none;
+      width: 100%;
+      margin-top: 5px;
+    }
+  
+    .navigationDropDown a {
+      font-size: 13px;
+      padding: 6px 10px;
+      line-height: 22px;
+      height: auto;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    #generalNav a,
+    #adminNav a,
+    #memberNav a {
+      font-size: 12px;
+      padding: 6px 8px;
+    }
+  
+    #generalNav,
+    #adminNav {
+      padding: 4px;
+    }
+  
+    #memberNav {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .navigationDropDown {
+      min-width: 100%;
+    }
+  }
+    /* Navi media Ende */
+
+/* Card media anfang  🔁 Media Query: Karten untereinander */
+@media (max-width: 1024px) {
+	.three,
+	.one {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.one div,
+	.three div {
+		width: 90%;
+		max-width: 320px;
+		top: 0 !important;
+	}
+}
+ /* Card media Ende */

@@ -1,0 +1,35 @@
+-- 🧹 1️⃣ Vorher sicherstellen, dass keine alte fehlerhafte Foreign Key-Beziehung mehr besteht
+ALTER TABLE translation DROP FOREIGN KEY fk_translation_placeholder_rel;
+-- (Fehler #1091 wird ignoriert, wenn der Schlüssel nicht existiert)
+
+-- 🧩 2️⃣ Beide Tabellen sicher auf InnoDB setzen
+ALTER TABLE translation ENGINE=InnoDB;
+ALTER TABLE translation_placeholder ENGINE=InnoDB;
+
+-- 🧱 3️⃣ Spaltentypen und Zeichensätze angleichen
+ALTER TABLE translation_placeholder
+MODIFY id VARCHAR(36)
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci
+NOT NULL;
+
+ALTER TABLE translation
+MODIFY fk_translation_placeholder VARCHAR(36)
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci
+NULL;
+
+-- 🧰 4️⃣ Bestehende fehlerhafte Indizes auf der Fremdspalte löschen (falls vorhanden)
+ALTER TABLE translation DROP INDEX fk_translation_placeholder;
+-- (Fehler #1091 ist egal, wenn kein Index da ist)
+
+-- 🪢 5️⃣ Jetzt die korrekte Fremdschlüsselbeziehung neu anlegen
+ALTER TABLE translation
+ADD CONSTRAINT fk_translation_placeholder_rel
+FOREIGN KEY (fk_translation_placeholder)
+REFERENCES translation_placeholder(id)
+ON DELETE SET NULL
+ON UPDATE CASCADE;
+
+-- ✅ Fertigmeldung
+SELECT '✅ Fremdschlüssel zwischen translation.fk_translation_placeholder und translation_placeholder.id wurde erfolgreich neu erstellt.' AS status;

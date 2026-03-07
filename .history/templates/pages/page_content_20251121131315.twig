@@ -1,0 +1,39 @@
+{% if content_data is defined and content_data|length > 0 %}
+    {% for block in content_data %}
+
+        {# --- PLAINTEXT BLOCK --- #}
+        {% if block.type == 'plaintext' %}
+            <article class="content-block">
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+            </article>
+        {% endif %}
+
+        {# --- FORM-BLOCKS: login_form, register_form etc. --- #}
+        {% if block.type ends with '_form' %}
+            <article class="content-block">
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+
+                {# Formular laden #}
+                {% include 'partials/formular.twig' with {
+                    headline: block.headline,
+                    text: block.text,
+                    config: block.config,
+                    type: block.type
+                } %}
+            </article>
+        {% endif %}
+
+    {% endfor %}
+{% else %}
+    <p class="content-text">Keine Inhalte vorhanden.</p>
+{% endif %}

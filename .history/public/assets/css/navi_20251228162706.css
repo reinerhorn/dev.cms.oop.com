@@ -1,0 +1,285 @@
+/* =====================================================
+   🌍 GENERAL / GUEST NAVIGATION
+   ===================================================== */
+.main-nav .nav-list {
+  flex-direction: column;
+}
+
+#generalNav {
+    position: relative;   /* bleibt im Header */
+    width: 100%;
+}
+
+#generalNav > .nav-list {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+#generalNav .nav-item {
+    display: block;
+}
+
+#generalNav a,
+#generalNav .nav-title {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 8px 14px;
+    line-height: 30px;
+    font-size: 15px;
+
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+
+    background-color: rgb(6, 6, 6);
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+#generalNav a:hover,
+#generalNav .nav-title:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+#generalNav .marked {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+/* ---------- Dropdown Pfeil (Guest) ---------- */
+#generalNav .dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Pfeil anzeigen */
+#generalNav .dropdown-toggle::after {
+    content: "▼";
+    margin-left: 6px;
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+/* Pfeil dreht sich beim Hover */
+#generalNav .nav-item:hover > .dropdown-toggle::after {
+    transform: rotate(180deg);
+}
+
+/* ---------- Dropdown (Guest) ---------- */
+
+#generalNav .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    min-width: 180px;
+    margin: 0;
+    padding: 6px 0;
+
+    list-style: none;
+    background: rgba(15, 15, 15, 0.97);
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.25s ease;
+
+    z-index: 999;
+}
+
+#generalNav .nav-item:hover > .dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#generalNav .dropdown-menu li a {
+    display: block;
+    padding: 10px 14px;
+
+    font-size: 14px;
+    color: var(--normalcolorwhite);
+    background: transparent;
+}
+
+#generalNav .dropdown-menu li a:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+
+/* =====================================================
+   🔹 ADMIN NAVIGATION (FIXED TOP BAR)
+   ===================================================== */
+
+/* =====================================================
+   🔐 ADMIN NAVIGATION (TOP FIXED BAR)
+   ===================================================== */
+
+#adminNav {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 30px;
+
+    background-color: var(--normalcolorblack);
+    z-index: 10000;
+}
+
+/* ----------------------------
+   UL = Flex-Container
+   ---------------------------- */
+
+#adminNav > .nav-list {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0 10px;
+    list-style: none;
+}
+
+/* ----------------------------
+   Nav-Gruppen
+   ---------------------------- */
+
+#adminNav .nav-left,
+#adminNav .nav-right {
+    display: flex;
+    align-items: center;
+}
+
+#adminNav .nav-right {
+    margin-left: auto; /* 🔥 Logout ganz rechts */
+}
+
+/* ----------------------------
+   Nav-Items
+   ---------------------------- */
+
+#adminNav .nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* ----------------------------
+   Links & Titel
+   ---------------------------- */
+
+#adminNav a,
+#adminNav .nav-title {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 12px;
+    height: 30px;
+
+    font-size: 14px;
+    line-height: 1;
+
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover */
+#adminNav a:hover,
+#adminNav .nav-title:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+/* Aktiv */
+#adminNav .marked {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+/* ----------------------------
+   Dropdowns
+   ---------------------------- */
+
+#adminNav .dropdown-menu {
+    display: none;
+    position: absolute;
+
+    top: 100%;
+    left: 0;
+
+    min-width: 180px;
+    padding: 6px 0;
+    margin: 0;
+
+    list-style: none;
+    background: rgba(15, 15, 15, 0.97);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+
+    z-index: 9999;
+}
+
+#adminNav .nav-item:hover > .dropdown-menu {
+    display: block;
+}
+
+/* Dropdown Links */
+#adminNav .dropdown-menu li a {
+    display: block;
+    padding: 8px 14px;
+
+    font-size: 14px;
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+}
+
+#adminNav .dropdown-menu li a:hover {
+    background-color: var(--gold);
+    color: var(--normalcolorblack);
+}
+
+
+/* =====================================================
+   👤 MEMBER NAVIGATION (LEFT SIDEBAR)
+   ===================================================== */
+
+#memberNav {
+    position: absolute;
+    top: 105px;
+    left: 4px;
+
+    padding: 5px;
+    background-color: rgb(60, 60, 60);
+
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    flex-direction: column;
+}
+
+#memberNav a {
+    padding: 8px 12px;
+
+    font-size: 14px;
+    color: var(--normalcolorwhite);
+    text-decoration: none;
+
+    border-bottom: 1px solid var(--gold);
+}
+
+#memberNav a:hover {
+    background-color: var(--gold);
+    color: black;
+}
+

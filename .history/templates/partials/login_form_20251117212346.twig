@@ -1,0 +1,35 @@
+<section class="login-form-block">
+
+    {% if headline %}
+        <h1 class="content-headline">{{ headline }}</h1>
+    {% endif %}
+
+    {% if text %}
+        <div class="content-text">{{ text|raw }}</div>
+    {% endif %}
+
+    <form method="post" action="" class="login-form">
+
+        {% if config.fields is defined %}
+
+            {% for f in config.fields %}
+
+                {% if f == 'email' %}
+                    <input type="email" name="email" placeholder="E-Mail" required>
+                {% endif %}
+
+                {% if f == 'password' %}
+                    <input type="password" name="password" placeholder="Passwort" required>
+                {% endif %}
+
+                {% if f == 'agree' %}
+                    <label><input type="checkbox" name="agree"> Ich stimme zu</label>
+                {% endif %}
+
+            {% endfor %}
+
+        {% endif %}
+
+        <button type="submit">Einloggen</button>
+    </form>
+</section>

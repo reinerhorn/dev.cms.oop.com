@@ -1,0 +1,19 @@
+ {% for block in content_data %}
+        {% if block.type == 'plaintext' %}
+            <article class="content-block">
+                <h1 class="content-headline">{{ block.headline }}</h1>
+                <div class="content-text">{{ block.text|raw }}</div>
+            </article>
+        {% endif %}
+
+        {% if block.type == 'form' %}
+            <article class="content-block">
+                <h1 class="content-headline">{{ block.headline }}</h1>
+                <div class="content-text">{{ block.text|raw }}</div>
+
+                {% include 'partials/forms/' ~ block.form_type ~ '.twig' with {
+                    config: block.config
+                } %}
+            </article>
+        {% endif %}
+    {% endfor %}

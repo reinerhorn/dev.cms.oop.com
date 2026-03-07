@@ -1,0 +1,2 @@
+sudo truncate -s 0 /opt/homebrew/var/log/httpd/php_error.log
+

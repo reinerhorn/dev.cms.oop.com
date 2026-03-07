@@ -1,0 +1,102 @@
+{# pages/page_content.twig — CLEAN + FIXED VERSION #}
+
+{% set blocks = data.content_data is defined ? data.content_data : content_data %}
+<pre style="color:yellow;background:#000;padding:10px;">
+BLOCK DEBUG:
+{{ dump(blocks) }}
+</pre>
+<section class="page-content">
+
+    {% if blocks is empty %}
+        <section class="error">
+            <h2>Keine Inhalte gefunden</h2>
+            <p class="content-text">Diese Seite enthält keine Inhalte oder Plugin-Daten.</p>
+        </section>
+    {% endif %}
+
+    {% for block in blocks %}
+        {# Skip empty content blocks #}
+        {% if (
+            (block.headline is not defined or block.headline|trim == '') and
+            (block.text is not defined or block.text|trim == '') and
+            (block.config is not defined)
+        ) %}
+            {# skip empty block (no continue allowed in this Twig version) #}
+            {% set _ = 0 %}
+        {% endif %}
+
+        {# ----------------------------- #}
+        {# PLAINTEXT BLOCK              #}
+        {# ----------------------------- #}
+        {% if block.type == 'plaintext' %}
+            <article class="content-block">
+
+                {% if block.headline is defined and block.headline|trim != '' %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+
+                {% if block.text is defined and block.text|trim != '' %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+
+            </article>
+
+        {# --------------------------------------------- #}
+        {# FORMULAR                                     #}
+        {# --------------------------------------------- #}
+        {% elseif block.type in ['formular', 'login-form', 'register'] %}
+            <article class="content-block">
+
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+
+                {% if block.config is defined and block.config.fields is defined %}
+                    <section class="form-section">
+                        <form method="post" class="dynamic-form">
+
+                            {% for field in block.config.fields %}
+                                {% set label = field %}
+                                {% set type =
+                                    field == 'email'    ? 'email' :
+                                    field == 'password' ? 'password' :
+                                    field == 'agree'    ? 'checkbox' :
+                                    'text'
+                                %}
+
+                                <div class="form-row">
+
+                                    {% if type == 'checkbox' %}
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="{{ field }}"> Ich stimme zu
+                                        </label>
+                                    {% else %}
+                                        <label for="{{ field }}">{{ label|capitalize }}</label>
+                                        <input id="{{ field }}"
+                                               type="{{ type }}"
+                                               name="{{ field }}"
+                                               placeholder="">
+                                    {% endif %}
+
+                                </div>
+                            {% endfor %}
+
+                            <div class="form-actions">
+                                <button type="submit">Absenden</button>
+                            </div>
+
+                        </form>
+                    </section>
+                {% endif %}
+
+            </article>
+
+        {% endif %}
+
+    {% endfor %}
+
+</section>

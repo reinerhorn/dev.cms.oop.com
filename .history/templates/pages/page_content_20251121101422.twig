@@ -1,0 +1,55 @@
+{% set blocks = data.content_data is defined ? data.content_data : content_data %}
+ 
+<section class="page-content">
+
+    {% if blocks is empty %}
+        <p class="content-text">Keine Inhalte vorhanden.</p>
+    {% endif %}
+
+    {% for block in blocks %}
+
+        {# ---------- PLAIN TEXT BLOCK ---------- #}
+        {% if block.type is not defined or block.type == 'plaintext' %}
+            <article class="content-block">
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+            </article>
+        {% endif %}
+<pre>{{ dump(block) }}</pre>
+        {# ---------- FORMULAR BLOCK (login_form, register_form, ...) ---------- #}
+        {% if block.type is defined and block.type ends with '_form' %}
+        
+            <section class="form-block">
+                {% if block.headline %}
+                    <h1 class="content-headline">{{ block.headline }}</h1>
+                {% endif %}
+                {% if block.text %}
+                    <div class="content-text">{{ block.text|raw }}</div>
+                {% endif %}
+
+                {% set fields = block.config.fields is defined ? block.config.fields : [] %}
+                <form method="post" class="dynamic-form">
+                    {% for field in fields %}
+                        {% if field == 'email' %}
+                            <input type="email" name="email" placeholder="E-Mail" required>
+                        {% elseif field == 'password' %}
+                            <input type="password" name="password" placeholder="Passwort" required>
+                        {% elseif field == 'agree' %}
+                            <label>
+                                <input type="checkbox" name="agree"> Ich stimme zu
+                            </label>
+                        {% endif %}
+                    {% endfor %}
+                    <button type="submit">Absenden</button>
+                </form>
+               <pre>{{ dump(block) }}</pre> 
+            </section>
+        {% endif %}
+
+    {% endfor %}
+
+</section>

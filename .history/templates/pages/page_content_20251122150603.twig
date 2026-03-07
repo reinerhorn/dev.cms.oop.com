@@ -1,0 +1,68 @@
+{# pages/page_content.twig — AUTOMAPPING VERSION #}
+
+{% set blocks = data.content_data is defined ? data.content_data : content_data %}
+
+<section class="page-content">
+
+    {% if blocks is empty %}
+        <section class="error">
+            <h2>Keine Inhalte gefunden</h2>
+            <p class="content-text">Diese Seite enthält keine Inhalte oder Plugin-Daten.</p>
+        </section>
+    {% endif %}
+
+    {% for block in blocks %}
+        <article class="content-block">
+
+            {% if block.headline %}
+                <h1 class="content-headline">{{ block.headline }}</h1>
+            {% endif %}
+
+            {% if block.text %}
+                <div class="content-text">{{ block.text|raw }}</div>
+            {% endif %}
+
+            {# FORMULAR MIT AUTOMAPPING #}
+            {% if block.config is defined and block.config.fields is defined %}
+                <section class="form-section">
+                    <form method="post" class="dynamic-form">
+
+                        {% for field in block.config.fields %}
+
+                            {% set label = field %}
+                            {% set type  =
+                                field == 'email'    ? 'email' :
+                                field == 'password' ? 'password' :
+                                field == 'agree'    ? 'checkbox' :
+                                'text'
+                            %}
+
+                            <div class="form-row">
+
+                                {% if type == 'checkbox' %}
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="{{ field }}"> Ich stimme zu
+                                    </label>
+                                {% else %}
+                                    <label for="{{ field }}">{{ label|capitalize }}</label>
+                                    <input id="{{ field }}"
+                                           type="{{ type }}"
+                                           name="{{ field }}"
+                                           placeholder="">
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                        <div class="form-actions">
+                            <button type="submit">Absenden</button>
+                        </div>
+
+                    </form>
+                </section>
+            {% endif %}
+
+        </article>
+    {% endfor %}
+</section>

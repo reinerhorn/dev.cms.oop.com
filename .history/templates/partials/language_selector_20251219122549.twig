@@ -1,0 +1,20 @@
+item.addEventListener("click", () => {
+  const lang = item.dataset.lang;
+
+  fetch("/ajax/set_language.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ language: lang })
+  })
+  .then(() => {
+    const path = window.location.pathname.split("/").filter(Boolean);
+
+    if (path[0] && /^[a-zA-Z-]{2,5}$/.test(path[0])) {
+      path[0] = lang;
+    } else {
+      path.unshift(lang);
+    }
+
+    window.location.href = "/" + path.join("/");
+  });
+});

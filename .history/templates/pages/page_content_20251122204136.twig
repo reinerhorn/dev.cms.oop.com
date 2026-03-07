@@ -1,0 +1,51 @@
+{% for block in blocks %}
+
+    {# ---------------- PLAINTEXT ---------------- #}
+    {% if block.type == 'plaintext' %}
+        <article class="content-block">
+
+            {% if block.headline is defined and block.headline|trim != '' %}
+                <h1 class="content-headline">{{ block.headline }}</h1>
+            {% endif %}
+
+            {% if block.text is defined and block.text|trim != '' %}
+                <div class="content-text">{{ block.text|raw }}</div>
+            {% endif %}
+
+        </article>
+    {% endif %}
+
+
+    {# ---------------- FORMULAR ---------------- #}
+    {% if block.type == 'formular' %}
+        <article class="content-block">
+
+            {% if block.headline|default('') != '' %}
+                <h1 class="content-headline">{{ block.headline }}</h1>
+            {% endif %}
+
+            {% if block.text|default('') != '' %}
+                <div class="content-text">{{ block.text|raw }}</div>
+            {% endif %}
+
+            <section class="form-section">
+                <form method="post" class="dynamic-form">
+
+                    {% for f in block.config.fields %}
+                        <div class="form-row">
+                            <label for="{{ f }}">{{ f|capitalize }}</label>
+                            <input id="{{ f }}" name="{{ f }}" type="text">
+                        </div>
+                    {% endfor %}
+
+                    <div class="form-actions">
+                        <button type="submit">Absenden</button>
+                    </div>
+
+                </form>
+            </section>
+
+        </article>
+    {% endif %}
+
+{% endfor %}

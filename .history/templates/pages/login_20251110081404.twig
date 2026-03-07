@@ -1,0 +1,29 @@
+{# templates/pages/login.twig #}
+{% extends "layout/base.twig" %}
+
+{% block content %}
+<div class="login-page">
+    {# Plaintext-Headline/Text (CMS-Inhalte) #}
+    {% if plugin_headline %}
+        <h1 class="content-headline">{{ plugin_headline }}</h1>
+    {% else %}
+        <h1 class="content-headline">Login</h1>
+    {% endif %}
+
+    {% if plugin_text %}
+        <div class="content-text">
+            {{ plugin_text|raw }}
+        </div>
+    {% endif %}
+
+    {# Plugin-Formular: kann sich auf plugin.* stützen #}
+    <div class="login-form">
+        <form method="post" action="">
+            <input type="email" name="email" value="{{ email|default('') }}" required>
+            <input type="password" name="password" required>
+            <input type="checkbox" name="agree" {% if agree %}checked{% endif %}> Ich stimme zu
+            <button type="submit">Einloggen</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

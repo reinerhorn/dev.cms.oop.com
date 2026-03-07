@@ -1,0 +1,30 @@
+{% set nav_id = 'generalNav' %}
+{% if navigation is not empty %}
+    {% for _item in navigation %}
+        {% if (_item.type|default('main')|lower) == 'main' and _item.css is defined and _item.css %}
+            {% set nav_id = _item.css|replace({'#':''}) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<nav id="{{ nav_id }}" class="main-nav" aria-label="Hauptnavigation">
+    {% if navigation is not empty %}
+        {% for item in navigation %}
+            {% if (item.type|default('main')|lower) == 'main' %}
+                <div id="{{ item.css|replace({'#':''}) }}" class="nav-item{% if item.active %} active{% endif %}">
+                    <a href="{{ item.url }}" class="{% if item.active %}marked{% endif %}">{{ item.title }}</a>
+
+                    {% if item.subpages is defined and item.subpages|length > 0 %}
+                        <div class="navigationDropDown">
+                            {% for sub in item.subpages %}
+                                <a href="{{ sub.url }}" class="{% if sub.active %}marked{% endif %}">{{ sub.title }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <p class="no-items">Keine Navigation verfügbar</p>
+    {% endif %}
+</nav>

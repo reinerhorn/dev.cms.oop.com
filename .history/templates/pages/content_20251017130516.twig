@@ -1,0 +1,22 @@
+{% if contents is defined and contents is not empty %}
+    <section class="page-content">
+        {% for label, blocks in contents %}
+            {% for block in blocks %}
+                {% if block.headline or block.text %}
+                    <article class="content-block">
+                        {% if block.headline %}
+                            <h2>{{ block.headline }}</h2>
+                        {% endif %}
+                        {% if block.text %}
+                            <div class="content-text">
+                                {{ block.text|raw }}
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </section>
+{% else %}
+    <p>Keine Inhalte gefunden.</p>
+{% endif %}

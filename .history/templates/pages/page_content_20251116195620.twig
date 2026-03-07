@@ -1,0 +1,23 @@
+<section class="page-content">
+    {# Support: entweder data.content_data (wenn Controller so liefert) oder content_data (direkt aus viewData) #}
+    {% set blocks = data.content_data is defined ? data.content_data : content_data %}
+    {% if blocks %}
+        {% for block in blocks %}
+            {# Nur anzeigen, wenn Headline oder Text vorhanden ist #}
+            {% if (block.headline is defined and block.headline|trim != '') or (block.text is defined and block.text|trim != '') %}
+                <article class="content-block">
+                    {% if block.headline is defined and block.headline|trim != '' %}
+                        <h1 class="content-headline">{{ block.headline }}</h1>
+                    {% endif %}
+                    {% if block.text is defined and block.text|trim != '' %}
+                        <div class="content-text">
+                            {{ block.text|raw }}
+                        </div>
+                    {% endif %}
+                </article>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {# bewusst kein Fallback-Text, Seite bleibt leer wenn keine Blöcke existieren #}
+    {% endif %}
+</section>
