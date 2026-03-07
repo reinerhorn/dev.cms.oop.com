@@ -78,17 +78,139 @@ Das CMS ist sofort einsetzbar. Hochladen, konfigurieren, loslegen.
 
 ## 📂 Projektstruktur (Beispiel)
 
-Sites/
-└── dev.cms-oop.com/
-    ├── index.php
-    ├── config/               ← enthält generelle App-Konfiguration
-    ├── function/             ← PHP-Funktionen / Klassen
-    ├── plugin/
-    ├── inc/
-    ├── css/
-    ├── ...
-    └── /.env/             ← geschützt, nur lokal eingebunden
-        └── conf/
-            └── h-d_config.php
+ dev.cms-oop.com/
+    ├──  Index.php        
+    ├──  init.php 
+	├──  CMSApp.php
+	├── .htaccess
+	├── .gitignore
+	├── robots.txt
+	├── README.md
+	├── README
+	├── /.env/ ← geschützt, unterordner eingebunden 
+	│	 	└── /conf/
+	│	 			├──	 h-d_config.php    Für den PHPMAULER conf	│	 			    
+                    └── cms_oop-config   Für die config.onc.php den ein binden
+	├── .vscode/    
+    │     └── settings.json.      
+	│ 	 
+	├── /ajax/   
+    │     └── ajax_header_upload.php
+	│ 	 
+	├── /assets/ 
+    │   └── css/
+    │        └── ui-components.css
+    │
+	├── /config/ 
+    │   	└── config.inc.php
+ 	│
+	├── /css/ 
+	│	 	├──	 admin.css
+	│ 	    ├──	 card.css
+	│ 	 	├──	 language_selector.css
+	│ 	 	├──	 navi.css
+	│ 	 	├──	 services.css
+	│ 		└── style.css
+    │         
+	├── /cache/
+    │    └── twig/
+    │   		 └──  leer
+	├── /class
+    │   ├── session.php   
+    │   ├── web_besucher.php 
+	│ 	 │  
+    │    ├── /helper/ 
+	│	 │		├──	 ButtonGenerator.php
+	│ 	 │      ├──	 IdGenerator.php
+	│ 	 │		├──	 PluginValidator.php
+	│ 	 │		└── SelectGenerator.php
+  	│    ├── /admin/ 
+	│	 │		├──	 admin_editor_handler.inc.php
+	│ 	 │      ├──	 CMSAdminSession.php.
+	│ 	 │		├──	 HeaderFooterManager.php
+	│ 	 │		└── HeaderUploadHandler.php│
+	│    │
+	│ 	 ├── /menber/ 
+	│	 │		├──	 MemberProfile
+	│ 	 │  	└── UserProfile.php	
+	│ 	 │  	│ 
+	│ 	 ├── /navi/ 
+	│ 	 │		└── navi.inc.php
+	│ 	 │	
+	│ 	 ├── /repository/
+	│ 	 │		└── ToggleFlagRepository.php
+	│	 │
+	│ 	 └── /security/ 
+	│	 		├──	 PageIntegrityChecker.php
+	│ 	    	└── UserRoleManager.php
+	│ 
+	├── /fonts/ 
+	│	 	├── greatvibes/
+	│		│		├──	 GreatVibes-Regular.ttf
+	│		│		└── GreatVibes-Regular.woff2
+	│		└── robotocondensed/	
+ 	│						├──	 RobotoCondensed-Bold.ttf
+	│		      			├──	 RobotoCondensed-Bold.woff2
+	│						└──  usw
+	├── /function/
+    │	 	├── /js/
+	│		│		├──	 chart.js
+	│		│		├──	 charts-loader.js
+	│		│		├──	 debug-toggle.js
+	│		│		└── language_selector.js
+	│		│
+	│		├── formular_generator.php	
+	│		├──	 getData.php
+	│		│──	 handle_page_editor_function.inc.php
+	│		├──	 handle_plaintext_editor_function.inc.php
+	│		├──	 language_selector.inc.php
+	│		└── post_toggle_flag.php
+	│ 
+	├── /images/
+	│		│ 	├── hd-logo.svg
+	│ 		│ 	└── hd-logo.webp
+	│ 		│ 
+	│   	├── /flaggen/
+	│		├── /icon/
+	│		├── /socialmedia/
+	│		├── /uploads/
+	│		└── usw.
+	│	 	 	
+	├── /inc/
+    │   ├── logout.log  
+    │   ├── session.php   
+    │   ├── web_besucher.php     
+    │   └── plugin_admin_roles.php		
+    │ 	   
+	├── /plugin/
+	│ 	 ├── admin_plugin/ 
+	│ 	 │         ├── plugin_admin_card_editor.php 
+	│ 	 │         ├── plugin_admin_footer_editor.php
+	│ 	 │         ├── plugin_admin_footer_images.php
+	│ 	 │         ├── plugin_admin_header_footer_editor.php 
+	│ 	 │         ├── plugin_admin_formular_editor.php
+	│ 	 │         ├── plugin_admin_page_editor.php 
+	│ 	 │         └── 	plugin_admin_roles.php
+	│ 	 │
+    │ 	 ├── /extra_plugin/
+	│ 	 ├── /plugin_cards  
+    │ 	 ├── /plugin_login
+    │ 	 ├──  /plugin_member 
+    │ 	 ├──  /plugin_shop 
+ 	│ 
+    ├── /templates/
+  	│    	├── debug_mode.tpl.php
+	│ 		│ 
+  	│    	├── /layout/
+	│    	│   ├──  base.twig        ← Grundlayout
+	│		│ 	├── header.twig      ← Header-Partial
+	│    	│   ├── footer.twig      ← Footer-Partial
+	│		│   └──  navigation.twig  ← Navigation
+	│    	└── /page/
+	│				├── start.twig       ← Startseite.   
+	│    			└── plugin_plaintext.twig
+	│ 
+	└──  /protected/  
+ 				 └── verify.php
 
 # dev.cms.oop.com
