@@ -2,7 +2,7 @@
 .DS_Store
 Thumbs.db
 
-# PHP-Spezifisch
+# PHP-spezifisch
 vendor/
 *.log
 *.cache
@@ -22,3 +22,11 @@ composer.lock
 
 # Sonstiges
 .env
+
+# Lokale History/Dev-Files (wie bei dir vorhanden)
+.dev/
+.history/
+
+# Cache und temporäre Dateien
+cache/
+var/
