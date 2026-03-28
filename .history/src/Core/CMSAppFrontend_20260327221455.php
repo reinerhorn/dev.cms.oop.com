@@ -53,7 +53,7 @@ final class CMSAppFrontend
             $layout = $layoutController->getLayout();
 
             // 5) Content laden
-            $contentController = new ContentController($db, $language);
+           $contentController = new ContentController($db, $language);
             $pagePayload = $contentController->getPageContent($pageId);
             $contentData = $pagePayload['content_data'] ?? []; 
 
@@ -65,7 +65,7 @@ final class CMSAppFrontend
                 }
                 $renderMethod = 'render' . str_replace(' ', '', ucwords(str_replace('_', ' ', $block['type'])));
                 if (method_exists(__CLASS__, $renderMethod)) {
-                    $contentHtml .= forward_static_call([__CLASS__, $renderMethod], $block);
+                    $contentHtml .= self::$renderMethod($block);
                 } else {
                     $contentHtml .= self::renderPlaintext($block);
                 }

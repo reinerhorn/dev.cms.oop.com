@@ -1,0 +1,32 @@
+# Systemdateien
+.DS_Store
+Thumbs.db
+
+# PHP-spezifisch
+vendor/
+*.log
+*.cache
+*.tmp
+
+# Editor- und IDE-Dateien
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node.js (falls npm verwendet wird)
+node_modules/
+
+# Composer
+composer.lock
+
+# Sonstiges
+.env
+
+# Lokale History/Dev-Files (wie bei dir vorhanden)
+.dev/
+.history/
+
+# Cache und temporäre Dateien
+cache/
+var/

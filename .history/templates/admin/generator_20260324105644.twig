@@ -1,0 +1,38 @@
+<h1>Formular Generator</h1>
+
+<table class="table table-bordered">
+
+    <tr>
+        <th>Tabelle</th>
+        <th>Aktion</th>
+    </tr>
+
+    {% for table in tables %}
+
+        <tr>
+
+            <td>{{ table }}</td>
+
+            <td>
+
+              <form method="post">
+
+                    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+
+                    <input type="hidden" name="form_id" value="generator_create_form">
+
+                    <input type="hidden" name="table" value="{{ table }}">
+
+                    <button type="submit" class="btn btn-primary">
+                        Editor erzeugen
+                    </button>
+
+                </form>
+
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+</table>

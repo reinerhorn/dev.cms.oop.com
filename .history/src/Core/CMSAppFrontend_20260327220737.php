@@ -7,6 +7,7 @@ namespace CMS\Core;
 use RuntimeException;
 use CMS\Security\Exception\ForbiddenException;
 use Twig\Environment;
+use Twig\TwigFunction;
 use CMS\Core\Controller\Layout\LayoutController;
 use CMS\Core\Controller\Layout\ContentController;
 
@@ -55,7 +56,7 @@ final class CMSAppFrontend
             // 5) Content laden
             $contentController = new ContentController($db, $language);
             $pagePayload = $contentController->getPageContent($pageId);
-            $contentData = $pagePayload['content_data'] ?? []; 
+            $contentData = $pagePayload['content_data'] ?? [];
 
             // 6) Content HTML bauen (modular, datengetrieben)
             $contentHtml = '';
@@ -65,7 +66,7 @@ final class CMSAppFrontend
                 }
                 $renderMethod = 'render' . str_replace(' ', '', ucwords(str_replace('_', ' ', $block['type'])));
                 if (method_exists(__CLASS__, $renderMethod)) {
-                    $contentHtml .= forward_static_call([__CLASS__, $renderMethod], $block);
+                    $contentHtml .= self::$renderMethod($block);
                 } else {
                     $contentHtml .= self::renderPlaintext($block);
                 }

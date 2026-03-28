@@ -71,32 +71,6 @@ class ContentController
         $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
 
-        $loaderMap = [];
-
-        foreach ($rows as $row) {
-            $table = trim($row['table_name'] ?? '');
-            $pluginName = strtolower(trim($row['plugin_name'] ?? ''));
-
-            if (!$table || !$pluginName) {
-                continue;
-            }
-
-            $methodName = 'load' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginName))) . 'Block';
-
-            if (method_exists($this, $methodName)) {
-                // Formular braucht pluginName zusätzlich
-                if ($methodName === 'loadFormularBlock') {
-                    $loaderMap[$table] = function ($uuid, $idx) use ($methodName, $pluginName) {
-                        return $this->$methodName($uuid, $idx, $pluginName);
-                    };
-                } else {
-                    $loaderMap[$table] = function ($uuid, $idx) use ($methodName) {
-                        return $this->$methodName($uuid, $idx);
-                    };
-                }
-            }
-        }
-
         $blocks = [];
 
         foreach ($rows as $row) {
@@ -110,15 +84,27 @@ class ContentController
                 continue;
             }
 
+            $loaderMap = [];
+            $res = $this->db->query("SELECT table_name, plugin_name FROM plugin WHERE is_active = 1");
+            while ($rowLoader = $res->fetch_assoc()) {
+                $tableLoader = $rowLoader['table_name'];
+                $pluginLoader = $rowLoader['plugin_name'];
+
+                $methodName = 'load' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginLoader))) . 'Block';
+                if (method_exists($this, $methodName)) {
+                    $loaderMap[$tableLoader] = fn($uuid, $idx, $pluginName) => $this->$methodName($uuid, $idx, $pluginName);
+                }
+            }
+
             if (isset($loaderMap[$table])) {
-                $block = $loaderMap[$table]($uuid, $idx);
+                $block = $loaderMap[$table]($uuid, $idx, $pluginName);
                 if ($block !== null) {
                     $blocks[] = $block;
                 }
                 continue;
             }
 
-            // Dynamisch Plugin-Klasse ermitteln (Fallback)
+            // Dynamisch Plugin-Klasse ermitteln
             $className = '\\CMS\\Plugin\\Plugin' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginName)));
 
             if (!class_exists($className)) {
@@ -139,14 +125,28 @@ class ContentController
                 $block = $className::loadByUuid($this->db, $uuid, $this->language);
             }
 
-            if (!empty($block)) {
-                $block['idx'] = $idx;
-                $blocks[] = $block;
-            } else {
+            if (empty($block)) {
                 error_log("Plugin '{$pluginName}' content not found for UUID '{$uuid}'");
+                $blocks[] = [
+                    'type'     => $pluginName,
+                    'idx'      => $idx,
+                    'uuid'     => $uuid,
+                    'template' => "pages/{$pluginName}.twig",
+                ];
+                continue;
             }
+
+            if (isset($block['config'])) {
+                error_log("Plugin '{$pluginName}' config loaded: " . print_r($block['config'], true));
+            } else {
+                error_log("Plugin '{$pluginName}' config not set");
+            }
+
+            $block['idx'] = $idx;
+            $blocks[] = $block;
         }
 
+        // Sicherstellen, dass die Blöcke nach idx sortiert sind
         usort($blocks, function ($a, $b) {
             return ($a['idx'] ?? 0) <=> ($b['idx'] ?? 0);
         });

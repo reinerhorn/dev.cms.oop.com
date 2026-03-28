@@ -1,0 +1,37 @@
+<h1>Formular Generator</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Tabelle</th>
+            <th>Aktion</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    {% for table in tables %}
+
+        <tr>
+            <td>{{ table }}</td>
+
+            <td>
+
+                <form method="post" action="/admin/generator/create">
+
+                    <input type="hidden" name="table" value="{{ table }}">
+
+                    <button type="submit">
+                        Editor erzeugen
+                    </button>
+
+                </form>
+
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+</table>

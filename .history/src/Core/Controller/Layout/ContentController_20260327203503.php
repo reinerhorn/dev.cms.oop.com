@@ -72,28 +72,14 @@ class ContentController
         $stmt->close();
 
         $loaderMap = [];
-
-        foreach ($rows as $row) {
-            $table = trim($row['table_name'] ?? '');
-            $pluginName = strtolower(trim($row['plugin_name'] ?? ''));
-
-            if (!$table || !$pluginName) {
-                continue;
-            }
-
-            $methodName = 'load' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginName))) . 'Block';
-
+        $res = $this->db->query("SELECT table_name, plugin_name FROM plugin WHERE is_active = 1");
+        while ($rowLoader = $res->fetch_assoc()) {
+            $tableLoader = $rowLoader['table_name'];
+            $pluginLoader = strtolower($rowLoader['plugin_name']);
+            $methodName = 'load' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginLoader))) . 'Block';
             if (method_exists($this, $methodName)) {
-                // Formular braucht pluginName zusätzlich
-                if ($methodName === 'loadFormularBlock') {
-                    $loaderMap[$table] = function ($uuid, $idx) use ($methodName, $pluginName) {
-                        return $this->$methodName($uuid, $idx, $pluginName);
-                    };
-                } else {
-                    $loaderMap[$table] = function ($uuid, $idx) use ($methodName) {
-                        return $this->$methodName($uuid, $idx);
-                    };
-                }
+                // Closure nur mit UUID und idx, Plugin-Name ist schon im Block
+                $loaderMap[$tableLoader] = fn($uuid, $idx) => $this->$methodName($uuid, $idx);
             }
         }
 

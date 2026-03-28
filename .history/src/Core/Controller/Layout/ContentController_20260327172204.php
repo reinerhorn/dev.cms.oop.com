@@ -71,32 +71,6 @@ class ContentController
         $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
 
-        $loaderMap = [];
-
-        foreach ($rows as $row) {
-            $table = trim($row['table_name'] ?? '');
-            $pluginName = strtolower(trim($row['plugin_name'] ?? ''));
-
-            if (!$table || !$pluginName) {
-                continue;
-            }
-
-            $methodName = 'load' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginName))) . 'Block';
-
-            if (method_exists($this, $methodName)) {
-                // Formular braucht pluginName zusätzlich
-                if ($methodName === 'loadFormularBlock') {
-                    $loaderMap[$table] = function ($uuid, $idx) use ($methodName, $pluginName) {
-                        return $this->$methodName($uuid, $idx, $pluginName);
-                    };
-                } else {
-                    $loaderMap[$table] = function ($uuid, $idx) use ($methodName) {
-                        return $this->$methodName($uuid, $idx);
-                    };
-                }
-            }
-        }
-
         $blocks = [];
 
         foreach ($rows as $row) {
@@ -110,46 +84,26 @@ class ContentController
                 continue;
             }
 
-            if (isset($loaderMap[$table])) {
-                $block = $loaderMap[$table]($uuid, $idx);
-                if ($block !== null) {
-                    $blocks[] = $block;
-                }
-                continue;
-            }
+            switch ($table) {
+                case 'p_content_plaintext':
+                    $blocks[] = $this->loadPlaintextBlock($uuid, $idx);
+                    break;
 
-            // Dynamisch Plugin-Klasse ermitteln (Fallback)
-            $className = '\\CMS\\Plugin\\Plugin' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginName)));
+                case 'p_content_formular':
+                    $formBlock = $this->loadFormularBlock($uuid, $idx, $pluginName);
+                    if ($formBlock !== null) {
+                        $blocks[] = $formBlock;
+                    }
+                    break;
 
-            if (!class_exists($className)) {
-                error_log("Unknown plugin class '{$className}' for plugin '{$pluginName}', table '{$table}', UUID '{$uuid}'");
-                $blocks[] = [
-                    'type'     => $pluginName,
-                    'idx'      => $idx,
-                    'uuid'     => $uuid,
-                    'template' => "pages/{$pluginName}.twig",
-                ];
-                continue;
-            }
-
-            $block = null;
-            if (method_exists($className, 'loadContentByLanguage')) {
-                $block = $className::loadContentByLanguage($this->db, $uuid, $this->language);
-            } elseif (method_exists($className, 'loadByUuid')) {
-                $block = $className::loadByUuid($this->db, $uuid, $this->language);
-            }
-
-            if (!empty($block)) {
-                $block['idx'] = $idx;
-                $blocks[] = $block;
-            } else {
-                error_log("Plugin '{$pluginName}' content not found for UUID '{$uuid}'");
+                default:
+                    $dynamicBlock = $this->loadDynamicPluginBlock($pluginName, $table, $uuid, $idx);
+                    if ($dynamicBlock !== null) {
+                        $blocks[] = $dynamicBlock;
+                    }
+                    break;
             }
         }
-
-        usort($blocks, function ($a, $b) {
-            return ($a['idx'] ?? 0) <=> ($b['idx'] ?? 0);
-        });
 
         return $blocks;
     }
@@ -236,6 +190,51 @@ class ContentController
         }
         $block['buttons'] = $buttons;
         $block['form_id'] = $formType;
+
+        return $block;
+    }
+
+    /**
+     * Lädt einen dynamischen Plugin-Content-Block
+     */
+    private function loadDynamicPluginBlock(string $pluginName, string $table, string $uuid, int $idx): ?array
+    {
+        $className = '\\CMS\\Plugin\\Plugin' . str_replace(' ', '', ucwords(str_replace('_', ' ', $pluginName)));
+
+        if (!class_exists($className)) {
+            error_log("Unknown plugin class '{$className}' for plugin '{$pluginName}', table '{$table}', UUID '{$uuid}'");
+            return [
+                'type'     => $pluginName,
+                'idx'      => $idx,
+                'uuid'     => $uuid,
+                'template' => "pages/{$pluginName}.twig",
+            ];
+        }
+
+        $block = null;
+        if (method_exists($className, 'loadContentByLanguage')) {
+            $block = $className::loadContentByLanguage($this->db, $uuid, $this->language);
+        } elseif (method_exists($className, 'loadByUuid')) {
+            $block = $className::loadByUuid($this->db, $uuid, $this->language);
+        }
+
+        if (empty($block)) {
+            error_log("Plugin '{$pluginName}' content not found for UUID '{$uuid}'");
+            return [
+                'type'     => $pluginName,
+                'idx'      => $idx,
+                'uuid'     => $uuid,
+                'template' => "pages/{$pluginName}.twig",
+            ];
+        }
+
+        if (isset($block['config'])) {
+            error_log("Plugin '{$pluginName}' config loaded: " . print_r($block['config'], true));
+        } else {
+            error_log("Plugin '{$pluginName}' config not set");
+        }
+
+        $block['idx'] = $idx;
 
         return $block;
     }

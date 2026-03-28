@@ -1,0 +1,272 @@
+{% set config      = block.config is iterable ? block.config : {} %}
+{% set fields      = config.fields ?? [] %}
+{% set form_class  = block.form_class ?? config.form_class ?? null %}
+
+<div class="admin-form-wrapper">
+ 
+{# Formular-Feedback (zentral aus CMSAppFrontend) #}
+{% if form_result is defined %}
+    {% if form_result.message %}
+        <div class="form-message {{ form_result.status == 'ok' ? 'form-success' : 'form-error' }}">
+            {{ form_result.message }}
+        </div>
+    {% endif %}
+
+    {% if form_result.errors is defined and form_result.errors is iterable and form_result.errors|length > 0 %}
+        <ul class="form-errors">
+            {% for error in form_result.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endif %}
+
+<form
+    method="{{ block.form.method|default('post') }}"
+    data-form
+    {% if form_class is not empty %}class="{{ form_class }}"{% endif %}
+>
+    {% if block.form.method|default('post') == 'post' %}
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+    {% endif %}
+
+    {# eindeutige Formular-ID zur Plugin-Isolation #}
+    {% if block.form_id is defined %}
+        <input type="hidden" name="form_id" value="{{ block.form_id }}">
+    {% endif %}
+
+    {# vollständige Formular-Konfiguration an den EntityEditorHandler senden #}
+    {% if block.config is defined %}
+        <input
+            type="hidden"
+            name="_form_config_json"
+            value="{{ block.config|json_encode|e('html_attr') }}"
+        >
+    {% endif %}
+
+    {% if block.headline %}
+        <h1>{{ block.headline }}</h1>
+    {% endif %}
+
+    {% if block.text %}
+        <div data-form-text>
+            {{ block.text|raw }}
+        </div>
+    {% endif %}
+{% for field in fields %}
+    {% set type = field.type|default('text') %}
+    {% set field_name = field.name|default('') %}
+    {% set field_id   = field_name %}
+    {% set field_label =
+        field.label is defined
+            ? (field.label.text|default(field.label))
+            : field_name
+    %}
+
+    {# ================= CHECKBOX ================= #}
+    {% if type == 'checkbox' %}
+        <div class="checkbox-group">
+            <input type="hidden" name="{{ field_name }}" value="0">
+            <label>
+                <input
+                    type="checkbox"
+                    name="{{ field_name }}"
+                    value="1"
+                    {% if field.value is defined and field.value == 1 %}
+                        checked
+                    {% endif %}
+                    {% if field.required %}required{% endif %}
+                >
+                {{ field_label }}
+            </label>
+        </div>
+
+    {# ================= TOGGLE ================= #}
+    {% elseif type == 'toggle' %}
+        <div class="form-group toggle-group">
+            <input type="hidden" name="{{ field_name }}" value="0">
+
+            <label class="toggle">
+                <input
+                    type="checkbox"
+                    name="{{ field_name }}"
+                    value="1"
+                    {% if field.value is defined and field.value == 1 %}
+                        checked
+                    {% endif %}
+                >
+                <span class="slider"></span>
+                {{ field_label }}
+            </label>
+        </div>
+
+    {# ================= TEXTAREA ================= #}
+    {% elseif type == 'textarea' %}
+        <div class="form-group">
+            <textarea
+                name="{{ field_name }}"
+                placeholder="{{ field_label }}"
+                {% if field.required %}required{% endif %}
+            >{{ field.value|default('') }}</textarea>
+        </div>
+
+    {# ================= JSON ================= #}
+    {% elseif type == 'json' %}
+        <div class="form-group">
+            <label>{{ field_label }}</label>
+            <textarea
+                name="{{ field_name }}"
+                class="json-editor"
+            >{{ field.value|default('{}') }}</textarea>
+        </div>
+
+    {# ================= SELECT ================= #}
+    {% elseif type == 'select' %}
+        <div class="form-group">
+            <label for="{{ field_id }}">{{ field_label }}</label>
+
+            {% set current_value = (field.value is defined and field.value is not null)
+                ? (field.value ~ '')
+                : '' %}
+
+            <select
+                id="{{ field_id }}"
+                name="{{ field_name }}"
+                {% if field_name == 'load_id' %}
+                    data-redirect-on-change="1"
+                {% endif %}
+                {% if field.required %}required{% endif %}
+            >
+
+                <option value=""
+                    {% if current_value == '' %}selected{% endif %}>
+                    -- neu --
+                </option>
+
+                {% if field.options is defined %}
+                    {% for option in field.options %}
+                        {% set option_value = option.value ~ '' %}
+                        <option value="{{ option_value }}"
+                            {% if option_value == current_value %}selected{% endif %}>
+                            {{ option.label }}
+                        </option>
+                    {% endfor %}
+                {% endif %}
+
+            </select>
+        </div>
+
+    {# ================= IMAGE ================= #}
+    {% elseif type == 'image' %}
+        <div class="form-group">
+            <label>{{ field_label }}</label>
+
+            {% if field.value %}
+                <div class="image-preview">
+                    <img src="{{ field.value }}" style="max-width:150px;">
+                </div>
+            {% endif %}
+
+            <input type="file" name="{{ field_name }}">
+        </div>
+
+    {# ================= DATE ================= #}
+    {% elseif type == 'date' %}
+        <div class="form-group">
+            <input
+                type="date"
+                name="{{ field_name }}"
+                value="{{ field.value|default('') }}"
+                {% if field.required %}required{% endif %}
+            >
+            <label>{{ field_label }}</label>
+        </div>
+
+    {# ================= DATETIME ================= #}
+    {% elseif type == 'datetime' %}
+        <div class="form-group">
+            <input
+                type="datetime-local"
+                name="{{ field_name }}"
+                value="{{ field.value|default('') }}"
+            >
+            <label>{{ field_label }}</label>
+        </div>
+
+    {# ================= PASSWORD ================= #}
+    {% elseif type == 'password' %}
+        <div class="form-group">
+            <input
+                type="password"
+                name="{{ field_name }}"
+                placeholder=" "
+            >
+            <label>{{ field_label }}</label>
+        </div>
+
+    {# ================= EMAIL ================= #}
+    {% elseif type == 'email' %}
+        <div class="form-group">
+            <input
+                type="email"
+                name="{{ field_name }}"
+                value="{{ field.value|default('') }}"
+                placeholder=" "
+            >
+            <label>{{ field_label }}</label>
+        </div>
+
+    {# ================= URL ================= #}
+    {% elseif type == 'url' %}
+        <div class="form-group">
+            <input
+                type="url"
+                name="{{ field_name }}"
+                value="{{ field.value|default('') }}"
+                placeholder=" "
+            >
+            <label>{{ field_label }}</label>
+        </div>
+
+    {# ================= WYSIWYG ================= #}
+    {% elseif type == 'wysiwyg' %}
+        <div class="form-group">
+            <label>{{ field_label }}</label>
+            <textarea
+                name="{{ field_name }}"
+                class="wysiwyg-editor"
+            >{{ field.value|default('') }}</textarea>
+        </div>
+
+    {# ================= DEFAULT ================= #}
+    {% else %}
+        <div class="form-group">
+            <input
+                type="{{ type }}"
+                id="{{ field_id }}"
+                name="{{ field_name }}"
+                value="{{ field.value|default('') }}"
+                placeholder=" "
+                {% if field.required %}required{% endif %}
+            >
+            <label for="{{ field_id }}">{{ field_label }}</label>
+        </div>
+    {% endif %}
+{% endfor %}
+
+    {% if block.buttons is defined and block.buttons is iterable and block.buttons|length > 0 %}
+        <div class="form-actions">
+            {% for button in block.buttons %}
+                <button
+                    type="{{ button.button_type }}"
+                    class="btn btn-{{ button.variant }}"
+                    {% if button.button_action %}name="button_action" value="{{ button.button_action }}"{% endif %}
+                    {% if button.confirm_required %}data-confirm="1"{% endif %}
+                >
+                    {{ t(button.label_key) }}
+                </button>
+            {% endfor %}
+        </div>
+    {% endif %}
+</form>
+</div>

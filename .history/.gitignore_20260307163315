@@ -1,0 +1,51 @@
+# ---------------------------
+# Systemdateien
+# ---------------------------
+.DS_Store
+Thumbs.db
+
+# ---------------------------
+# Logs / Cache / Temp
+# ---------------------------
+*.log
+*.cache
+*.tmp
+cache/
+
+# ---------------------------
+# Composer
+# ---------------------------
+vendor/
+
+# composer.lock nur ignorieren wenn Library
+# für Projekte normalerweise committen
+# composer.lock
+
+# ---------------------------
+# Environment
+# ---------------------------
+.env
+
+# ---------------------------
+# IDE / Editor
+# ---------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---------------------------
+# Node (falls später nötig)
+# ---------------------------
+node_modules/
+
+# ---------------------------
+# History / Backup
+# ---------------------------
+.history/
+
+# ---------------------------
+# macOS
+# ---------------------------
+.AppleDouble
+.LSOverride
