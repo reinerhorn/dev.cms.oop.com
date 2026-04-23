@@ -1,0 +1,46 @@
+<header class="{{ header.css|default('header') }}">
+    <div class="header-top">
+
+        {# ----------------------------
+           LINKS → Logo(s)
+           ---------------------------- #}
+        <div class="header-left">
+            {% if header.images is defined and header.images is iterable %}
+                {% for image in header.images %}
+                    <a href="{{ image.link_url|default('/') }}">
+                        <img
+                            class="logo"
+                            src="{{ asset_path }}{{ image.image_url }}"
+                            alt="{{ image.alt_text|default('Logo') }}"
+                        >
+                    </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {# ----------------------------
+           MITTE → Text aus Translation
+           ---------------------------- #}
+        <div class="header-center">
+            <span class="companyname">
+                {% if header.headline %}
+                    {{ header.headline }}
+                {% endif %}
+            </span>
+        </div>
+
+        {# ----------------------------
+           RECHTS → Language Switcher
+           ---------------------------- #}
+        <div class="header-right">
+            {% include 'partials/language_selector.twig' %}
+        </div>
+
+    </div>
+
+    {# DEBUG (optional) #}
+    {% if debug is defined and debug %}
+        <!-- HEADER ROLE: {{ header.role|default(0) }} -->
+        <!-- HEADER CSS: {{ header.css|default('header') }} -->
+    {% endif %}
+</header>

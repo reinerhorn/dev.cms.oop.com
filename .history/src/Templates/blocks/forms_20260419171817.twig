@@ -1,0 +1,172 @@
+{% if t is not defined %}
+    {% macro t(key) %}{{ key }}{% endmacro %}
+    {% import _self as i18n %}
+{% endif %}
+{% set config      = block.config is iterable ? block.config : {} %}
+{% set fields      = config.fields ?? [] %}
+{% set form_class  = block.form_class ?? config.form_class ?? null %}
+
+<div class="admin-form-wrapper">
+ 
+{# Formular-Feedback (zentral aus CMSAppFrontend) #}
+{% if form_result is defined %}
+    {% if form_result.message %}
+        <div class="form-message {{ form_result.status == 'ok' ? 'form-success' : 'form-error' }}">
+            {{ form_result.message }}
+        </div>
+    {% endif %}
+
+    {% if form_result.errors is defined and form_result.errors is iterable and form_result.errors|length > 0 %}
+        <ul class="form-errors">
+            {% for error in form_result.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endif %}
+
+<form
+    method="{{ config.method|default('post') }}"
+    data-form
+    {% if form_class is not empty %}class="{{ form_class }}"{% endif %}
+>
+   
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+    
+
+    {# eindeutige Formular-ID zur Plugin-Isolation #}
+    {% if config.form_id is defined %}
+        <input type="hidden" name="form_id" value="{{ config.form_id }}">
+    {% endif %}
+
+    {% if block.headline %}
+        <h1>{{ block.headline }}</h1>
+    {% endif %}
+
+    {% if block.text %}
+        <div data-form-text>
+            {{ block.text|raw }}
+        </div>
+    {% endif %}
+    <pre>DEBUG FIELDS: {{ fields|length }}</pre>
+
+    {% for field in fields %}
+        {% set type = field.type|default('text') %}
+        {% set field_name = field.name|default('') %}
+        {% set field_id   = field_name %}
+        {% set field_label = field.label is iterable 
+            ? (field.label.text|default(field_name)) 
+            : (field.label|default(field_name)) %}
+
+    {% if type == 'checkbox' %}
+        <div class="checkbox-group">
+            <input type="hidden" name="{{ field_name }}" value="0">
+            <label>
+                <input
+                    type="checkbox"
+                    name="{{ field_name }}"
+                    value="1"
+                    {% if field.value is defined and field.value == 1 %}
+                        checked
+                    {% endif %}
+                    {% if field.required %}required{% endif %}
+                >
+                {{ field_label }}
+            </label>
+        </div>
+
+    {% elseif type == 'textarea' %}
+            <textarea
+                name="{{ field_name }}"
+                placeholder="{{ field_label }}"
+                {% if field.required %}required{% endif %}
+            >{{ field.value|default('') }}</textarea>
+
+        {% elseif type == 'select' %}
+            <div class="form-group">
+                <label for="{{ field_id }}">{{ field_label }}</label>
+
+                {# aktuelle Auswahl sauber und typsicher bestimmen #}
+                {% set current_value = (field.value is defined and field.value is not null) 
+                    ? (field.value ~ '') 
+                    : '' %}
+ 
+                <select
+                    id="{{ field_id }}"
+                    name="{{ field_name }}"
+                    {% if field_name == 'load_id' %}
+                        data-redirect-on-change="1"
+                    {% endif %}
+                    {% if field.required %}required{% endif %}
+                >
+
+                    <option value=""
+                        {% if current_value == '' %}selected="selected"{% endif %}>
+                        -- neu --
+                    </option>
+
+                    {% if field.options is defined and field.options is iterable %}
+                        {% for option in field.options %}
+                            {% set option_value = option.value ~ '' %}
+                            <option value="{{ option_value }}"
+                                {% if option_value == current_value %}selected="selected"{% endif %}>
+                                {{ option.label }}
+                            </option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+
+        {% else %}
+            <div class="form-group">
+                <input
+                    type="{{ type }}"
+                    id="{{ field_id }}"
+                    name="{{ field_name }}"
+                    value="{{ field.value|default('') }}"
+                    placeholder=" "
+                    {% if field.required %}required{% endif %}
+                >
+                <label for="{{ field_id }}">{{ field_label }}</label>
+            </div>
+        {% endif %}
+    {% endfor %}
+  
+    {% if block.buttons is defined and block.buttons is iterable and block.buttons|length > 0 %}
+        <div class="form-actions">
+            {% for button in block.buttons %}
+                <button
+                    type="{{ button.button_type }}"
+                    class="btn btn-{{ button.variant }}"
+                    {% if button.action %}name="action" value="{{ button.action }}"{% endif %}
+                 
+                    {% if button.confirm_required %}data-confirm="1"{% endif %}
+                >
+                    {{ button.label_key }}
+                </button>
+            {% endfor %}
+        </div>
+    {% endif %}
+</form>
+</div>
+<script>
+
+document.querySelectorAll('form[data-form]').forEach(form => {
+
+    form.addEventListener('submit', function(e) {
+
+        const formData = new FormData(form);
+
+        console.log('--- FORM SUBMIT DEBUG ---');
+
+        for (let [key, value] of formData.entries()) {
+
+            console.log(key + ':', value);
+
+        }
+
+    });
+
+});
+
+</script>

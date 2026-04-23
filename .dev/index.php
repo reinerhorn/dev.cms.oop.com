@@ -1,6 +1,6 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . "/CMSApp.php";
-require_once $_SERVER['DOCUMENT_ROOT'] . "/init.php";
+//require_once $_SERVER['DOCUMENT_ROOT'] . "/init.php";
 #echo "🔍 CMSApp geladen aus: " . realpath($_SERVER['DOCUMENT_ROOT'] . "/CMSApp.php") . "<br>";
 if (isset($_GET['lang'])) {
     CMSApp::setLanguage($_GET['lang']);
