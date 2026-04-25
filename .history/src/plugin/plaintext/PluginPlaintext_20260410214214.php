@@ -5,7 +5,7 @@ use CMS\Application\Interface\HandlerInterface;
 use mysqli;
 use Throwable;
 
-class PluginPlaintext implements HandlerInterFace
+class PluginPlaintext implements HandlerIntergace
 {
 
     public static function loadByUuid(mysqli $db, string $pluginContentUuid, string $language): array
