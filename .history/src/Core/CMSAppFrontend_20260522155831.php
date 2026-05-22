@@ -7,7 +7,6 @@ namespace CMS\Core;
 use RuntimeException;
 use CMS\Security\Exception\ForbiddenException;
 use Twig\Environment;
-use Twig\TwigFunction;
 use CMS\Core\Controller\Layout\LayoutController;
 use CMS\Core\Controller\Layout\ContentController;
 
@@ -57,19 +56,36 @@ final class CMSAppFrontend
             $contentController = new ContentController($db, $language);
             $pagePayload = $contentController->getPageContent($pageId);
             $contentData = $pagePayload['content_data'] ?? [];
-
+            error_log('CONTENT DATA: ' . print_r($contentData, true));
             // 6) Content HTML bauen (modular, datengetrieben)
             $contentHtml = '';
-            foreach ($contentData as $block) {
-                if (!isset($block['type'])) {
+
+            foreach ($contentData as $idx => $block) {
+
+                if (!isset($block['plugin_key'])) {
+                    error_log('Missing plugin_key at idx=' . $idx);
                     continue;
                 }
-                $renderMethod = 'render' . str_replace(' ', '', ucwords(str_replace('_', ' ', $block['type'])));
-                if (method_exists(__CLASS__, $renderMethod)) {
-                    $contentHtml .= self::$renderMethod($block);
-                } else {
-                    $contentHtml .= self::renderPlaintext($block);
+
+                $pluginKey = strtolower(trim($block['plugin_key'] ?? ''));
+                $template = 'blocks/' . $pluginKey . '.twig';
+
+                if (!$twig->getLoader()->exists($template)) {
+                    error_log("Template not found for plugin_key '{$pluginKey}', fallback to plaintext");
+                    $template = 'blocks/plaintext.twig';
                 }
+
+                error_log('RENDER BLOCK: ' . $pluginKey);
+
+                $contentHtml .= $twig->render($template, [
+                    'block'   => $block,
+                    'session' => $_SESSION ?? [],
+                    'auth'    => [
+                        'logged_in' => !empty($_SESSION['user_id']),
+                        'user_id'   => $_SESSION['user_id'] ?? null,
+                        'role_id'   => $_SESSION['role_id'] ?? 'guest-role-000',
+                    ],
+                ]);
             }
 
             // 7) View-Daten zusammenstellen
@@ -99,7 +115,6 @@ final class CMSAppFrontend
             unset($_SESSION['form_result']);
 
             return $twig->render('layout/base.twig', $viewData);
-
         } catch (ForbiddenException $e) {
             http_response_code(403);
             return $twig->render('errors/403.twig');
@@ -165,4 +180,4 @@ final class CMSAppFrontend
         if ($res) while ($row = $res->fetch_assoc()) $out[] = $row;
         return $out;
     }
-} 
+}

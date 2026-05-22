@@ -60,34 +60,32 @@ final class CMSAppFrontend
             // 6) Content HTML bauen (modular, datengetrieben)
             $contentHtml = '';
 
-            foreach ($contentData as $idx => $blocks) {
-                foreach ($blocks as $block) {
+            foreach ($contentData as $idx => $block) {
 
-                    if (!isset($block['plugin_key'])) {
-                        error_log('Missing plugin_key at idx=' . $idx);
-                        continue;
-                    }
-
-                    $pluginKey = strtolower(trim($block['plugin_key'] ?? ''));
-                    $template = 'blocks/' . $pluginKey . '.twig';
-
-                    if (!$twig->getLoader()->exists($template)) {
-                        error_log("Template not found for plugin_key '{$pluginKey}', fallback to plaintext");
-                        $template = 'blocks/plaintext.twig';
-                    }
-
-                    error_log('RENDER BLOCK: ' . $pluginKey);
-
-                    $contentHtml .= $twig->render($template, [
-                        'block'   => $block,
-                        'session' => $_SESSION ?? [],
-                        'auth'    => [
-                            'logged_in' => !empty($_SESSION['user_id']),
-                            'user_id'   => $_SESSION['user_id'] ?? null,
-                            'role_id'   => $_SESSION['role_id'] ?? 'guest-role-000',
-                        ],
-                    ]);
+                if (!isset($block['plugin_key'])) {
+                    error_log('Missing plugin_key at idx=' . $idx);
+                    continue;
                 }
+
+                $pluginKey = strtolower(trim($block['plugin_key'] ?? ''));
+                $template = 'blocks/' . $pluginKey . '.twig';
+
+                if (!$twig->getLoader()->exists($template)) {
+                    error_log("Template not found for plugin_key '{$pluginKey}', fallback to plaintext");
+                    $template = 'blocks/plaintext.twig';
+                }
+
+                error_log('RENDER BLOCK: ' . $pluginKey);
+
+                $contentHtml .= $twig->render($template, [
+                    'block'   => $block,
+                    'session' => $_SESSION ?? [],
+                    'auth'    => [
+                        'logged_in' => !empty($_SESSION['user_id']),
+                        'user_id'   => $_SESSION['user_id'] ?? null,
+                        'role_id'   => $_SESSION['role_id'] ?? 'guest-role-000',
+                    ],
+                ]);
             }
 
             // 7) View-Daten zusammenstellen
