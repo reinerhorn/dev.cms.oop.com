@@ -35,15 +35,32 @@ CMSApp::init();
 // 🚨 CENTRAL POST DISPATCH
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
-    $formResult = [
-        'success' => true,
-        'redirect' => $_SERVER['HTTP_REFERER'] ?? '/'
-    ];
+    error_log('POST REQUEST DETECTED');
+    error_log('RAW POST: ' . print_r($_POST, true));
 
-    $_SESSION['form_result'] = $formResult;
+    try {
 
-    header('Location: ' . $formResult['redirect']);
-    exit;
+        $dispatcher = new \CMS\Application\FormAction\FormActionDispatcher(
+            CMSApp::getDb(),
+            CMSApp::getAccessResolver()
+        );
+
+        $dispatcher->dispatch($_POST, []);
+
+        exit;
+
+    } catch (\Throwable $e) {
+
+        error_log('POST DISPATCH ERROR: ' . $e->getMessage());
+
+        $_SESSION['form_result'] = [
+            'success' => false,
+            'message' => $e->getMessage(),
+        ];
+
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/'));
+        exit;
+    }
 }
 
 error_log('🔥 BEFORE ROUTER');

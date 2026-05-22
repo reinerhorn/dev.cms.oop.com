@@ -25,12 +25,13 @@ final class FormActionDispatcher
         error_log('POST TOKEN: ' . ($postData['_csrf'] ?? 'NULL'));
         error_log('SESSION TOKEN: ' . ($_SESSION['_csrf'] ?? 'NULL'));
         try {
-            $formId = trim($postData['form_id'] ?? '');
-            $buttonAction = trim($postData['action'] ?? '');
+            $pluginKey = trim($postData['action'] ?? '');
 
-            if ($formId === '') {
-                throw new RuntimeException('Keine form_id übergeben');
+            if ($pluginKey === '') {
+                throw new RuntimeException('Keine action übergeben');
             }
+
+            error_log('PLUGIN KEY: ' . $pluginKey);
 
             // 1) CSRF prüfen
             if (
@@ -45,38 +46,49 @@ final class FormActionDispatcher
             $db = $this->db;
 
             $stmt = $db->prepare("
-                SELECT handler_class, module, type
+                SELECT handler_class, module, ordner_type
                 FROM plugin
-                WHERE form_id = ?
-                  AND action = ?
+                WHERE plugin_key = ?
                   AND is_active = 1
                 LIMIT 1
             ");
-            $stmt->bind_param('s', $formId);
+            if (!$stmt) {
+                throw new RuntimeException('SQL Prepare fehlgeschlagen: ' . $db->error);
+            }
+            $stmt->bind_param('s', $pluginKey);
             $stmt->execute();
+            if ($stmt->error) {
+                throw new RuntimeException('SQL Execute fehlgeschlagen: ' . $stmt->error);
+            }
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             error_log('========== FORM ACTION DEBUG ==========');
             error_log('RAW DB ROW: ' . print_r($row, true));
             error_log('MODULE: ' . ($row['module'] ?? 'NULL'));
+            error_log('ORDNER_TYPE: ' . ($row['ordner_type'] ?? 'NULL'));
             error_log('HANDLER_CLASS: ' . ($row['handler_class'] ?? 'NULL'));
 
             if (!$row) {
-                throw new RuntimeException('Kein Handler für form_id: ' . $formId);
+                throw new RuntimeException('Kein Handler für plugin_key: ' . $pluginKey);
             }
-            // 🔥 Debug Action (nur zur Kontrolle, KEIN Routing!)
-            error_log('BUTTON ACTION: ' . $buttonAction);
 
         // Namespace automatisch aufbauen (module + handler_class)
         error_log('========== CLASS BUILD START ==========');
-            $type = $row['type'] ?? 'FormAction';
-            $module = $row['module'] ?? '';
-            $handlerClass = $row['handler_class'];
+            $type = strtolower(trim((string)($row['ordner_type'] ?? 'formaction')));
+            $module = strtolower(trim((string)($row['module'] ?? '')));
+            $handlerClass = trim((string)($row['handler_class'] ?? ''));
             error_log('MODULE BEFORE BUILD: ' . $module);
             error_log('HANDLER BEFORE BUILD: ' . $handlerClass);
 
+            // Normalize $type and $module
+            $type = match ($type) {
+                'formaction' => 'FormAction',
+                default => ucfirst($type),
+            };
+
+            $module = ucfirst($module);
+
             // 🔥 FIX: normalize handler class (remove leading backslashes / whitespace)
-            $handlerClass = trim($handlerClass);
             $handlerClass = ltrim($handlerClass, '\\');
 
             error_log('HANDLER AFTER NORMALIZE: ' . $handlerClass);
@@ -84,7 +96,7 @@ final class FormActionDispatcher
             if (!str_contains($handlerClass, '\\')) {
                 $handlerClass = 'CMS\\Application\\'
                     . $type . '\\'
-                    . ucfirst($module)
+                    . $module
                     . '\\'
                     . $handlerClass;
             }
@@ -97,7 +109,7 @@ final class FormActionDispatcher
             }
             error_log('CLASS EXISTS RESULT: YES');
 
-            // 🔥 Handler bekommt ALLE Daten inkl. action
+            // 🔥 Handler bekommt alle POST-Daten (action/plugin_key ist Routing-Key)
             $handler = new $handlerClass();
 
             if (!method_exists($handler, 'handle')) {
