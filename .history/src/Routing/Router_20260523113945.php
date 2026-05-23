@@ -112,7 +112,9 @@ final class Router
         // SYSTEM ACTIONS (z. B. Logout)
         // =============================
         if ($uri === '/auth/logout' && $method === 'POST') {         
-
+            error_log('LOGOUT ROUTE HIT');
+            error_log('LOGOUT SESSION BEFORE: ' . print_r($_SESSION, true));
+            error_log('LOGOUT POST: ' . print_r($_POST, true));
             // CSRF prüfen
             if (
                 empty($_POST['_csrf']) ||
@@ -129,6 +131,7 @@ final class Router
 
             // Session vollständig leeren
             $_SESSION = [];
+            error_log('SESSION CLEARED');
 
             // Session-Cookie löschen
             if (ini_get('session.use_cookies')) {
@@ -146,12 +149,15 @@ final class Router
 
             // Session zerstören
             session_destroy();
+            error_log('SESSION DESTROYED');
 
             // Neue Session für nächsten Request starten
             session_start();
+            error_log('NEW SESSION STARTED: ' . session_id());
             // CSRF wird zentral im Bootstrap / CMSApp initialisiert
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
             header('Pragma: no-cache');
+            error_log('LOGOUT REDIRECT: /' . $language . '/startseite');
             // Redirect zur Startseite
             header('Location: /' . $language . '/startseite');
             exit;
