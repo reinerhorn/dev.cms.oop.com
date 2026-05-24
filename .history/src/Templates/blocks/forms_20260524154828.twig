@@ -2,10 +2,10 @@
     {% macro t(key) %}{{ key }}{% endmacro %}
     {% import _self as i18n %}
 {% endif %}
-{% set config      = block.config is iterable ? block.config : {} %}
- 
-{% set fields = config.fields ?? [] %}
-{% set form_class  = block.form_class ?? config.form_class ?? null %}
+{% set data = block.data is iterable ? block.data : {} %}
+
+{% set fields = data.fields ?? [] %}
+{% set form_class = data.form_class ?? null %}
 
 <div class="admin-form-wrapper">
  
@@ -27,7 +27,7 @@
 {% endif %}
 
 <form
-    method="{{ config.method|default('post') }}"
+    method="{{ data.method|default('post') }}"
     data-form
     {% if form_class is not empty %}class="{{ form_class }}"{% endif %}
 >
@@ -36,25 +36,25 @@
     
 
     {# eindeutige Formular-ID zur Plugin-Isolation #}
-    {% if config.form_id is defined %}
-        <input type="hidden" name="form_id" value="{{ config.form_id }}">
+    {% if data.form_id is defined %}
+        <input type="hidden" name="form_id" value="{{ data.form_id }}">
     {% endif %}
 
-    {% if block.headline %}
-        <h1>{{ block.headline }}</h1>
+    {% if data.headline %}
+        <h1>{{ data.headline }}</h1>
     {% endif %}
 
-    {% if block.text %}
+    {% if data.text %}
         <div data-form-text>
-            {{ block.text|raw }}
+            {{ data.text|raw }}
         </div>
     {% endif %}
     <pre>DEBUG FIELDS: {{ fields|length }}</pre>
 
     {% for field in fields %}
-        {% set type = field.type|default('text') %}
+        {% set type = field.ui.type|default(field.type|default('text')) %}
         {% set field_name = field.name|default('') %}
-        {% set field_id   = field_name %}
+        {% set field_id = field.ui.id|default(field_name) %}
         {% set field_label = field.label is iterable 
             ? (field.label.text|default(field_name)) 
             : (field.label|default(field_name)) %}
@@ -70,7 +70,7 @@
                     {% if field.value is defined and field.value == 1 %}
                         checked
                     {% endif %}
-                    {% if field.required %}required{% endif %}
+                    {% if field.db.required|default(false) %}required{% endif %}
                 >
                 {{ field_label }}
             </label>
@@ -80,7 +80,7 @@
             <textarea
                 name="{{ field_name }}"
                 placeholder="{{ field_label }}"
-                {% if field.required %}required{% endif %}
+                {% if field.db.required|default(false) %}required{% endif %}
             >{{ field.value|default('') }}</textarea>
 
         {% elseif type == 'select' %}
@@ -95,10 +95,10 @@
                 <select
                     id="{{ field_id }}"
                     name="{{ field_name }}"
-                    {% if field_name == 'load_id' %}
+                    {% if field.ui.auto_submit|default(false) %}
                         data-redirect-on-change="1"
                     {% endif %}
-                    {% if field.required %}required{% endif %}
+                    {% if field.db.required|default(false) %}required{% endif %}
                 >
 
                     <option value=""
@@ -106,8 +106,8 @@
                         -- neu --
                     </option>
 
-                    {% if field.options is defined and field.options is iterable %}
-                        {% for option in field.options %}
+                    {% if field.ui.options is defined and field.ui.options is iterable %}
+                        {% for option in field.ui.options %}
                             {% set option_value = option.value ~ '' %}
                             <option value="{{ option_value }}"
                                 {% if option_value == current_value %}selected="selected"{% endif %}>
@@ -126,7 +126,7 @@
                     name="{{ field_name }}"
                     value="{{ field.value|default('') }}"
                     placeholder=" "
-                    {% if field.required %}required{% endif %}
+                    {% if field.db.required|default(false) %}required{% endif %}
                 >
                 <label for="{{ field_id }}">{{ field_label }}</label>
             </div>
