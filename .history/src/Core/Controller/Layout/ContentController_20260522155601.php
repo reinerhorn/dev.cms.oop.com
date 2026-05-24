@@ -122,7 +122,7 @@ class ContentController
 
                 if ($formId) {
 
-                    $buttons = ButtonService::getByFormId(
+                    $buttons = FormButtonService::getByFormId(
                         $this->db,
                         $formId
                     );

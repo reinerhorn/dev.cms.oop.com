@@ -1,9 +1,11 @@
 <?php
-namespace CMS\Service;
+declare(strict_types=1);
+
+namespace CMS\Application\Service;
 
 use mysqli;
 
-class ButtonService
+final class FormButtonService
 {
     public static function getByFormId(mysqli $db, string $formId): array
     {
@@ -27,17 +29,18 @@ class ButtonService
 
         $stmt->bind_param('s', $formId);
         $stmt->execute();
+
         $res = $stmt->get_result();
 
         $buttons = [];
 
         while ($row = $res->fetch_assoc()) {
             $buttons[] = [
-                'label_key'       => $row['label_key'],
-                'button_type'     => $row['button_type'],
-                'variant'         => $row['variant'],
-                'action'          => $row['button_action'],
-                'confirm_required'=> (bool)$row['confirm_required'],
+                'label_key'        => $row['label_key'],
+                'button_type'      => $row['button_type'],
+                'variant'          => $row['variant'],
+                'action'           => $row['button_action'],
+                'confirm_required' => (bool)$row['confirm_required'],
             ];
         }
 

@@ -101,22 +101,23 @@ final class PluginEntryEditor
 
             return [
                 'plugin_key' => 'forms',
+                'data' => [
+                    'id' => '',
+                    'headline' => '',
+                    'text' => '',
+                    'form_style' => '',
+                    'language' => null,
 
-                'id' => '',
-                'headline' => '',
-                'text' => '',
-                'form_style' => '',
-                'language' => null,
-
-                'fields' => $fields,
-                'form_id' => $config['form_id'] ?? null,
-                'method' => $config['method'] ?? 'POST',
-
-                'form' => [
                     'fields' => $fields,
                     'form_id' => $config['form_id'] ?? null,
                     'method' => $config['method'] ?? 'POST',
-                    'config' => $config
+
+                    'form' => [
+                        'fields' => $fields,
+                        'form_id' => $config['form_id'] ?? null,
+                        'method' => $config['method'] ?? 'POST',
+                        'config' => $config
+                    ]
                 ]
             ];
         }
@@ -181,25 +182,27 @@ final class PluginEntryEditor
 
         return [
             'plugin_key' => 'forms',
+            'data' => [
+                'id' => $row['id'],
+                'headline' => $row['headline'],
+                'text' => $row['text'],
+                'form_style' => $row['form_style'],
+                'language' => $row['fk_language_id'],
 
-            'id' => $row['id'],
-            'headline' => $row['headline'],
-            'text' => $row['text'],
-            'form_style' => $row['form_style'],
-            'language' => $row['fk_language_id'],
-
-            // ✔ FLAT (Frontend kompatibel)
-            'fields' => $fields,
-            'form_id' => $config['form_id'] ?? null,
-            'method' => $config['method'] ?? 'POST',
-
-            // ✔ OPTIONAL nested structure
-            'form' => [
+                // ✔ FLAT (alt kompatibel)
                 'fields' => $fields,
                 'form_id' => $config['form_id'] ?? null,
                 'method' => $config['method'] ?? 'POST',
-                'config' => $config
+
+                // ✔ NESTED (neu kompatibel)
+                'form' => [
+                    'fields' => $fields,
+                    'form_id' => $config['form_id'] ?? null,
+                    'method' => $config['method'] ?? 'POST',
+                    'config' => $config
+                ]
             ]
         ];
     }
 }
+
