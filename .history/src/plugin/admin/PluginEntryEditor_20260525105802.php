@@ -189,25 +189,8 @@ final class PluginEntryEditor
         foreach ($fields as &$field) {
             $name = $field['name'] ?? null;
 
-            // -------------------------------------------------
-            // KEEP SELECTED LOAD ID
-            // damit das Select nicht wieder auf "-- neu --" springt
-            // -------------------------------------------------
-            if (
-                $loadId
-                && $name
-                && (
-                    $name === 'load_id'
-                    || str_ends_with($name, '_load_id')
-                )
-            ) {
-                $field['value'] = $loadId;
-                continue;
-            }
-
-            if (!isset($field['value'])) {
-                $field['value'] = null;
-            }
+            // Default: immer reset (wichtig für "neu")
+            $field['value'] = null;
 
             if (
                 $name

@@ -39,12 +39,6 @@ final class PluginEntryEditor
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        $config = json_decode($row['config_json'] ?? '[]', true);
-
-        if (!is_array($config)) {
-            $config = [];
-        }
-
         // -------------------------------------------------
         // ENTITY DATA LOAD (for select load_id)
         // -------------------------------------------------
@@ -108,13 +102,6 @@ final class PluginEntryEditor
                     ->get_result()
                     ->fetch_assoc();
 
-                error_log(
-                    'ENTITY TABLE: '
-                    . $table
-                    . ' | PRIMARY: '
-                    . $primaryKey
-                );
-
                 $entityStmt->close();
             }
 
@@ -176,6 +163,10 @@ final class PluginEntryEditor
             ];
         }
 
+        $config = json_decode($row['config_json'] ?? '[]', true);
+        if (!is_array($config)) {
+            $config = [];
+        }
         error_log('ENTRY EDITOR CONFIG: ' . print_r($config, true));
 
         // -------------------------------------------------
@@ -189,39 +180,11 @@ final class PluginEntryEditor
         foreach ($fields as &$field) {
             $name = $field['name'] ?? null;
 
-            // -------------------------------------------------
-            // KEEP SELECTED LOAD ID
-            // damit das Select nicht wieder auf "-- neu --" springt
-            // -------------------------------------------------
-            if (
-                $loadId
-                && $name
-                && (
-                    $name === 'load_id'
-                    || str_ends_with($name, '_load_id')
-                )
-            ) {
-                $field['value'] = $loadId;
-                continue;
-            }
+            // Default: immer reset (wichtig für "neu")
+            $field['value'] = null;
 
-            if (!isset($field['value'])) {
-                $field['value'] = null;
-            }
-
-            if (
-                $name
-                && is_array($entityRow)
-                && array_key_exists($name, $entityRow)
-            ) {
+            if ($name && $entityRow && array_key_exists($name, $entityRow)) {
                 $field['value'] = $entityRow[$name];
-
-                error_log(
-                    'FIELD VALUE SET: '
-                    . $name
-                    . ' => '
-                    . print_r($entityRow[$name], true)
-                );
             }
         }
         unset($field);
@@ -254,7 +217,6 @@ final class PluginEntryEditor
                     }
 
                     $field['ui']['options'] = $options;
-                    $field['options'] = $options;
                 }
             }
         }
