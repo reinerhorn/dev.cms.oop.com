@@ -7,8 +7,6 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
-
-error_log('🔥 TEST LOG');
 error_log('=== REQUEST START ===');
 error_log('METHOD: ' . ($_SERVER['REQUEST_METHOD'] ?? 'NULL'));
 error_log('POST: ' . print_r($_POST, true));
