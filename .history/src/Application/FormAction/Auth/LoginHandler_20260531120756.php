@@ -7,7 +7,6 @@ use CMS\Core\CMSApp;
 use CMS\Application\FormAction\Auth\AuthService;
 final class LoginHandler
 {
-
     public function handle(array $data, array $pageMeta): array
     {
         $frontend = $pageMeta['frontend'] ?? null;
@@ -48,6 +47,16 @@ final class LoginHandler
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
         $stmt->close();
+
+        error_log('LOGIN USER = ' . print_r($user, true));
+
+        if ($user && isset($user['password'])) {
+            error_log('PASSWORD HASH FROM DB = ' . $user['password']);
+
+            $verify = password_verify($password, $user['password']);
+
+            error_log('PASSWORD VERIFY RESULT = ' . ($verify ? 'YES' : 'NO'));
+        }
 
         if (
             !$user
@@ -144,7 +153,7 @@ final class LoginHandler
 
         error_log('LOGIN SUCCESS USER_ID=' . $user['id']);
         error_log('SESSION AFTER LOGIN = ' . json_encode($_SESSION));
-
+        error_log('ROLE_ID BEFORE RESOLVE = ' . ($_SESSION['role_id'] ?? 'NULL'));
        
 
         // -------------------------------------------------
@@ -157,12 +166,17 @@ final class LoginHandler
             unset($_SESSION['login_redirect']);
         } else {
             // 2) Fallback: Startseite über AccessResolver (Rolle + Sprache)
+            error_log('ROLE_ID IN SESSION = ' . ($_SESSION['role_id'] ?? 'NULL'));
+            error_log('LANGUAGE IN SESSION = ' . ($_SESSION['language'] ?? 'de'));
+
             $accessResolver = CMSApp::getAccessResolver();
 
             $redirect = $accessResolver->resolveStartPage(
-                (string)$_SESSION['role_id'],
+                (string)($_SESSION['role_id'] ?? ''),
                 (string)($_SESSION['language'] ?? 'de')
             );
+
+            error_log('RESOLVE STARTPAGE RESULT = ' . ($redirect ?: 'NULL'));
         }
 
         error_log('LOGIN REDIRECT TO = ' . ($redirect ?: 'null'));

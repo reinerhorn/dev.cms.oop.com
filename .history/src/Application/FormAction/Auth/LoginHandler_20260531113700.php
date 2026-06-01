@@ -48,6 +48,16 @@ final class LoginHandler
         $user = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
+        error_log('LOGIN USER = ' . print_r($user, true));
+
+        if ($user && isset($user['password'])) {
+            error_log('PASSWORD HASH FROM DB = ' . $user['password']);
+
+            $verify = password_verify($password, $user['password']);
+
+            error_log('PASSWORD VERIFY RESULT = ' . ($verify ? 'YES' : 'NO'));
+        }
+
         if (
             !$user
             || !isset($user['password'])
@@ -143,7 +153,7 @@ final class LoginHandler
 
         error_log('LOGIN SUCCESS USER_ID=' . $user['id']);
         error_log('SESSION AFTER LOGIN = ' . json_encode($_SESSION));
-
+        error_log('ROLE_ID BEFORE RESOLVE = ' . ($_SESSION['role_id'] ?? 'NULL'));
        
 
         // -------------------------------------------------

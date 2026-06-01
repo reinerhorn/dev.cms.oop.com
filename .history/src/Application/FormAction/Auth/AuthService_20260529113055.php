@@ -36,9 +36,26 @@ class AuthService
 
     public function login(string $userId, string $roleId): void
     {
+        error_log('AUTH LOGIN START');
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+            error_log('SESSION STARTED');
+        }
+
         $_SESSION[self::SESSION_USER_ID] = $userId;
         $_SESSION[self::SESSION_ROLE_ID] = $roleId;
-        session_regenerate_id(true);
+
+        error_log('SESSION DATA WRITTEN');
+
+        if (!headers_sent()) {
+            session_regenerate_id(true);
+            error_log('SESSION REGENERATED');
+        } else {
+            error_log('HEADERS ALREADY SENT');
+        }
+
+        error_log('AUTH LOGIN END');
     }
 
     public function logout(): void

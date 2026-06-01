@@ -61,6 +61,8 @@ class PageController
 
         // 1.5) Login-Guard: eingeloggte User nicht auf Login-Seite lassen
         $roleId = $this->roleService->getCurrentRoleId();
+        error_log('CURRENT ROLE ID: ' . $roleId);
+        error_log('CURRENT SESSION: ' . print_r($_SESSION, true));
 
         if ($slug === 'login' && $roleId !== 'guest-role-000') {
             $redirect = $this->accessResolver->resolveStartPage(

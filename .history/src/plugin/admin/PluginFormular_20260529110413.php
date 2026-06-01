@@ -1,5 +1,6 @@
 <?php
-namespace CMS\plugin\admin;
+declare(strict_types=1);
+namespace CMS\Plugin\Admin;
 
 use mysqli;
  use CMS\Application\Interface\HandlerInterface;
@@ -59,18 +60,27 @@ class PluginFormular implements HandlerInterface
                 $ui    = $definition['ui'] ?? [];
                 $label = $definition['label'] ?? [];
 
-         $field = [
-              
-              
-              'id'          => $ui['id'] ?? ($definition['name'] ?? ''),
-              'class'       => $ui['class'] ?? '',
-              'placeholder' => $ui['placeholder'] ?? '',
-              'label'       => is_array($label)
-                  ? ($label['text'] ?? ucfirst($definition['name'] ?? ''))
-                  : (string)$label,
-              'required'    => !empty($definition['db']['required']),
-              'options'     => []
-          ];
+                $field = $definition;
+
+                $field['value'] = $field['value'] ?? null;
+
+                if (!isset($field['ui']) || !is_array($field['ui'])) {
+                    $field['ui'] = [];
+                }
+
+                if (!isset($field['db']) || !is_array($field['db'])) {
+                    $field['db'] = [];
+                }
+
+                if (!isset($field['label']) || !is_array($field['label'])) {
+                    $field['label'] = [
+                        'text' => ucfirst($definition['name'] ?? '')
+                    ];
+                }
+
+                if (!isset($field['ui']['options']) || !is_array($field['ui']['options'])) {
+                    $field['ui']['options'] = [];
+                }
 
                 // Select-Optionen automatisch aus DB laden
                 if (
@@ -94,7 +104,7 @@ class PluginFormular implements HandlerInterface
 
                         if ($result) {
                             while ($opt = $result->fetch_assoc()) {
-                                $field['options'][] = [
+                                $field['ui']['options'][] = [
                                     'value' => $opt[$valueField] ?? '',
                                     'label' => $opt[$labelField] ?? ''
                                 ];
@@ -134,7 +144,7 @@ class PluginFormular implements HandlerInterface
             FROM page_config pc
             LEFT JOIN plugin p ON p.plugin_uuid = pc.fk_plugin_uuid
             WHERE pc.fk_page_uuid = ?
-              AND LOWER(p.name) IN ('forms','register','login-form','register-form')
+              AND p.is_active = 1
             ORDER BY pc.idx ASC
         ");
 

@@ -48,6 +48,16 @@ final class LoginHandler
         $user = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
+        error_log('LOGIN USER = ' . print_r($user, true));
+
+        if ($user && isset($user['password'])) {
+            error_log('PASSWORD HASH FROM DB = ' . $user['password']);
+
+            $verify = password_verify($password, $user['password']);
+
+            error_log('PASSWORD VERIFY RESULT = ' . ($verify ? 'YES' : 'NO'));
+        }
+
         if (
             !$user
             || !isset($user['password'])
@@ -143,7 +153,7 @@ final class LoginHandler
 
         error_log('LOGIN SUCCESS USER_ID=' . $user['id']);
         error_log('SESSION AFTER LOGIN = ' . json_encode($_SESSION));
-
+        error_log('ROLE_ID BEFORE RESOLVE = ' . ($_SESSION['role_id'] ?? 'NULL'));
        
 
         // -------------------------------------------------
@@ -156,12 +166,26 @@ final class LoginHandler
             unset($_SESSION['login_redirect']);
         } else {
             // 2) Fallback: Startseite über AccessResolver (Rolle + Sprache)
+            error_log('ROLE_ID IN SESSION = ' . ($_SESSION['role_id'] ?? 'NULL'));
+            error_log('LANGUAGE IN SESSION = ' . ($_SESSION['language'] ?? 'de'));
+
+            $roleService = CMSApp::getRoleService();
+            $currentRoleId = (string)($_SESSION['role_id'] ?? '');
+
+            error_log('CURRENT ROLE FOR RESOLVER = ' . ($currentRoleId ?: 'EMPTY'));
+
+            $defaultPageId = $roleService->getDefaultPageId($currentRoleId);
+
+            error_log('DEFAULT PAGE ID = ' . ($defaultPageId ?? 'NULL'));
+
             $accessResolver = CMSApp::getAccessResolver();
 
             $redirect = $accessResolver->resolveStartPage(
-                (string)$_SESSION['role_id'],
+                $currentRoleId,
                 (string)($_SESSION['language'] ?? 'de')
             );
+
+            error_log('RESOLVE STARTPAGE RESULT = ' . ($redirect ?: 'NULL'));
         }
 
         error_log('LOGIN REDIRECT TO = ' . ($redirect ?: 'null'));
