@@ -89,17 +89,12 @@ final class PluginJsonEditor
                                 continue;
                             }
 
-                            $table =
-                                $json['entity']['table']
-                                ?? $json['table']
-                                ?? null;
+                            $table = $json['entity']['table'] ?? null;
+                            $formId = $json['form_id'] ?? null;
 
-                            if (!$table) {
+                            if (!$table || !$formId) {
                                 continue;
                             }
-
-                            $formId = $json['form_id']
-                                ?? ($json['entity']['table'] . '_form');
 
                             if (!isset($existingForms[$table])) {
                                 $existingForms[$table] = [

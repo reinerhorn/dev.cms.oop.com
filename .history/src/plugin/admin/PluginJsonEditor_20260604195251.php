@@ -89,10 +89,7 @@ final class PluginJsonEditor
                                 continue;
                             }
 
-                            $table =
-                                $json['entity']['table']
-                                ?? $json['table']
-                                ?? null;
+                            $table = $json['entity']['table'] ?? null;
 
                             if (!$table) {
                                 continue;

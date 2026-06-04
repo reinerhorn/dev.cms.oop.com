@@ -48,34 +48,6 @@ final class JsonFormBuilderHandler
 
         $language = 'de';
 
-        $checkStmt = $this->db->prepare(
-            'SELECT id
-             FROM p_content_formular
-             WHERE form_type = ?
-             LIMIT 1'
-        );
-
-        if (!$checkStmt) {
-            throw new \RuntimeException(
-                'Duplicate-Check Prepare fehlgeschlagen: ' . $this->db->error
-            );
-        }
-
-        $checkStmt->bind_param('s', $formType);
-        $checkStmt->execute();
-
-        $checkResult = $checkStmt->get_result();
-
-        if ($checkResult && $checkResult->num_rows > 0) {
-            $checkStmt->close();
-
-            throw new \RuntimeException(
-                'Für diese Tabelle existiert bereits ein Formular (' . $formType . ').'
-            );
-        }
-
-        $checkStmt->close();
-
         $stmt = $this->db->prepare(
             'INSERT INTO p_content_formular (
                 id,

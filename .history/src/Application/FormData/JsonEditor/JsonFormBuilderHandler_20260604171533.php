@@ -26,12 +26,10 @@ final class JsonFormBuilderHandler
 
         $id = bin2hex(random_bytes(16));
 
-        $table = trim((string)($postData['table'] ?? ''));
-
-        $formType = $table !== ''
-            ? $table . '_form'
-            : 'generated_form';
+        $formType = (string)($postData['form_type'] ?? 'simple');
         $formStyle = 'default';
+
+        $table = (string)($postData['table'] ?? '');
 
         $labels = [
             'addresses' => 'Adressen',
@@ -47,34 +45,6 @@ final class JsonFormBuilderHandler
         $text = 'Automatisch generiertes Formular für Tabelle ' . $table;
 
         $language = 'de';
-
-        $checkStmt = $this->db->prepare(
-            'SELECT id
-             FROM p_content_formular
-             WHERE form_type = ?
-             LIMIT 1'
-        );
-
-        if (!$checkStmt) {
-            throw new \RuntimeException(
-                'Duplicate-Check Prepare fehlgeschlagen: ' . $this->db->error
-            );
-        }
-
-        $checkStmt->bind_param('s', $formType);
-        $checkStmt->execute();
-
-        $checkResult = $checkStmt->get_result();
-
-        if ($checkResult && $checkResult->num_rows > 0) {
-            $checkStmt->close();
-
-            throw new \RuntimeException(
-                'Für diese Tabelle existiert bereits ein Formular (' . $formType . ').'
-            );
-        }
-
-        $checkStmt->close();
 
         $stmt = $this->db->prepare(
             'INSERT INTO p_content_formular (
