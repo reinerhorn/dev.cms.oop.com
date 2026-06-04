@@ -40,17 +40,13 @@ final class JsonFormBuilderHandler
         // Tabellenstruktur laden
         // -----------------------------------
 
-        error_log('JSON BUILDER TABLE: [' . $table . ']');
-
-        $sql = "SHOW COLUMNS FROM `{$table}`";
-
-        error_log('JSON BUILDER SQL: ' . $sql);
-
-        $result = $this->db->query($sql);
+        $result = $this->db->query("
+            SHOW COLUMNS FROM {$table}
+        ");
 
         if (!$result) {
             throw new \RuntimeException(
-                'SQL ERROR: ' . $this->db->error
+                'Tabelle konnte nicht gelesen werden.'
             );
         }
 
@@ -247,21 +243,18 @@ final class JsonFormBuilderHandler
 
     private function tableExists(string $table): bool
     {
-        $table = $this->db->real_escape_string($table);
+        $stmt = $this->db->prepare("
+            SHOW TABLES LIKE ?
+        ");
 
-        $sql = "SHOW TABLES LIKE '{$table}'";
+        $stmt->bind_param("s", $table);
+        $stmt->execute();
 
-        error_log('TABLE EXISTS SQL: ' . $sql);
+        $exists = $stmt->get_result()->num_rows > 0;
 
-        $result = $this->db->query($sql);
+        $stmt->close();
 
-        if (!$result) {
-            throw new \RuntimeException(
-                'TABLE EXISTS SQL ERROR: ' . $this->db->error
-            );
-        }
-
-        return $result->num_rows > 0;
+        return $exists;
     }
 
     // =====================================================
@@ -270,17 +263,9 @@ final class JsonFormBuilderHandler
 
     private function detectLabelField(string $table): string
     {
-        $sql = "SHOW COLUMNS FROM `{$table}`";
-
-        error_log('LABEL DETECTOR SQL: ' . $sql);
-
-        $result = $this->db->query($sql);
-
-        if (!$result) {
-            throw new \RuntimeException(
-                'LABEL DETECTOR SQL ERROR: ' . $this->db->error
-            );
-        }
+        $result = $this->db->query("
+            SHOW COLUMNS FROM {$table}
+        ");
 
         $preferred = [
             'headline',
