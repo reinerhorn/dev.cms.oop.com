@@ -55,11 +55,6 @@ final class PluginJsonEditor
 
             $ui = $field['ui'] ?? [];
 
-            // Checkbox für Mehrfachauswahl sofort umschalten
-            if (($field['name'] ?? '') === 'multi_table') {
-                $field['ui']['onchange'] = 'this.form.submit()';
-            }
-
             if (
                 ($ui['type'] ?? null) === 'select'
                 && isset($ui['options_source'])
@@ -153,8 +148,8 @@ final class PluginJsonEditor
                                 continue;
                             }
 
-                            $value = $_POST['multi_table']
-                                ?? $checkField['value']
+                            $value = $checkField['value']
+                                ?? $_POST['multi_table']
                                 ?? null;
 
                             $multiTableEnabled = in_array(

@@ -1,4 +1,4 @@
-{% set editor = block.editor ?? {} %}
+ {% set editor = block.editor ?? {} %}
 {% set fields = editor.fields ?? [] %}
 
 {% if form_result is defined and form_result %}
@@ -24,7 +24,13 @@
             value="{{ csrf }}"
         >
     {% endif %}
- 
+
+   <pre>
+
+{{ dump(field) }}
+
+</pre>
+
     {% for field in fields %}
 
         {% set ui = field.ui ?? {} %}
@@ -49,15 +55,12 @@
 
             {% if type == 'select' %}
 
-                {% set is_multiple = (ui.multiple is defined and ui.multiple and name != 'table') %}
+                {% set is_multiple = ui.multiple is defined and ui.multiple %}
 
                 <select
                     id="{{ name }}"
                     name="{{ is_multiple ? name ~ '[]' : name }}"
                     {% if is_multiple %}multiple{% endif %}
-                    {% if is_multiple and ui.size is defined %}
-                        size="{{ ui.size }}"
-                    {% endif %}
                     {% if required %}required{% endif %}
                 >
 
@@ -117,9 +120,6 @@
                     value="1"
                     {% if value %}
                         checked
-                    {% endif %}
-                    {% if ui.onchange is defined %}
-                        onchange="{{ ui.onchange }}"
                     {% endif %}
                 >
 

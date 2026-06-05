@@ -55,11 +55,6 @@ final class PluginJsonEditor
 
             $ui = $field['ui'] ?? [];
 
-            // Checkbox für Mehrfachauswahl sofort umschalten
-            if (($field['name'] ?? '') === 'multi_table') {
-                $field['ui']['onchange'] = 'this.form.submit()';
-            }
-
             if (
                 ($ui['type'] ?? null) === 'select'
                 && isset($ui['options_source'])
@@ -142,39 +137,10 @@ final class PluginJsonEditor
 
                     $field['ui']['options'] = $tables;
 
-                    // Standard: normales Select
+                    // Mehrfachauswahl für Tabellen erlauben
                     if (($field['name'] ?? '') === 'table') {
-
-                        $multiTableEnabled = false;
-
-                        foreach ($fields as $checkField) {
-
-                            if (($checkField['name'] ?? '') !== 'multi_table') {
-                                continue;
-                            }
-
-                            $value = $_POST['multi_table']
-                                ?? $checkField['value']
-                                ?? null;
-
-                            $multiTableEnabled = in_array(
-                                (string) $value,
-                                ['1', 'true', 'on'],
-                                true
-                            );
-
-                            break;
-                        }
-
-                        if ($multiTableEnabled) {
-                            // Mehrfachauswahl-Liste
-                            $field['ui']['multiple'] = true;
-                            $field['ui']['size'] = 15;
-                        } else {
-                            // Normales Dropdown
-                            $field['ui']['multiple'] = false;
-                            unset($field['ui']['size']);
-                        }
+                        $field['ui']['multiple'] = true;
+                        $field['ui']['size'] = 15;
                     }
                 }
             }
