@@ -10,7 +10,13 @@
 {% set form_class = block.form_class ?? config.form_class ?? null %}
 
 <div class="admin-form-wrapper">
+ <pre>
 
+FORM_RESULT:
+
+{{ dump(form_result) }}
+
+</pre>
 {# Formular-Feedback (zentral aus CMSAppFrontend) #}
 {% if form_result is defined %}
     {% if form_result.message %}

@@ -78,9 +78,10 @@ final class CMSAppFrontend
                 error_log('RENDER BLOCK: ' . $pluginKey);
 
                 $contentHtml .= $twig->render($template, [
-                    'block'   => $block,
-                    'session' => $_SESSION ?? [],
-                    'auth'    => [
+                    'block'       => $block,
+                    'session'     => $_SESSION ?? [],
+                    'form_result' => $_SESSION['form_result'] ?? null,
+                    'auth'        => [
                         'logged_in' => !empty($_SESSION['user_id']),
                         'user_id'   => $_SESSION['user_id'] ?? null,
                         'role_id'   => $_SESSION['role_id'] ?? 'guest-role-000',
@@ -89,6 +90,7 @@ final class CMSAppFrontend
             }
 
             // 7) View-Daten zusammenstellen
+            error_log('SESSION FORM_RESULT BEFORE VIEW: ' . print_r($_SESSION['form_result'] ?? null, true));
             $viewData = [
                 'body_class'   => 'context-' . $pageContext,
                 'role_id'      => $roleId,
@@ -112,6 +114,7 @@ final class CMSAppFrontend
                 'js_vars'      => [],
             ];
 
+            error_log('VIEW FORM_RESULT: ' . print_r($viewData['form_result'] ?? null, true));
             unset($_SESSION['form_result']);
 
             return $twig->render('layout/base.twig', $viewData);
