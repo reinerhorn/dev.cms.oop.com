@@ -400,48 +400,16 @@ $skipFields = [
         string $foreignTable,
         ?string $referencedColumn
     ): string {
-        if (
-            $referencedColumn !== null
-            && $referencedColumn !== 'id'
-        ) {
+        if ($referencedColumn !== null) {
             return $referencedColumn;
         }
 
-        $columns = $this->getTableColumns($foreignTable);
-
-        foreach ([
-            'page_uuid',
-            'nav_uuid',
-            'plugin_uuid',
-            'translation_uuid'
-        ] as $uuidField) {
-            if (in_array($uuidField, $columns, true)) {
-                return $uuidField;
-            }
-        }
-
-        return 'id';
-    }
-
-    private function getTableColumns(string $table): array
-    {
-        $result = $this->db->query(
-            "SHOW COLUMNS FROM `{$table}`"
-        );
-
-        if (!$result) {
-            throw new \RuntimeException(
-                'SHOW COLUMNS fehlgeschlagen: ' . $this->db->error
-            );
-        }
-
-        $columns = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $columns[] = $row['Field'];
-        }
-
-        return $columns;
+        return match ($foreignTable) {
+            'page' => 'page_uuid',
+            'navigation' => 'nav_uuid',
+            'plugin' => 'plugin_uuid',
+            default => 'id'
+        };
     }
 
     private function resolveRelation(

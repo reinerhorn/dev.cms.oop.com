@@ -10,13 +10,11 @@ final class JsonFormBuilderHandler
     private const FIELD_REGISTRY = [
         'seo_slug' => [
             'ui' => 'select',
-            'table' => 'slug_placeholder',
-            'label_field' => 'id'
+            'table' => 'slug_placeholder'
         ],
         'context_id' => [
             'ui' => 'select',
-            'table' => 'context_placeholder',
-            'label_field' => 'id'
+            'table' => 'context_placeholder'
         ],
         'meta_description' => [
             'ui' => 'textarea'
@@ -30,20 +28,6 @@ final class JsonFormBuilderHandler
         'is_active' => [
             'ui' => 'checkbox'
         ]
-    ];
-
-    private const LABEL_FIELDS = [
-        'page' => 'slug',
-        'navigation' => 'seo_slug',
-        'plugin' => 'module',
-        'permissions' => 'name',
-        'trans_language' => 'label',
-        'translation_placeholder' => 'id',
-        'view_context_audience' => 'id',
-        'page_permissions' => 'id',
-        'translation' => 'label',
-        'slug_placeholder' => 'id',
-        'context_placeholder' => 'id',
     ];
     public function __construct(
         private mysqli $db
@@ -270,7 +254,6 @@ $skipFields = [
             $type = strtolower($column['Type']);
             $null = $column['Null'] ?? 'YES';
             $key = $column['Key'] ?? '';
-            $default = $column['Default'] ?? null;
 
             if (in_array($name, $skipFields, true)) {
                 continue;
@@ -291,7 +274,7 @@ $skipFields = [
 
                 'db' => [
                     'type' => 'column',
-                    'required' => ($null === 'NO' && $default === null)
+                    'required' => ($null === 'NO')
                 ],
 
                 'ui' => [
@@ -312,33 +295,11 @@ $skipFields = [
                 $field['ui']['readonly'] = true;
             }
 
-            if (
-                str_ends_with($name, '_uuid')
-                && !str_starts_with($name, 'fk_')
-            ) {
-                continue;
-            }
-
-            if (
-                $name === 'slug'
-                || $name === 'page_uuid'
-                || $name === 'nav_uuid'
-                || $name === 'plugin_uuid'
-                || $name === 'translation_uuid'
-            ) {
-                $field['ui']['readonly'] = true;
-            }
-
             // -----------------------------------
             // SELECT FK ERKENNUNG
             // -----------------------------------
 
             $foreignKey = $this->resolveRelation(
-                $table,
-                $name
-            );
-
-            $foreignKeyColumn = $this->detectReferencedColumn(
                 $table,
                 $name
             );
@@ -358,10 +319,7 @@ $skipFields = [
                     'type' => 'select',
                     'options_source' => [
                         'table' => $foreignKey,
-                        'value_field' => $this->getPreferredValueField(
-                            $foreignKey,
-                            $foreignKeyColumn
-                        ),
+                        'value_field' => 'id',
                         'label_field' => $this->resolveLabelField($foreignKey)
                     ]
                 ];
@@ -396,54 +354,6 @@ $skipFields = [
         ];
     }
 
-    private function getPreferredValueField(
-        string $foreignTable,
-        ?string $referencedColumn
-    ): string {
-        if (
-            $referencedColumn !== null
-            && $referencedColumn !== 'id'
-        ) {
-            return $referencedColumn;
-        }
-
-        $columns = $this->getTableColumns($foreignTable);
-
-        foreach ([
-            'page_uuid',
-            'nav_uuid',
-            'plugin_uuid',
-            'translation_uuid'
-        ] as $uuidField) {
-            if (in_array($uuidField, $columns, true)) {
-                return $uuidField;
-            }
-        }
-
-        return 'id';
-    }
-
-    private function getTableColumns(string $table): array
-    {
-        $result = $this->db->query(
-            "SHOW COLUMNS FROM `{$table}`"
-        );
-
-        if (!$result) {
-            throw new \RuntimeException(
-                'SHOW COLUMNS fehlgeschlagen: ' . $this->db->error
-            );
-        }
-
-        $columns = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $columns[] = $row['Field'];
-        }
-
-        return $columns;
-    }
-
     private function resolveRelation(
         string $table,
         string $column
@@ -453,17 +363,6 @@ $skipFields = [
             isset(self::FIELD_REGISTRY[$column]['table'])
         ) {
             return self::FIELD_REGISTRY[$column]['table'];
-        }
-
-        if (
-            str_starts_with($column, 'fk_')
-            && str_ends_with($column, '_uuid')
-        ) {
-            $guessedTable = substr($column, 3, -5);
-
-            if ($guessedTable !== '' && $this->tableExists($guessedTable)) {
-                return $guessedTable;
-            }
         }
 
         return $this->detectForeignKey(
@@ -512,48 +411,24 @@ $skipFields = [
         return $row['REFERENCED_TABLE_NAME'] ?? null;
     }
 
-    private function detectReferencedColumn(
-        string $table,
-        string $column
-    ): ?string {
-
-        $sql = "
-            SELECT REFERENCED_COLUMN_NAME
-            FROM information_schema.KEY_COLUMN_USAGE
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = ?
-              AND COLUMN_NAME = ?
-              AND REFERENCED_TABLE_NAME IS NOT NULL
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            return null;
-        }
-
-        $stmt->bind_param('ss', $table, $column);
-        $stmt->execute();
-
-        $result = $stmt->get_result();
-
-        if (!$result || $result->num_rows === 0) {
-            $stmt->close();
-            return null;
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        return $row['REFERENCED_COLUMN_NAME'] ?? null;
-    }
-
     private function resolveLabelField(string $table): string
     {
-        if (isset(self::LABEL_FIELDS[$table])) {
-            return self::LABEL_FIELDS[$table];
+        $custom = [
+            'page' => 'slug',
+            'navigation' => 'seo_slug',
+            'plugin' => 'module',
+            'permissions' => 'name',
+            'trans_language' => 'label',
+            'translation_placeholder' => 'id',
+            'view_context_audience' => 'id',
+            'page_permissions' => 'id',
+            'translation' => 'label',
+            'slug_placeholder' => 'id',
+            'context_placeholder' => 'id',
+        ];
+
+        if (isset($custom[$table])) {
+            return $custom[$table];
         }
 
         return $this->detectLabelField($table);
@@ -603,9 +478,6 @@ $skipFields = [
         $preferred = [
             'seo_slug',
             'slug',
-            'page_uuid',
-            'nav_uuid',
-            'plugin_uuid',
             'name',
             'title',
             'headline',
@@ -674,12 +546,6 @@ $skipFields = [
             str_contains($type, 'double')
         ) {
             return 'number';
-        }
-
-        if (
-            str_ends_with($name, '_uuid')
-        ) {
-            return 'hidden';
         }
 
         return 'text';

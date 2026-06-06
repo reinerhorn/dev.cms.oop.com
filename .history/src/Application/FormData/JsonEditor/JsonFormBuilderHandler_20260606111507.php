@@ -319,16 +319,6 @@ $skipFields = [
                 continue;
             }
 
-            if (
-                $name === 'slug'
-                || $name === 'page_uuid'
-                || $name === 'nav_uuid'
-                || $name === 'plugin_uuid'
-                || $name === 'translation_uuid'
-            ) {
-                $field['ui']['readonly'] = true;
-            }
-
             // -----------------------------------
             // SELECT FK ERKENNUNG
             // -----------------------------------
@@ -358,10 +348,7 @@ $skipFields = [
                     'type' => 'select',
                     'options_source' => [
                         'table' => $foreignKey,
-                        'value_field' => $this->getPreferredValueField(
-                            $foreignKey,
-                            $foreignKeyColumn
-                        ),
+                        'value_field' => $foreignKeyColumn ?? 'id',
                         'label_field' => $this->resolveLabelField($foreignKey)
                     ]
                 ];
@@ -394,54 +381,6 @@ $skipFields = [
 
             'fields' => $fields
         ];
-    }
-
-    private function getPreferredValueField(
-        string $foreignTable,
-        ?string $referencedColumn
-    ): string {
-        if (
-            $referencedColumn !== null
-            && $referencedColumn !== 'id'
-        ) {
-            return $referencedColumn;
-        }
-
-        $columns = $this->getTableColumns($foreignTable);
-
-        foreach ([
-            'page_uuid',
-            'nav_uuid',
-            'plugin_uuid',
-            'translation_uuid'
-        ] as $uuidField) {
-            if (in_array($uuidField, $columns, true)) {
-                return $uuidField;
-            }
-        }
-
-        return 'id';
-    }
-
-    private function getTableColumns(string $table): array
-    {
-        $result = $this->db->query(
-            "SHOW COLUMNS FROM `{$table}`"
-        );
-
-        if (!$result) {
-            throw new \RuntimeException(
-                'SHOW COLUMNS fehlgeschlagen: ' . $this->db->error
-            );
-        }
-
-        $columns = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $columns[] = $row['Field'];
-        }
-
-        return $columns;
     }
 
     private function resolveRelation(
@@ -603,9 +542,6 @@ $skipFields = [
         $preferred = [
             'seo_slug',
             'slug',
-            'page_uuid',
-            'nav_uuid',
-            'plugin_uuid',
             'name',
             'title',
             'headline',
