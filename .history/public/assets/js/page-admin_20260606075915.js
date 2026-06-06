@@ -1,5 +1,29 @@
 document.addEventListener('change', function (e) {
 
+    // =====================================
+    // Checkbox: Mehrfachauswahl umschalten
+    // =====================================
+    if (
+        e.target instanceof HTMLInputElement
+        && e.target.type === 'checkbox'
+        && e.target.id === 'multi_table'
+    ) {
+        const singleSelect = document.getElementById('table_single');
+        const multiSelect  = document.getElementById('table_multi');
+
+        if (singleSelect && multiSelect) {
+            if (e.target.checked) {
+                singleSelect.style.display = 'none';
+                multiSelect.style.display = '';
+            } else {
+                multiSelect.style.display = 'none';
+                singleSelect.style.display = '';
+            }
+        }
+
+        return;
+    }
+
     const select = e.target;
     if (!(select instanceof HTMLSelectElement)) {
         return;

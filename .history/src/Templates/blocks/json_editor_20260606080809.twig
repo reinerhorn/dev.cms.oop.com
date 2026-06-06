@@ -1,0 +1,191 @@
+{% set editor = block.editor ?? {} %}
+{% set fields = editor.fields ?? [] %}
+
+{% if form_result is defined and form_result %}
+    <div class="form-message {{ form_result.success ? 'form-success' : 'form-error' }}">
+        {{ form_result.message }}
+    </div>
+{% endif %}
+ 
+<form
+    method="{{ editor.method|default('POST') }}"
+>
+
+    <input
+        type="hidden"
+        name="form_id"
+        value="{{ editor.form_id|default('json_editor') }}"
+    >
+
+    {% if csrf is defined %}
+        <input
+            type="hidden"
+            name="_csrf"
+            value="{{ csrf }}"
+        >
+    {% endif %}
+ 
+    {% for field in fields %}
+
+        {% set ui = field.ui ?? {} %}
+        {% set db = field.db ?? {} %}
+
+        {% set type = ui.type|default('text') %}
+        {% set name = field.name|default('') %}
+        {% set value = field.value|default('') %}
+        {% set required = db.required|default(false) %}
+
+        {% set label = field.label.text|default(name) %}
+
+        <div class="form-group">
+
+            <label for="{{ name }}">
+                {{ label }}
+            </label>
+
+            {# ---------------------------------- #}
+            {# SELECT #}
+            {# ---------------------------------- #}
+
+            {% if type == 'select' %}
+
+                {% if name == 'table' %}
+
+                    <select
+                        id="table_single"
+                        name="table"
+                        {% if required %}required{% endif %}
+                    >
+                        {% if ui.options is defined %}
+                            {% for option in ui.options %}
+                                <option
+                                    value="{{ option.value }}"
+                                    {% if option.value == value %}selected{% endif %}
+                                >
+                                    {{ option.label }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+
+                    <select
+                        id="table_multi"
+                        name="table[]"
+                        multiple
+                        size="15"
+                        style="display:none"
+                    >
+                        {% if ui.options is defined %}
+                            {% for option in ui.options %}
+                                <option value="{{ option.value }}">
+                                    {{ option.label }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+
+                {% else %}
+
+                    {% set is_multiple = ui.multiple is defined and ui.multiple %}
+
+                    <select
+                        id="{{ name }}"
+                        name="{{ is_multiple ? name ~ '[]' : name }}"
+                        {% if is_multiple %}multiple{% endif %}
+                        {% if is_multiple and ui.size is defined %}
+                            size="{{ ui.size }}"
+                        {% endif %}
+                        {% if required %}required{% endif %}
+                    >
+                        {% if ui.options is defined %}
+                            {% for option in ui.options %}
+                                {% set selected = false %}
+
+                                {% if is_multiple %}
+                                    {% set selected = value is iterable and option.value in value %}
+                                {% else %}
+                                    {% set selected = option.value == value %}
+                                {% endif %}
+
+                                <option
+                                    value="{{ option.value }}"
+                                    {% if selected %}selected{% endif %}
+                                >
+                                    {{ option.label }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+
+                {% endif %}
+
+            {# ---------------------------------- #}
+            {# TEXTAREA #}
+            {# ---------------------------------- #}
+
+            {% elseif type == 'textarea' %}
+
+                <textarea
+                    id="{{ name }}"
+                    name="{{ name }}"
+                    {% if required %}required{% endif %}
+                >{{ value }}</textarea>
+
+            {# ---------------------------------- #}
+            {# CHECKBOX #}
+            {# ---------------------------------- #}
+
+            {% elseif type == 'checkbox' %}
+
+                <input
+                    type="hidden"
+                    name="{{ name }}"
+                    value="0"
+                >
+
+                <input
+                    type="checkbox"
+                    id="{{ name }}"
+                    name="{{ name }}"
+                    value="1"
+                    {% if value %}
+                        checked
+                    {% endif %}
+                    {% if ui.onchange is defined %}
+                        onchange="{{ ui.onchange }}"
+                    {% endif %}
+                >
+
+            {# ---------------------------------- #}
+            {# STANDARD INPUT #}
+            {# ---------------------------------- #}
+
+            {% else %}
+
+                <input
+                    type="{{ type }}"
+                    id="{{ name }}"
+                    name="{{ name }}"
+                    value="{{ value }}"
+                    {% if required %}required{% endif %}
+                >
+
+            {% endif %}
+
+        </div>
+
+    {% endfor %}
+
+    <div class="form-actions">
+
+        <button
+            type="submit"
+            name="action"
+            value="generate_json_form"
+        >
+            JSON Formular erzeugen
+        </button>
+
+    </div>
+
+</form>
