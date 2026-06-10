@@ -1,1 +1,0 @@
-oder Footer komplett finalisieren wie Headeroder Footer komplett finalisieren wie Header

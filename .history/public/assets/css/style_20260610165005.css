@@ -172,15 +172,12 @@ body {
 /* Ende Mitglider Header */
 
 main.content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 40px;
     padding: 3rem 5%;
     max-width: 1200px;
     margin: 0 auto;
-    overflow-x: hidden;
-    overflow-y: auto;
     box-sizing: border-box;
 }
 
@@ -251,4 +248,37 @@ footer a {
 
 footer a:hover {
    color:  var(--normalcolorwhite);
+}
+.footer-images {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-top: 10px;
+
+    flex-wrap: wrap;
+
+}
+
+.footer-images img {
+
+    max-width: 100%;
+
+    max-height: 40px;
+
+    width: auto;
+
+    height: auto;
+
+}
+
+.footer-images a {
+
+    display: inline-block;
+
 }

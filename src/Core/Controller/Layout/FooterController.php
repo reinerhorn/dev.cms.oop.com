@@ -23,9 +23,12 @@ class FooterController
         $stmt = $db->prepare("
             SELECT
                 f.id,
+                f.headline,
+                f.label,
                 f.link,
                 f.version,
-                t.label AS translated_company
+                f.css,
+                t.label AS translated_label
             FROM footer f
             LEFT JOIN translation t
               ON t.fk_translation_holder = f.fk_translation_placeholder
@@ -50,9 +53,12 @@ class FooterController
             $stmt = $db->prepare("
                 SELECT
                     f.id,
+                    f.headline,
+                    f.label,
                     f.link,
                     f.version,
-                    t.label AS translated_company
+                    f.css,
+                    t.label AS translated_label
                 FROM footer f
                 LEFT JOIN translation t
                   ON t.fk_translation_holder = f.fk_translation_placeholder
@@ -77,7 +83,7 @@ class FooterController
         $images = [];
 
         $imgStmt = $db->prepare("
-            SELECT image_url, alt_text
+            SELECT image_url, link_url , alt_text
             FROM footer_images
             WHERE footer_id = ?
             ORDER BY sort_order ASC
@@ -99,10 +105,12 @@ class FooterController
         // 4) Rückgabe (analog Header)
         // ---------------------------------------------
         return [
-            'link'    => $footer['link'] ?? '/',
-            'company' => $footer['translated_company'] ?? '',
-            'version' => $footer['version'] ?? '',
-            'images'  => $images,
+            'headline' => $footer['headline'] ?? '',
+            'label'    => $footer['translated_label'] ?? $footer['label'] ?? '',
+            'link'     => $footer['link'] ?? '/',
+            'version'  => $footer['version'] ?? '',
+            'css'      => $footer['css'] ?? 'footer',
+            'images'   => $images,
         ];
     }
 
@@ -112,10 +120,12 @@ class FooterController
     private static function fallbackFooter(): array
     {
         return [
-            'link'    => '/',
-            'company' => '',
-            'version' => '',
-            'images'  => [],
+            'headline' => '',
+            'label'    => '',
+            'link'     => '/',
+            'version'  => '',
+            'css'      => 'footer',
+            'images'   => [],
         ];
     }
 }

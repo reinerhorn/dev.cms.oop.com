@@ -249,3 +249,34 @@ footer a {
 footer a:hover {
    color:  var(--normalcolorwhite);
 }
+.footer-images {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-top: 10px;
+
+    flex-wrap: wrap;
+
+}
+
+.footer-images img {
+
+    max-height: 50px;
+
+    width: auto;
+
+    display: block;
+
+}
+
+.footer-images a {
+
+    display: inline-block;
+
+}

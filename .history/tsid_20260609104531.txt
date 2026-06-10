@@ -8,6 +8,3 @@ git status
 git add .
 git commit -m "Meine Änderungen"
 git push origin develop
-
-truncate -s 0 logs/php-error.log löschen vom errorlog
-

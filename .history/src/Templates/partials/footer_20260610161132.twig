@@ -1,0 +1,24 @@
+<footer class="{{ footer.css }}">
+
+    <div class="footer-info">
+
+        <p>
+
+            <a href="{{ footer.link }}">
+
+                {{ footer.headline }}
+
+            </a>
+
+        </p>
+
+
+        {% if footer.version is not empty %}
+
+            <small>{{ footer.version }}</small>
+
+        {% endif %}
+
+    </div>
+
+</footer>
