@@ -39,6 +39,7 @@
 }
 html, body {
   height: 100%;
+  background-color: var(--yellow);
 
 }
 
@@ -125,7 +126,7 @@ main.content {
 /* Einzelner Content-Block */
 article.content-block {
     width: 100%;
-    background-color: #f5f4ed;
+    background-color: #fafafa;
     padding: 2rem;
     border-radius: 8px;
     box-sizing: border-box;

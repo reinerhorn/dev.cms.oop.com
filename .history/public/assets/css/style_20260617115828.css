@@ -23,7 +23,7 @@
   --red: hsl(0, 78%, 62%);
   --orange: hsl(42, 93%, 50%);
   --blue: hsl(224, 89%, 55%);
-  --yellow: rgba(248, 212, 5, 0.992);
+  --yellow: rgb(225, 186, 45);
   --varyDarkBlue: hsl(234, 98%, 48%);
   --varyDarkgreen: hsl(121, 86%, 48%);
   --grayishBlue: hsl(48, 4%, 25%);
@@ -39,6 +39,7 @@
 }
 html, body {
   height: 100%;
+  background-color: var(--yellow);
 
 }
 
@@ -125,7 +126,7 @@ main.content {
 /* Einzelner Content-Block */
 article.content-block {
     width: 100%;
-    background-color: #f5f4ed;
+    background-color: #fafafa;
     padding: 2rem;
     border-radius: 8px;
     box-sizing: border-box;
