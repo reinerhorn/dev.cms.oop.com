@@ -77,7 +77,7 @@ class FooterController
         $images = [];
 
         $imgStmt = $db->prepare("
-            SELECT image_url, link_url, alt_text
+            SELECT image_url, alt_text
             FROM footer_images
             WHERE footer_id = ?
             ORDER BY sort_order ASC
@@ -123,27 +123,20 @@ class FooterController
             $linkUrl  = trim($img['link_url'] ?? '');
             $alt      = trim($img['alt_text'] ?? '');
 
-            $ext = strtolower(pathinfo($imageUrl, PATHINFO_EXTENSION));
-
-            $type = match ($ext) {
-                'svg'  => 'svg',
-                'webp' => 'image',
-                'png'  => 'image',
-                'jpg'  => 'image',
-                'jpeg' => 'image',
-                default => 'image'
-            };
-
             // Skip broken entries
             if ($imageUrl === '') {
                 continue;
+            }
+
+            // Validate URL safety
+            if ($linkUrl !== '' && !filter_var($linkUrl, FILTER_VALIDATE_URL)) {
+                $linkUrl = '';
             }
 
             $result[] = [
                 'image_url' => $imageUrl,
                 'link_url'  => $linkUrl,
                 'alt_text'  => $alt,
-                'type'      => $type,
             ];
         }
 

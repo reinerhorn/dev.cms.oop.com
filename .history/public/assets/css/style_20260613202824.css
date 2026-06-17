@@ -160,11 +160,7 @@ article.content-block .content-text a {
 article.content-block .content-text a:hover {
     color: #004999;
 }
-
-/* =========================================================
-   FOOTER BASE
-   ========================================================= */
-
+ 
 .footer {
     background-color: var(--normalcolorblack);
     color: var(--normalcolorwhite);
@@ -174,74 +170,64 @@ article.content-block .content-text a:hover {
     font-size: 14px;
     width: 100%;
     margin-top: auto;
+    position: relative;
+    z-index: 1;
 }
 
-/* =========================================================
-   FOOTER LINKS
-   ========================================================= */
-
+/* LINKS IM FOOTER */
 .footer a {
     color: var(--orange);
     text-decoration: none;
     font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
 }
 
-/* =========================================================
-   ICON CONTAINER
-   ========================================================= */
+/* HOVER */
+.footer a:hover {
+    color: var(--normalcolorwhite);
+}
 
+/* COPY / VERSION */
+.footer-copy {
+    margin: 5px 0;
+    font-weight: 600;
+}
+
+.footer-version {
+    margin: 5px 0;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* ICON CONTAINER */
 .footer-images {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    flex-wrap: wrap;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
-/* =========================================================
-   LINK WRAPPER (CRITICAL CLICK FIX)
-   ========================================================= */
-
+/* LINK WRAPPER FÜR ICONS */
 .footer-image-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
     cursor: pointer;
 }
 
-/* =========================================================
-   ICONS (IMG + SVG STABLE RENDERING)
-   ========================================================= */
-
-.footer-image-link img,
-.footer-image-link svg {
-    width: 40px;
-    height: 40px;
-    max-width: 120px;
+/* ICON SELBST */
+.footer-image {
     max-height: 40px;
+    width: auto;
+    height: auto;
     display: block;
-    object-fit: contain;
+    transition: transform 0.2s ease-in-out;
+    pointer-events: auto;
 }
 
-/* =========================================================
-   SVG COLOR SAFETY (currentColor support)
-   ========================================================= */
-
-.footer {
-    color: var(--normalcolorwhite);
-}
-
-/* =========================================================
-   HOVER EFFECT
-   ========================================================= */
-
-.footer-image-link:hover img,
-.footer-image-link:hover svg {
+/* HOVER EFFECT */
+.footer-image:hover {
     transform: scale(1.05);
 }

@@ -14,20 +14,18 @@
 
                 {% for image in footer.images %}
 
-                    {% set url = image.link_url|default('')|trim %}
-
-                    {% if url != '' %}
-                        <a class="footer-image-link" href="{{ url }}">
+                    {% if image.link_url is not empty %}
+                        <a class="footer-image-link" href="{{ image.link_url }}">
                             <img
                                 class="footer-image"
-                                src="{{ image.image_url|default('')|trim }}"
+                                src="{{ image.image_url|trim }}"
                                 alt="{{ image.alt_text }}"
                             >
                         </a>
                     {% else %}
                         <img
                             class="footer-image"
-                            src="{{ image.image_url|default('')|trim }}"
+                            src="{{ image.image_url|trim }}"
                             alt="{{ image.alt_text }}"
                         >
                     {% endif %}

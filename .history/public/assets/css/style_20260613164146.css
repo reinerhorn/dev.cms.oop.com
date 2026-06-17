@@ -39,13 +39,12 @@
 }
 html, body {
   height: 100%;
-
+  margin: 0;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
  
 .header {
@@ -56,7 +55,7 @@ body {
   background: linear-gradient(90deg, rgb(27, 10, 184), rgb(14, 14, 14));
   padding: 10px 20px;
   box-shadow: 0 10px 29px -10px rgba(0, 0, 0, 0.3);
- 
+  z-index: 1000;
 }
 
 .header-top {
@@ -111,6 +110,67 @@ body {
   transform: scale(1.1);
 }
 
+
+
+/*Admin  Headers */
+.admin-header {
+    position: absolute;   /* 🔥 entscheidend */
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: 80px;
+
+    display: flex;
+    align-items: center;
+
+    background-image: repeating-conic-gradient(
+        from 1turn,
+        rgb(0, 0, 0) 20.59%,
+        rgb(1, 66, 246) 76.05%,
+        rgb(252, 202, 1) 83.61%
+    );
+
+    box-shadow: 0px 10px 29px -10px rgba(0, 0, 0, 0.3);
+    padding: 0 10px;
+    z-index: 300;
+}
+ 
+.admin-header a {
+  color: var(--normalcolorwhite);
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.admin-header img {
+  height: 60px; /* Logo innerhalb des Headers */
+  margin-right: 15px;
+}
+/* Ende Adinm Header */
+/*  Mitglider Header */
+.member-header {
+  background-image: repeating-conic-gradient(from 1turn, rgb(0, 0, 0) 20.59%, rgb(1, 66, 246) 76.05%, rgb(252, 202, 1) 83.61%);
+  box-shadow: 0px 10px 29px -10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.member-header a {
+  color: var(--normalcolorwhite);
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.member-header img {
+  height: 80px; /* Logo innerhalb des Headers */
+  margin-right: 15px;
+}
+/* Ende Mitglider Header */
+
 main.content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
@@ -160,11 +220,7 @@ article.content-block .content-text a {
 article.content-block .content-text a:hover {
     color: #004999;
 }
-
-/* =========================================================
-   FOOTER BASE
-   ========================================================= */
-
+ 
 .footer {
     background-color: var(--normalcolorblack);
     color: var(--normalcolorwhite);
@@ -176,72 +232,51 @@ article.content-block .content-text a:hover {
     margin-top: auto;
 }
 
-/* =========================================================
-   FOOTER LINKS
-   ========================================================= */
-
 .footer a {
     color: var(--orange);
     text-decoration: none;
     font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    transition: color 0.3s ease-in-out;
 }
 
-/* =========================================================
-   ICON CONTAINER
-   ========================================================= */
+.footer a:hover {
+    color: var(--normalcolorwhite);
+}
+
+.footer-copy {
+    margin: 5px 0;
+    font-weight: 600;
+}
+
+.footer-version {
+    margin: 5px 0;
+    font-size: 12px;
+    opacity: 0.8;
+}
 
 .footer-images {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    flex-wrap: wrap;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
-/* =========================================================
-   LINK WRAPPER (CRITICAL CLICK FIX)
-   ========================================================= */
+.footer-image {
+    max-height: 40px;
+    width: auto;
+    height: auto;
+    display: block;
+    transition: transform 0.2s ease-in-out;
+}
+
+.footer-image:hover {
+    transform: scale(1.05);
+}
 
 .footer-image-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    cursor: pointer;
-}
-
-/* =========================================================
-   ICONS (IMG + SVG STABLE RENDERING)
-   ========================================================= */
-
-.footer-image-link img,
-.footer-image-link svg {
-    width: 40px;
-    height: 40px;
-    max-width: 120px;
-    max-height: 40px;
-    display: block;
-    object-fit: contain;
-}
-
-/* =========================================================
-   SVG COLOR SAFETY (currentColor support)
-   ========================================================= */
-
-.footer {
-    color: var(--normalcolorwhite);
-}
-
-/* =========================================================
-   HOVER EFFECT
-   ========================================================= */
-
-.footer-image-link:hover img,
-.footer-image-link:hover svg {
-    transform: scale(1.05);
 }

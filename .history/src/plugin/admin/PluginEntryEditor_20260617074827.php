@@ -20,8 +20,6 @@ final class PluginEntryEditor
 
     public function load(string $id): array
     {
-        error_log('PLUGIN ENTRY EDITOR UUID: ' . $id);
-        
         $stmt = $this->db->prepare("
             SELECT 
                 id,
@@ -40,28 +38,6 @@ final class PluginEntryEditor
 
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
-
-        if (!$row) {
-            error_log('PLUGIN ENTRY EDITOR: FORM NOT FOUND FOR UUID: ' . $id);
-
-            return [
-                'plugin_key' => 'forms',
-                'id' => '',
-                'headline' => '',
-                'text' => '',
-                'form_style' => '',
-                'language' => null,
-                'fields' => [],
-                'form_id' => null,
-                'method' => 'POST',
-                'form' => [
-                    'fields' => [],
-                    'form_id' => null,
-                    'method' => 'POST',
-                    'config' => []
-                ]
-            ];
-        }
 
         $config = json_decode($row['config_json'] ?? '[]', true);
 
@@ -143,6 +119,61 @@ final class PluginEntryEditor
             }
 
             error_log('ENTRY EDITOR ENTITY ROW: ' . print_r($entityRow, true));
+        }
+
+        if (!$row) {
+            // -------------------------------------------------
+            // NEW MODE → config laden + Werte resetten
+            // -------------------------------------------------
+            $config = [];
+
+            // Falls eine config_json existiert (z.B. initialer Entry)
+            if (!empty($id)) {
+                $stmt = $this->db->prepare("
+                    SELECT config_json 
+                    FROM p_content_formular
+                    WHERE id = ?
+                    LIMIT 1
+                ");
+                $stmt->bind_param("s", $id);
+                $stmt->execute();
+                $cfgRow = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+
+                $config = json_decode($cfgRow['config_json'] ?? '[]', true);
+                if (!is_array($config)) {
+                    $config = [];
+                }
+            }
+
+            $fields = $config['fields'] ?? [];
+
+            // 👉 WICHTIG: alle Werte resetten
+            foreach ($fields as &$field) {
+                $field['value'] = null;
+            }
+            unset($field);
+
+            return [
+                'plugin_key' => 'forms',
+
+                'id' => '',
+                'headline' => '',
+                'text' => '',
+                'form_style' => '',
+                'language' => null,
+
+                'fields' => $fields,
+                'form_id' => $config['form_id'] ?? null,
+                'method' => $config['method'] ?? 'POST',
+
+                'form' => [
+                    'fields' => $fields,
+                    'form_id' => $config['form_id'] ?? null,
+                    'method' => $config['method'] ?? 'POST',
+                    'config' => $config
+                ]
+            ];
         }
 
         error_log('ENTRY EDITOR CONFIG: ' . print_r($config, true));

@@ -1,41 +1,39 @@
-<footer class="footer">
+<footer class="{{ footer.css }}">
     <div class="footer-info">
 
-        <p class="footer-copy">
-            &copy; 2020 - 2025 {{ footer.company }}
+        <p>
+            <a href="{{ footer.link }}">
+                {{ footer.headline }}
+            </a>
         </p>
 
         {% if footer.version is not empty %}
-            <p class="footer-version">{{ footer.version }}</p>
+            <small>{{ footer.version }}</small>
         {% endif %}
 
         {% if footer.images is not empty %}
             <div class="footer-images">
-
+                <img src="/assets/images/socialmedia/facebook.svg" style="width:50px;height:50px;border:2px solid red;">
                 {% for image in footer.images %}
 
-                    {% set url = image.link_url|default('')|trim %}
-
-                    {% if url != '' %}
-                        <a class="footer-image-link" href="{{ url }}">
+                    {% if image.link_url is not empty %}
+                        <a href="{{ image.link_url }}">
                             <img
-                                class="footer-image"
-                                src="{{ image.image_url|default('')|trim }}"
+                                src="{{ image.image_url|trim }}"
                                 alt="{{ image.alt_text }}"
                             >
                         </a>
                     {% else %}
                         <img
-                            class="footer-image"
-                            src="{{ image.image_url|default('')|trim }}"
+                            src="{{ image.image_url|trim }}"
                             alt="{{ image.alt_text }}"
                         >
                     {% endif %}
 
                 {% endfor %}
-
             </div>
         {% endif %}
 
     </div>
+
 </footer>

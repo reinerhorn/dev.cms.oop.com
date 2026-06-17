@@ -161,10 +161,6 @@ article.content-block .content-text a:hover {
     color: #004999;
 }
 
-/* =========================================================
-   FOOTER BASE
-   ========================================================= */
-
 .footer {
     background-color: var(--normalcolorblack);
     color: var(--normalcolorwhite);
@@ -176,72 +172,43 @@ article.content-block .content-text a:hover {
     margin-top: auto;
 }
 
-/* =========================================================
-   FOOTER LINKS
-   ========================================================= */
-
+/* LINKS IM FOOTER */
 .footer a {
     color: var(--orange);
     text-decoration: none;
     font-weight: bold;
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
 }
 
-/* =========================================================
-   ICON CONTAINER
-   ========================================================= */
-
+/* ICON CONTAINER */
 .footer-images {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    flex-wrap: wrap;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
-/* =========================================================
-   LINK WRAPPER (CRITICAL CLICK FIX)
-   ========================================================= */
-
+/* LINK WRAPPER */
 .footer-image-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    cursor: pointer;
 }
 
-/* =========================================================
-   ICONS (IMG + SVG STABLE RENDERING)
-   ========================================================= */
-
-.footer-image-link img,
-.footer-image-link svg {
-    width: 40px;
-    height: 40px;
-    max-width: 120px;
+/* 🔥 FIX FÜR RIESEN-LOGOS */
+.footer-image {
     max-height: 40px;
-    display: block;
+    max-width: 120px;   /* WICHTIG */
+    width: auto;
+    height: auto;
     object-fit: contain;
+    display: block;
+    transition: transform 0.2s ease-in-out;
 }
 
-/* =========================================================
-   SVG COLOR SAFETY (currentColor support)
-   ========================================================= */
-
-.footer {
-    color: var(--normalcolorwhite);
-}
-
-/* =========================================================
-   HOVER EFFECT
-   ========================================================= */
-
-.footer-image-link:hover img,
-.footer-image-link:hover svg {
+/* HOVER */
+.footer-image:hover {
     transform: scale(1.05);
-}
+} 

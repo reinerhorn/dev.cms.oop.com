@@ -160,12 +160,9 @@ article.content-block .content-text a {
 article.content-block .content-text a:hover {
     color: #004999;
 }
-
-/* =========================================================
-   FOOTER BASE
-   ========================================================= */
-
+ 
 .footer {
+    position: relative;
     background-color: var(--normalcolorblack);
     color: var(--normalcolorwhite);
     font-family: "robotocondensed";
@@ -174,74 +171,59 @@ article.content-block .content-text a:hover {
     font-size: 14px;
     width: 100%;
     margin-top: auto;
+    z-index: 9999;
+    outline: 5px solid red !important;
 }
-
-/* =========================================================
-   FOOTER LINKS
-   ========================================================= */
 
 .footer a {
     color: var(--orange);
     text-decoration: none;
     font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    transition: color 0.3s ease-in-out;
+    outline: 3px solid blue !important;    
 }
 
-/* =========================================================
-   ICON CONTAINER
-   ========================================================= */
+.footer a:hover {
+    color: var(--normalcolorwhite);
+}
+
+.footer-copy {
+    margin: 5px 0;
+    font-weight: 600;
+}
+
+.footer-version {
+    margin: 5px 0;
+    font-size: 12px;
+    opacity: 0.8;
+}
 
 .footer-images {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    flex-wrap: wrap;
     margin-top: 10px;
+    flex-wrap: wrap;
+    outline: 2px solid red !important;
+    position: relative;  
 }
 
-/* =========================================================
-   LINK WRAPPER (CRITICAL CLICK FIX)
-   ========================================================= */
+.footer-image {
+    max-height: 40px;
+    width: auto;
+    height: auto;
+    display: block;
+    transition: transform 0.2s ease-in-out;
+}
+
+.footer-image:hover {
+    transform: scale(1.05);
+}
 
 .footer-image-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    cursor: pointer;
-}
-
-/* =========================================================
-   ICONS (IMG + SVG STABLE RENDERING)
-   ========================================================= */
-
-.footer-image-link img,
-.footer-image-link svg {
-    width: 40px;
-    height: 40px;
-    max-width: 120px;
-    max-height: 40px;
-    display: block;
-    object-fit: contain;
-}
-
-/* =========================================================
-   SVG COLOR SAFETY (currentColor support)
-   ========================================================= */
-
-.footer {
-    color: var(--normalcolorwhite);
-}
-
-/* =========================================================
-   HOVER EFFECT
-   ========================================================= */
-
-.footer-image-link:hover img,
-.footer-image-link:hover svg {
-    transform: scale(1.05);
+    outline: 2px solid red !important;
 }

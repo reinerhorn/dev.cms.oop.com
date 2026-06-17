@@ -1,4 +1,4 @@
-@font-face {
+/Users/reinerhorn/Sites/dev.cms-oop.com/Public/assets/css/style.css:@font-face {
   font-family: "greatvibes";
   src: URL("../fonts/greatvibes/GreatVibes-Regular.woff2") format("woff2");
 }
@@ -177,7 +177,7 @@ article.content-block .content-text a:hover {
 }
 
 /* =========================================================
-   FOOTER LINKS
+   FOOTER LINKS (WICHTIG: INLINE FLEX)
    ========================================================= */
 
 .footer a {
@@ -203,38 +203,29 @@ article.content-block .content-text a:hover {
 }
 
 /* =========================================================
-   LINK WRAPPER (CRITICAL CLICK FIX)
+   LINK WRAPPER (KRITISCH FÜR KLICKBARKEIT)
    ========================================================= */
 
 .footer-image-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
     cursor: pointer;
 }
 
 /* =========================================================
-   ICONS (IMG + SVG STABLE RENDERING)
+   ICONS (IMG + SVG GEMEINSAM)
    ========================================================= */
 
 .footer-image-link img,
 .footer-image-link svg {
-    width: 40px;
-    height: 40px;
-    max-width: 120px;
     max-height: 40px;
-    display: block;
+    max-width: 120px;
+    width: auto;
+    height: auto;
     object-fit: contain;
-}
-
-/* =========================================================
-   SVG COLOR SAFETY (currentColor support)
-   ========================================================= */
-
-.footer {
-    color: var(--normalcolorwhite);
+    display: block;
+    transition: transform 0.2s ease-in-out;
 }
 
 /* =========================================================

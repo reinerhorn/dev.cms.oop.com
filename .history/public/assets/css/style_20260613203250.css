@@ -161,87 +161,34 @@ article.content-block .content-text a:hover {
     color: #004999;
 }
 
-/* =========================================================
-   FOOTER BASE
-   ========================================================= */
-
-.footer {
-    background-color: var(--normalcolorblack);
-    color: var(--normalcolorwhite);
-    font-family: "robotocondensed";
-    text-align: center;
-    padding: 20px 10px;
-    font-size: 14px;
-    width: 100%;
-    margin-top: auto;
+.footer,
+.footer * {
+    pointer-events: auto !important;
 }
 
-/* =========================================================
-   FOOTER LINKS
-   ========================================================= */
-
+/* LINKS IM FOOTER SICHER MACHEN */
 .footer a {
-    color: var(--orange);
-    text-decoration: none;
-    font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    position: relative !important;
+    z-index: 2 !important;
+    display: inline-flex !important;
 }
 
-/* =========================================================
-   ICON CONTAINER
-   ========================================================= */
-
-.footer-images {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-/* =========================================================
-   LINK WRAPPER (CRITICAL CLICK FIX)
-   ========================================================= */
-
+/* ICON LINKS ABSICHERN */
 .footer-image-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    cursor: pointer;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
-/* =========================================================
-   ICONS (IMG + SVG STABLE RENDERING)
-   ========================================================= */
-
-.footer-image-link img,
-.footer-image-link svg {
-    width: 40px;
-    height: 40px;
-    max-width: 120px;
-    max-height: 40px;
-    display: block;
-    object-fit: contain;
+/* WICHTIG: BILDER DÜRFEN KEIN CLICK BLOCKEN */
+.footer-image {
+    pointer-events: auto !important;
 }
 
-/* =========================================================
-   SVG COLOR SAFETY (currentColor support)
-   ========================================================= */
-
-.footer {
-    color: var(--normalcolorwhite);
-}
-
-/* =========================================================
-   HOVER EFFECT
-   ========================================================= */
-
-.footer-image-link:hover img,
-.footer-image-link:hover svg {
-    transform: scale(1.05);
+/* GLOBALER FALLBACK GEGEN OVERLAYS */
+footer::before,
+footer::after,
+.footer::before,
+.footer::after {
+    display: none !important;
+    pointer-events: none !important;
 }
