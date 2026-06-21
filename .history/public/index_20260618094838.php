@@ -21,6 +21,7 @@ use Twig\Environment as TwigEnvironment;
 use Twig\Extension\DebugExtension;
 use CMS\Core\Environment;
 use CMS\Application\FormAction\FormActionDispatcher;
+//require_once dirname(__DIR__) . '/src/Core/Environment.php';
 
 // 🔥 ENV INIT DEBUG
 error_log('AAA VOR ENV');

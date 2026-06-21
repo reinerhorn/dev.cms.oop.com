@@ -10,52 +10,6 @@ final class FooterImagesHandler implements CrudHandlerInterface
         private \mysqli $db
     ) {}
 
-    public function handle(array $postData, array $pageMeta = []): array
-    {
-        $action = $postData['action'] ?? '';
-
-        $id = trim((string)(
-            $postData['id']
-            ?? $postData['footer_images__id']
-            ?? $postData['footer_images_load_id']
-            ?? ''
-        ));
-
-        $data = [
-            'footer_id'  => $postData['footer_images__footer_id'] ?? '',
-            'image_url'  => $postData['footer_images__image_url'] ?? '',
-            'link_url'   => $postData['footer_images__link_url'] ?? '',
-            'alt_text'   => $postData['footer_images__alt_text'] ?? '',
-            'sort_order' => (int)($postData['footer_images__sort_order'] ?? 0),
-        ];
-
-        if (str_contains($action, 'delete')) {
-            $this->delete($id);
-
-            return [
-                'success' => true,
-                'message' => 'Footer Image gelöscht'
-            ];
-        }
-
-        if ($id !== '') {
-            $this->update($id, $data);
-
-            return [
-                'success' => true,
-                'message' => 'Footer Image aktualisiert'
-            ];
-        }
-
-        $newId = $this->save($data);
-
-        return [
-            'success' => true,
-            'message' => 'Footer Image gespeichert',
-            'id' => $newId
-        ];
-    }
-
     public function load(string $id): array
     {
         $stmt = $this->db->prepare("SELECT * FROM footer_images WHERE id = ?");

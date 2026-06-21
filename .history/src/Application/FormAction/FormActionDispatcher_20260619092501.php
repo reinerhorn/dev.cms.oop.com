@@ -34,19 +34,17 @@ final class FormActionDispatcher
 
             $pluginKey = $action;
 
-            // Nur CRUD-Formulare über form_id routen.
-            // Login, Logout usw. verwenden ihren action-Key direkt.
+            // Datengetriebene Formulare: form_id + action => header_save, footer_images_save usw.
             if (
                 $formId !== ''
                 && in_array($action, ['save', 'delete', 'update'], true)
             ) {
                 $normalizedFormId = preg_replace('/_form$/', '', $formId);
 
-                $pluginKey = str_replace('_', '-', $normalizedFormId);
+                // plugin.plugin_key verwendet Bindestriche (footer-save, header-save)
+                $pluginKey = str_replace('_', '-', $normalizedFormId) . '-' . $action;
             }
 
-            error_log('ACTION RAW: ' . $action);
-            error_log('FORM_ID RAW: ' . $formId);
             error_log('FORM ID: ' . $formId);
             error_log('NORMALIZED FORM ID: ' . ($normalizedFormId ?? 'NULL'));
             error_log('ACTION: ' . $action);

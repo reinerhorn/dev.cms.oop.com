@@ -14,35 +14,17 @@ final class FooterHandler implements CrudHandlerInterface
     {
         $action = $postData['action'] ?? '';
 
-        // ID aus datengetriebenem Formular ermitteln
-        $id = trim((string)(
-            $postData['id']
-            ?? $postData['footer__id']
-            ?? $postData['footer_load_id']
-            ?? ''
-        ));
-
-        error_log('FOOTER ACTION: ' . $action);
-        error_log('FOOTER ID: ' . $id);
+        $id = trim((string)($postData['id'] ?? ''));
 
         $data = [
-            'headline'   => $postData['footer__headline'] ?? $postData['headline'] ?? '',
-            'link'       => $postData['footer__link'] ?? $postData['link'] ?? '',
-            'label'      => $postData['footer__label'] ?? $postData['label'] ?? '',
-            'css'        => $postData['footer__css'] ?? $postData['css'] ?? '',
-            'context_id' => $postData['footer__context_id'] ?? $postData['context_id'] ?? '',
-            'fk_translation_placeholder' => $postData['footer__fk_translation_placeholder'] ?? $postData['fk_translation_placeholder'] ?? '',
+            'headline'   => $postData['headline'] ?? '',
+            'link'       => $postData['link'] ?? '',
+            'label'      => $postData['label'] ?? '',
+            'css'        => $postData['css'] ?? '',
+            'context_id' => $postData['context_id'] ?? '',
         ];
-        error_log('FOOTER POST DATA: ' . print_r($data, true));
 
         if (str_contains($action, 'delete')) {
-            if ($id === '') {
-                return [
-                    'success' => false,
-                    'message' => 'Keine Footer-ID zum Löschen gefunden'
-                ];
-            }
-
             $this->delete($id);
 
             return [
@@ -83,27 +65,18 @@ final class FooterHandler implements CrudHandlerInterface
         $id = $this->uuid();
 
         $stmt = $this->db->prepare("
-            INSERT INTO footer (
-                id,
-                headline,
-                link,
-                label,
-                css,
-                context_id,
-                fk_translation_placeholder
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO footer (id, headline, link, label, css, context_id)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
 
         $stmt->bind_param(
-            "sssssss",
+            "ssssss",
             $id,
             $data['headline'],
             $data['link'],
             $data['label'],
             $data['css'],
-            $data['context_id'],
-            $data['fk_translation_placeholder']
+            $data['context_id']
         );
 
         $stmt->execute();
@@ -115,18 +88,17 @@ final class FooterHandler implements CrudHandlerInterface
     {
         $stmt = $this->db->prepare("
             UPDATE footer
-            SET headline = ?, link = ?, label = ?, css = ?, context_id = ?, fk_translation_placeholder = ?
+            SET headline = ?, link = ?, label = ?, css = ?, context_id = ?
             WHERE id = ?
         ");
 
         $stmt->bind_param(
-            "sssssss",
+            "ssssss",
             $data['headline'],
             $data['link'],
             $data['label'],
             $data['css'],
             $data['context_id'],
-            $data['fk_translation_placeholder'],
             $id
         );
 

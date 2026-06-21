@@ -40,26 +40,10 @@ final class EntityEditorHandler
             ];
         }
 
-        $formId = trim((string)($postData['form_id'] ?? ''));
-        $actionKey = trim((string)($postData['action'] ?? ''));
-
-        // Fallback für alte Formulare
-        if ($actionKey === '') {
-            $actionKey = 'save';
-        }
-
-        // Neue Logik:
-        // header + save   => header_save
-        // footer + delete => footer_delete
-        if ($formId !== '' && !str_contains($actionKey, '_')) {
-            $actionKey = $formId . '_' . $actionKey;
-        }
+        $actionKey = trim((string)($postData['action'] ?? 'save'));
 
         $isDelete = str_ends_with($actionKey, '_delete');
-        $isSave   = str_ends_with($actionKey, '_save');
-
-        error_log('ENTITY EDITOR FORM_ID: ' . $formId);
-        error_log('ENTITY EDITOR ACTION: ' . $actionKey);
+        $isSave   = str_ends_with($actionKey, '_save') || $actionKey === 'save';
 
         /*
         ==========================

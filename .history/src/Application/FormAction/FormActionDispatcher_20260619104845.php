@@ -34,19 +34,14 @@ final class FormActionDispatcher
 
             $pluginKey = $action;
 
-            // Nur CRUD-Formulare über form_id routen.
-            // Login, Logout usw. verwenden ihren action-Key direkt.
-            if (
-                $formId !== ''
-                && in_array($action, ['save', 'delete', 'update'], true)
-            ) {
+            // Datengetriebene Formulare: EIN Formular = EIN Handler.
+            // save/delete/update werden im Handler verarbeitet.
+            if ($formId !== '') {
                 $normalizedFormId = preg_replace('/_form$/', '', $formId);
 
                 $pluginKey = str_replace('_', '-', $normalizedFormId);
             }
 
-            error_log('ACTION RAW: ' . $action);
-            error_log('FORM_ID RAW: ' . $formId);
             error_log('FORM ID: ' . $formId);
             error_log('NORMALIZED FORM ID: ' . ($normalizedFormId ?? 'NULL'));
             error_log('ACTION: ' . $action);

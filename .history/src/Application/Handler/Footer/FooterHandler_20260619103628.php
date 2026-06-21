@@ -14,16 +14,7 @@ final class FooterHandler implements CrudHandlerInterface
     {
         $action = $postData['action'] ?? '';
 
-        // ID aus datengetriebenem Formular ermitteln
-        $id = trim((string)(
-            $postData['id']
-            ?? $postData['footer__id']
-            ?? $postData['footer_load_id']
-            ?? ''
-        ));
-
-        error_log('FOOTER ACTION: ' . $action);
-        error_log('FOOTER ID: ' . $id);
+        $id = trim((string)($postData['id'] ?? ''));
 
         $data = [
             'headline'   => $postData['footer__headline'] ?? $postData['headline'] ?? '',
@@ -36,13 +27,6 @@ final class FooterHandler implements CrudHandlerInterface
         error_log('FOOTER POST DATA: ' . print_r($data, true));
 
         if (str_contains($action, 'delete')) {
-            if ($id === '') {
-                return [
-                    'success' => false,
-                    'message' => 'Keine Footer-ID zum Löschen gefunden'
-                ];
-            }
-
             $this->delete($id);
 
             return [
