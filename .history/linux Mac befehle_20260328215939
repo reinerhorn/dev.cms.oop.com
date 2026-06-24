@@ -1,4 +1,0 @@
-sudo truncate -s 0 /opt/homebrew/var/log/httpd/php_error.log  zum löschen von error.log
-truncate -s 0 logs/php-error.log von dev.cms-oop.com logs 
-ls -le logs/php-error.log
-tail -f logs/php-error.log auslesen im terminal dev.cms-oop.com nur hier auf diesem path

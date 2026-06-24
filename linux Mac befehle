@@ -22,4 +22,4 @@ PHP die Datei wieder anlegen darf (Permissions!)
    FILE_APPEND
 ;
  
-DESCRIBE header_images;√DESCRIBE header_images;
+DESCRIBE header_images;
