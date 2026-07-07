@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace CMS\Application\FormData\JsonEditor;
+
 use mysqli;
 
 final class JsonFormBuilderHandler
@@ -130,8 +131,9 @@ final class JsonFormBuilderHandler
             $checkStmt->close();
 
             throw new \RuntimeException(
-                'Datensatz bereits vorhanden. Formular "' . $formType . '" existiert bereits (ID: ' . ($existing['id'] ?? '-') . ').'
-            );
+                 'Datensatz bereits vorhanden. Formular "' . $formType .
+                '" existiert bereits (ID: ' . ($existing['id'] ?? '-') . ').'
+                );  
         }
 
         $checkStmt->close();
@@ -249,7 +251,7 @@ $skipFields = [
 
                     'options_source' => [
                         'table' => $table,
-                        'value_field' => 'id',
+                        'value_field' => $this->detectPrimaryKey($table),
                         'label_field' => $this->detectLabelField($table)
                     ]
                 ],
@@ -384,7 +386,9 @@ $skipFields = [
             'entity' => [
                 'tables' => $tables,
                 'table' => count($tables) === 1 ? $tables[0] : null,
-                'primary_key' => 'id',
+                'primary_key' => count($tables) === 1
+                     ? $this->detectPrimaryKey($tables[0])
+                     : null,
                 'relations' => $relations
             ],
 
@@ -397,31 +401,36 @@ $skipFields = [
     }
 
     private function getPreferredValueField(
-        string $foreignTable,
-        ?string $referencedColumn
-    ): string {
-        if (
-            $referencedColumn !== null
-            && $referencedColumn !== 'id'
-        ) {
-            return $referencedColumn;
-        }
+    string $foreignTable,
+    ?string $referencedColumn
+): string {
 
-        $columns = $this->getTableColumns($foreignTable);
+    if ($referencedColumn !== null) {
+        return $referencedColumn;
+    }
 
-        foreach ([
-            'page_uuid',
-            'nav_uuid',
-            'plugin_uuid',
-            'translation_uuid'
-        ] as $uuidField) {
-            if (in_array($uuidField, $columns, true)) {
-                return $uuidField;
-            }
-        }
+    return $this->detectPrimaryKey($foreignTable);
+}
 
+private function detectPrimaryKey(string $table): string
+{
+    $result = $this->db->query("
+        SELECT COLUMN_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = '{$this->db->real_escape_string($table)}'
+          AND CONSTRAINT_NAME = 'PRIMARY'
+        LIMIT 1
+    ");
+
+    if (!$result) {
         return 'id';
     }
+
+    $row = $result->fetch_assoc();
+
+    return $row['COLUMN_NAME'] ?? 'id';
+}
 
     private function getTableColumns(string $table): array
     {
@@ -692,3 +701,4 @@ $skipFields = [
         );
     }
 }
+

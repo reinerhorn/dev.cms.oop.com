@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace CMS\Application\FormData\JsonEditor;
+
 use mysqli;
 
 final class JsonFormBuilderHandler
@@ -130,8 +131,9 @@ final class JsonFormBuilderHandler
             $checkStmt->close();
 
             throw new \RuntimeException(
-                'Datensatz bereits vorhanden. Formular "' . $formType . '" existiert bereits (ID: ' . ($existing['id'] ?? '-') . ').'
-            );
+                 'Datensatz bereits vorhanden. Formular "' . $formType .
+                '" existiert bereits (ID: ' . ($existing['id'] ?? '-') . ').'
+                );  
         }
 
         $checkStmt->close();
@@ -319,6 +321,16 @@ $skipFields = [
                 continue;
             }
 
+            if (
+                $name === 'slug'
+                || $name === 'page_uuid'
+                || $name === 'nav_uuid'
+                || $name === 'plugin_uuid'
+                || $name === 'translation_uuid'
+            ) {
+                $field['ui']['readonly'] = true;
+            }
+
             // -----------------------------------
             // SELECT FK ERKENNUNG
             // -----------------------------------
@@ -348,7 +360,10 @@ $skipFields = [
                     'type' => 'select',
                     'options_source' => [
                         'table' => $foreignKey,
-                        'value_field' => $foreignKeyColumn ?? 'id',
+                        'value_field' => $this->getPreferredValueField(
+                            $foreignKey,
+                            $foreignKeyColumn
+                        ),
                         'label_field' => $this->resolveLabelField($foreignKey)
                     ]
                 ];
@@ -371,7 +386,9 @@ $skipFields = [
             'entity' => [
                 'tables' => $tables,
                 'table' => count($tables) === 1 ? $tables[0] : null,
-                'primary_key' => 'id',
+                'primary_key' => count($tables) === 1
+                     ? $this->detectPrimaryKey($tables[0])
+                     : null,
                 'relations' => $relations
             ],
 
@@ -381,6 +398,59 @@ $skipFields = [
 
             'fields' => $fields
         ];
+    }
+
+    private function getPreferredValueField(
+    string $foreignTable,
+    ?string $referencedColumn
+): string {
+
+    if ($referencedColumn !== null) {
+        return $referencedColumn;
+    }
+
+    return $this->detectPrimaryKey($foreignTable);
+}
+
+private function detectPrimaryKey(string $table): string
+{
+    $result = $this->db->query("
+        SELECT COLUMN_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = '{$this->db->real_escape_string($table)}'
+          AND CONSTRAINT_NAME = 'PRIMARY'
+        LIMIT 1
+    ");
+
+    if (!$result) {
+        return 'id';
+    }
+
+    $row = $result->fetch_assoc();
+
+    return $row['COLUMN_NAME'] ?? 'id';
+}
+
+    private function getTableColumns(string $table): array
+    {
+        $result = $this->db->query(
+            "SHOW COLUMNS FROM `{$table}`"
+        );
+
+        if (!$result) {
+            throw new \RuntimeException(
+                'SHOW COLUMNS fehlgeschlagen: ' . $this->db->error
+            );
+        }
+
+        $columns = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $columns[] = $row['Field'];
+        }
+
+        return $columns;
     }
 
     private function resolveRelation(
@@ -542,6 +612,9 @@ $skipFields = [
         $preferred = [
             'seo_slug',
             'slug',
+            'page_uuid',
+            'nav_uuid',
+            'plugin_uuid',
             'name',
             'title',
             'headline',
@@ -628,3 +701,4 @@ $skipFields = [
         );
     }
 }
+

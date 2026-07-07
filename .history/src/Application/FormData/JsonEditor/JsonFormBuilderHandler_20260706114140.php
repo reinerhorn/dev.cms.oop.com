@@ -7,6 +7,44 @@ use mysqli;
 
 final class JsonFormBuilderHandler
 {
+    private const FIELD_REGISTRY = [
+        'seo_slug' => [
+            'ui' => 'select',
+            'table' => 'slug_placeholder',
+            'label_field' => 'id'
+        ],
+        'context_id' => [
+            'ui' => 'select',
+            'table' => 'context_placeholder',
+            'label_field' => 'id'
+        ],
+        'meta_description' => [
+            'ui' => 'textarea'
+        ],
+        'help_text' => [
+            'ui' => 'textarea'
+        ],
+        'enabled' => [
+            'ui' => 'checkbox'
+        ],
+        'is_active' => [
+            'ui' => 'checkbox'
+        ]
+    ];
+
+    private const LABEL_FIELDS = [
+        'page' => 'slug',
+        'navigation' => 'seo_slug',
+        'plugin' => 'module',
+        'permissions' => 'name',
+        'trans_language' => 'label',
+        'translation_placeholder' => 'id',
+        'view_context_audience' => 'id',
+        'page_permissions' => 'id',
+        'translation' => 'label',
+        'slug_placeholder' => 'id',
+        'context_placeholder' => 'id',
+    ];
     public function __construct(
         private mysqli $db
     ) {}
@@ -92,8 +130,13 @@ final class JsonFormBuilderHandler
             $checkStmt->close();
 
             throw new \RuntimeException(
-                'Datensatz bereits vorhanden. Formular "' . $formType . '" existiert bereits (ID: ' . ($existing['id'] ?? '-') . ').'
-            );
+                 'Datensatz bereits vorhanden. Formular "' . $formType .
+                '" existiert bereits (ID: ' . ($existing['id'] ?? '-') . ').'
+                );
+
+            
+            
+            
         }
 
         $checkStmt->close();
@@ -232,6 +275,7 @@ $skipFields = [
             $type = strtolower($column['Type']);
             $null = $column['Null'] ?? 'YES';
             $key = $column['Key'] ?? '';
+            $default = $column['Default'] ?? null;
 
             if (in_array($name, $skipFields, true)) {
                 continue;
@@ -252,7 +296,7 @@ $skipFields = [
 
                 'db' => [
                     'type' => 'column',
-                    'required' => ($null === 'NO')
+                    'required' => ($null === 'NO' && $default === null)
                 ],
 
                 'ui' => [
@@ -273,11 +317,33 @@ $skipFields = [
                 $field['ui']['readonly'] = true;
             }
 
+            if (
+                str_ends_with($name, '_uuid')
+                && !str_starts_with($name, 'fk_')
+            ) {
+                continue;
+            }
+
+            if (
+                $name === 'slug'
+                || $name === 'page_uuid'
+                || $name === 'nav_uuid'
+                || $name === 'plugin_uuid'
+                || $name === 'translation_uuid'
+            ) {
+                $field['ui']['readonly'] = true;
+            }
+
             // -----------------------------------
             // SELECT FK ERKENNUNG
             // -----------------------------------
 
-            $foreignKey = $this->detectForeignKey(
+            $foreignKey = $this->resolveRelation(
+                $table,
+                $name
+            );
+
+            $foreignKeyColumn = $this->detectReferencedColumn(
                 $table,
                 $name
             );
@@ -297,7 +363,10 @@ $skipFields = [
                     'type' => 'select',
                     'options_source' => [
                         'table' => $foreignKey,
-                        'value_field' => 'id',
+                        'value_field' => $this->getPreferredValueField(
+                            $foreignKey,
+                            $foreignKeyColumn
+                        ),
                         'label_field' => $this->resolveLabelField($foreignKey)
                     ]
                 ];
@@ -320,7 +389,9 @@ $skipFields = [
             'entity' => [
                 'tables' => $tables,
                 'table' => count($tables) === 1 ? $tables[0] : null,
-                'primary_key' => 'id',
+                'primary_key' => count($tables) === 1
+                     ? $this->detectPrimaryKey($tables[0])
+                     : null,
                 'relations' => $relations
             ],
 
@@ -330,6 +401,87 @@ $skipFields = [
 
             'fields' => $fields
         ];
+    }
+
+    private function getPreferredValueField(
+    string $foreignTable,
+    ?string $referencedColumn
+): string {
+
+    if ($referencedColumn !== null) {
+        return $referencedColumn;
+    }
+
+    return $this->detectPrimaryKey($foreignTable);
+}
+
+private function detectPrimaryKey(string $table): string
+{
+    $result = $this->db->query("
+        SELECT COLUMN_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = '{$this->db->real_escape_string($table)}'
+          AND CONSTRAINT_NAME = 'PRIMARY'
+        LIMIT 1
+    ");
+
+    if (!$result) {
+        return 'id';
+    }
+
+    $row = $result->fetch_assoc();
+
+    return $row['COLUMN_NAME'] ?? 'id';
+}
+
+    private function getTableColumns(string $table): array
+    {
+        $result = $this->db->query(
+            "SHOW COLUMNS FROM `{$table}`"
+        );
+
+        if (!$result) {
+            throw new \RuntimeException(
+                'SHOW COLUMNS fehlgeschlagen: ' . $this->db->error
+            );
+        }
+
+        $columns = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $columns[] = $row['Field'];
+        }
+
+        return $columns;
+    }
+
+    private function resolveRelation(
+        string $table,
+        string $column
+    ): ?string {
+
+        if (
+            isset(self::FIELD_REGISTRY[$column]['table'])
+        ) {
+            return self::FIELD_REGISTRY[$column]['table'];
+        }
+
+        if (
+            str_starts_with($column, 'fk_')
+            && str_ends_with($column, '_uuid')
+        ) {
+            $guessedTable = substr($column, 3, -5);
+
+            if ($guessedTable !== '' && $this->tableExists($guessedTable)) {
+                return $guessedTable;
+            }
+        }
+
+        return $this->detectForeignKey(
+            $table,
+            $column
+        );
     }
 
     private function detectForeignKey(
@@ -372,22 +524,48 @@ $skipFields = [
         return $row['REFERENCED_TABLE_NAME'] ?? null;
     }
 
+    private function detectReferencedColumn(
+        string $table,
+        string $column
+    ): ?string {
+
+        $sql = "
+            SELECT REFERENCED_COLUMN_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = ?
+              AND COLUMN_NAME = ?
+              AND REFERENCED_TABLE_NAME IS NOT NULL
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            return null;
+        }
+
+        $stmt->bind_param('ss', $table, $column);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+
+        if (!$result || $result->num_rows === 0) {
+            $stmt->close();
+            return null;
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return $row['REFERENCED_COLUMN_NAME'] ?? null;
+    }
+
     private function resolveLabelField(string $table): string
     {
-        $custom = [
-            'page' => 'slug',
-            'navigation' => 'seo_slug',
-            'plugin' => 'module',
-            'permissions' => 'name',
-            'trans_language' => 'label',
-            'translation_placeholder' => 'id',
-            'view_context_audience' => 'id',
-            'page_permissions' => 'id',
-            'translation' => 'label'
-        ];
-
-        if (isset($custom[$table])) {
-            return $custom[$table];
+        if (isset(self::LABEL_FIELDS[$table])) {
+            return self::LABEL_FIELDS[$table];
         }
 
         return $this->detectLabelField($table);
@@ -437,6 +615,9 @@ $skipFields = [
         $preferred = [
             'seo_slug',
             'slug',
+            'page_uuid',
+            'nav_uuid',
+            'plugin_uuid',
             'name',
             'title',
             'headline',
@@ -472,6 +653,11 @@ $skipFields = [
         string $name,
         string $type
     ): string {
+        if (
+            isset(self::FIELD_REGISTRY[$name]['ui'])
+        ) {
+            return self::FIELD_REGISTRY[$name]['ui'];
+        }
 
         $name = strtolower($name);
         $type = strtolower($type);
@@ -502,6 +688,12 @@ $skipFields = [
             return 'number';
         }
 
+        if (
+            str_ends_with($name, '_uuid')
+        ) {
+            return 'hidden';
+        }
+
         return 'text';
     }
 
@@ -512,3 +704,4 @@ $skipFields = [
         );
     }
 }
+
