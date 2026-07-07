@@ -34,17 +34,14 @@ final class PageResolver
                 p.required_permission_id,
                 p.nav_id,
                 p.page_css_id,
-                p.form_action
+          
             FROM page p
-            INNER JOIN page ps 
-                ON ps.page_uuid = p.page_uuid
-            WHERE ps.slug = ?
-              AND ps.language = ?
-              AND p.enabled = 1
+                WHERE p.slug = ?
+                AND p.enabled = 1
             LIMIT 1
         ");
 
-        $stmt->bind_param('ss', $slug, $language);
+        $stmt->bind_param('s', $slug);
         $stmt->execute();
 
         $result = $stmt->get_result()->fetch_assoc();
