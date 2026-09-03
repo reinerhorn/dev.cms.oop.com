@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace CMS\Application\FormAction;
 
-error_log('DISPATCH START');
-
-
- 
 use RuntimeException;
 use mysqli;
 use CMS\Security\AccessResolver;

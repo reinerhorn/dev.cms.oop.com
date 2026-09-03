@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+use {{serviceNamespace}}\{{serviceClass}};
+
+final class {{className}}
+{
+    public function __construct(
+        private {{serviceClass}} $service
+    ) {}
+
+    public function create(array $data): string
+    {
+        return $this->service->create($data);
+    }
+
+    public function update(string $id, array $data): bool
+    {
+        return $this->service->update($id, $data);
+    }
+
+    public function delete(string $id): bool
+    {
+        return $this->service->delete($id);
+    }
+
+    public function find(string $id): array
+    {
+        return $this->service->find($id);
+    }
+
+    public function findAll(): array
+    {
+        return $this->service->findAll();
+    }
+}
