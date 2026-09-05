@@ -17,9 +17,9 @@ final class PluginRegistrationGenerator
     }
 
     /**
-     * Erstellt die Plugin-Konfiguration.
+     * Erstellt die Plugin-Definition.
      *
-     * Diese Methode registriert noch nichts in der Datenbank.
+     * Diese Methode schreibt noch nichts in die Datenbank.
      *
      * @param array<string,mixed> $config
      *
@@ -32,21 +32,24 @@ final class PluginRegistrationGenerator
             '========== PLUGIN REGISTRATION GENERATOR START =========='
         );
 
-        $table = $this->stringValue(
-            $config['table']
-            ?? $config['db_table']
-            ?? ''
-        );
+        $table =
+            $this->stringValue(
+                $config['table']
+                ?? $config['db_table']
+                ?? ''
+            );
 
-        $saveKey = $this->stringValue(
-            $config['save_key']
-            ?? ''
-        );
+        $saveKey =
+            $this->stringValue(
+                $config['save_key']
+                ?? ''
+            );
 
-        $formType = $this->stringValue(
-            $config['form_type']
-            ?? 'entry'
-        );
+        $formType =
+            $this->stringValue(
+                $config['form_type']
+                ?? 'entry'
+            );
 
         /*
          * ---------------------------------------------------------
@@ -87,32 +90,43 @@ final class PluginRegistrationGenerator
 
         /*
          * ---------------------------------------------------------
-         * TABLE NAME
+         * TABLE
          * ---------------------------------------------------------
          *
-         * Bei einem normalen Formular wird die Tabelle registriert.
+         * Für normale Tabellen-basierte Generatoren wird die Tabelle
+         * als table_name registriert.
          *
-         * Beim Generator selbst darf table_name leer sein.
+         * Der Generator selbst darf aber auch ohne physische
+         * Content-Tabelle registriert werden. Deshalb ist eine leere
+         * table_name grundsätzlich erlaubt.
          */
 
-        $tableName = $table;
+        $tableName =
+            $table;
 
         /*
          * ---------------------------------------------------------
          * MODULE
          * ---------------------------------------------------------
-         */
-
-        $module = $this->deriveModuleName(
-            $table,
-            $saveKey
-        );
-
-        /*
-         * Handler:
+         *
+         * Der Handler liegt unter:
          *
          * CMS\Application\FormData\Handler\<Module>\<Module>Handler
+         *
+         * Beispiel:
+         *
+         * address
+         * ->
+         * Address
+         * ->
+         * CMS\Application\FormData\Handler\Address\AddressHandler
          */
+
+        $module =
+            $this->deriveModuleName(
+                $table,
+                $saveKey
+            );
 
         $handlerClass =
             'CMS\\Application\\FormData\\Handler\\'
@@ -126,10 +140,11 @@ final class PluginRegistrationGenerator
          * PLUGIN KEY
          * ---------------------------------------------------------
          *
-         * save_key ist der kanonische Plugin-Key.
+         * Der save_key ist der kanonische Plugin-Key.
          */
 
-        $pluginKey = $saveKey;
+        $pluginKey =
+            $saveKey;
 
         /*
          * ---------------------------------------------------------
@@ -137,22 +152,33 @@ final class PluginRegistrationGenerator
          * ---------------------------------------------------------
          */
 
-        $pluginUuid = $this->uuidV4();
+        $pluginUuid =
+            $this->uuidV4();
 
         /*
          * ---------------------------------------------------------
-         * PLUGIN DEFINITION
+         * RESULT
          * ---------------------------------------------------------
          */
 
         $plugin = [
-            'plugin_uuid' => $pluginUuid,
-            'plugin_key' => $pluginKey,
-            'module' => $module,
-            'handler_class' => $handlerClass,
-            'name' => $pluginKey,
-            'is_active' => 1,
-            'table_name' => $tableName,
+            'plugin_uuid' =>
+                $pluginUuid,
+
+            'plugin_key' =>
+                $pluginKey,
+
+            'module' =>
+                $module,
+
+            'handler_class' =>
+                $handlerClass,
+
+            'table_name' =>
+                $tableName,
+
+            'is_active' =>
+                1,
         ];
 
         error_log(
@@ -171,18 +197,9 @@ final class PluginRegistrationGenerator
     }
 
     /**
-     * Registriert ein Plugin in der Tabelle plugin.
+     * Registriert das Plugin in der plugin-Tabelle.
      *
-     * Die Methode ist idempotent:
-     *
-     * - Plugin existiert mit gleicher Konfiguration:
-     *   vorhandener Datensatz wird zurückgegeben.
-     *
-     * - Plugin existiert mit anderer Konfiguration:
-     *   Exception.
-     *
-     * - Plugin existiert nicht:
-     *   neuer Datensatz wird angelegt.
+     * Gibt immer den tatsächlichen Plugin-Datensatz zurück.
      *
      * @param array<string,mixed> $plugin
      *
@@ -195,9 +212,17 @@ final class PluginRegistrationGenerator
             '========== PLUGIN REGISTER START =========='
         );
 
+        error_log(
+            'PLUGIN REGISTER DATA: '
+            . print_r(
+                $plugin,
+                true
+            )
+        );
+
         /*
          * ---------------------------------------------------------
-         * REQUIRED FIELDS
+         * REQUIRED VALUES
          * ---------------------------------------------------------
          */
 
@@ -211,10 +236,12 @@ final class PluginRegistrationGenerator
         ];
 
         foreach ($required as $field) {
-            if (!array_key_exists(
-                $field,
-                $plugin
-            )) {
+            if (
+                !array_key_exists(
+                    $field,
+                    $plugin
+                )
+            ) {
                 throw new RuntimeException(
                     'PluginRegistrationGenerator: '
                     . 'Feld "' .
@@ -224,38 +251,29 @@ final class PluginRegistrationGenerator
             }
         }
 
-        /*
-         * ---------------------------------------------------------
-         * VALUES
-         * ---------------------------------------------------------
-         */
-
         $pluginUuid =
-            (string) $plugin['plugin_uuid'];
+            (string)
+            $plugin['plugin_uuid'];
 
         $pluginKey =
-            (string) $plugin['plugin_key'];
+            (string)
+            $plugin['plugin_key'];
 
         $module =
-            (string) $plugin['module'];
+            (string)
+            $plugin['module'];
 
         $handlerClass =
-            (string) $plugin['handler_class'];
+            (string)
+            $plugin['handler_class'];
 
         $tableName =
-            (string) (
-                $plugin['table_name']
-                ?? ''
-            );
-
-        $name =
-            (string) (
-                $plugin['name']
-                ?? $pluginKey
-            );
+            (string)
+            ($plugin['table_name'] ?? '');
 
         $isActive =
-            ((int) $plugin['is_active']) === 1
+            ((int)
+            $plugin['is_active']) === 1
                 ? 1
                 : 0;
 
@@ -271,6 +289,21 @@ final class PluginRegistrationGenerator
             );
 
         if ($existing !== null) {
+            error_log(
+                'PLUGIN REGISTER: EXISTING PLUGIN FOUND: '
+                . print_r(
+                    $existing,
+                    true
+                )
+            );
+
+            /*
+             * Gleicher Plugin-Key + gleiche Konfiguration:
+             *
+             * Plugin existiert bereits.
+             * Wir geben den vorhandenen Datensatz zurück.
+             */
+
             $existingTable =
                 (string) (
                     $existing['table_name']
@@ -283,29 +316,17 @@ final class PluginRegistrationGenerator
                     ?? ''
                 );
 
-            /*
-             * Gleicher Plugin-Key und gleiche Konfiguration.
-             *
-             * Nichts erneut anlegen.
-             */
-
             if (
                 $existingTable === $tableName
                 && $existingHandler === $handlerClass
             ) {
                 error_log(
                     'PLUGIN REGISTER: '
-                    . 'Plugin bereits vorhanden.'
+                    . 'PLUGIN ALREADY REGISTERED.'
                 );
 
                 return $existing;
             }
-
-            /*
-             * Gleicher Key aber andere Konfiguration.
-             *
-             * Nicht überschreiben.
-             */
 
             throw new RuntimeException(
                 'Plugin mit dem Schlüssel "' .
@@ -319,18 +340,6 @@ final class PluginRegistrationGenerator
          * ---------------------------------------------------------
          * INSERT
          * ---------------------------------------------------------
-         *
-         * Aktuelles Schema:
-         *
-         * plugin_uuid
-         * plugin_key
-         * module
-         * handler_class
-         * name
-         * is_active
-         * table_name
-         *
-         * Kein action_key.
          */
 
         $sql = '
@@ -370,19 +379,17 @@ final class PluginRegistrationGenerator
         }
 
         /*
-         * Typen:
+         * name:
          *
-         * s = plugin_uuid
-         * s = plugin_key
-         * s = module
-         * s = handler_class
-         * s = name
-         * i = is_active
-         * s = table_name
+         * Der Plugin-Key ist hier die neutrale Bezeichnung.
+         * Ein separates Name-System können wir später ergänzen.
          */
 
+        $name =
+            $pluginKey;
+
         $stmt->bind_param(
-            'sssssis',
+            'sssss is',
             $pluginUuid,
             $pluginKey,
             $module,
@@ -391,58 +398,10 @@ final class PluginRegistrationGenerator
             $isActive,
             $tableName
         );
-
-        if (!$stmt->execute()) {
-            $error =
-                $stmt->error;
-
-            $stmt->close();
-
-            throw new RuntimeException(
-                'PluginRegistrationGenerator: '
-                . 'INSERT fehlgeschlagen: '
-                . $error
-            );
-        }
-
-        $stmt->close();
-
-        /*
-         * ---------------------------------------------------------
-         * LOAD INSERTED PLUGIN
-         * ---------------------------------------------------------
-         *
-         * Nicht einfach $plugin zurückgeben.
-         *
-         * Wir laden den tatsächlichen DB-Datensatz.
-         */
-
-        $registeredPlugin =
-            $this->findByPluginKey(
-                $pluginKey
-            );
-
-        if ($registeredPlugin === null) {
-            throw new RuntimeException(
-                'PluginRegistrationGenerator: '
-                . 'Plugin wurde erfolgreich eingefügt, '
-                . 'konnte danach aber nicht geladen werden.'
-            );
-        }
-
-        error_log(
-            'PLUGIN REGISTER COMPLETE: '
-            . print_r(
-                $registeredPlugin,
-                true
-            )
-        );
-
-        return $registeredPlugin;
     }
 
     /**
-     * Sucht ein Plugin anhand des plugin_key.
+     * Sucht ein Plugin über seinen plugin_key.
      *
      * @return array<string,mixed>|null
      */
@@ -471,7 +430,7 @@ final class PluginRegistrationGenerator
         if (!$stmt) {
             throw new RuntimeException(
                 'PluginRegistrationGenerator: '
-                . 'Prepare SELECT fehlgeschlagen: '
+                . 'Prepare Plugin-Abfrage fehlgeschlagen: '
                 . $this->db->error
             );
         }
@@ -489,7 +448,7 @@ final class PluginRegistrationGenerator
 
             throw new RuntimeException(
                 'PluginRegistrationGenerator: '
-                . 'SELECT fehlgeschlagen: '
+                . 'Plugin-Abfrage fehlgeschlagen: '
                 . $error
             );
         }
@@ -517,77 +476,58 @@ final class PluginRegistrationGenerator
 
         return [
             'plugin_uuid' =>
-                (string) (
-                    $row['plugin_uuid']
-                    ?? ''
-                ),
+                (string)
+                ($row['plugin_uuid'] ?? ''),
 
             'plugin_key' =>
-                (string) (
-                    $row['plugin_key']
-                    ?? ''
-                ),
+                (string)
+                ($row['plugin_key'] ?? ''),
 
             'module' =>
-                (string) (
-                    $row['module']
-                    ?? ''
-                ),
+                (string)
+                ($row['module'] ?? ''),
 
             'handler_class' =>
-                (string) (
-                    $row['handler_class']
-                    ?? ''
-                ),
+                (string)
+                ($row['handler_class'] ?? ''),
 
             'name' =>
-                (string) (
-                    $row['name']
-                    ?? ''
-                ),
+                (string)
+                ($row['name'] ?? ''),
 
             'is_active' =>
-                (int) (
-                    $row['is_active']
-                    ?? 0
-                ),
+                (int)
+                ($row['is_active'] ?? 0),
 
             'table_name' =>
-                (string) (
-                    $row['table_name']
-                    ?? ''
-                ),
+                (string)
+                ($row['table_name'] ?? ''),
         ];
     }
 
     /**
      * Ermittelt den Modulnamen.
-     *
-     * Beispiele:
-     *
-     * customer
-     * -> Customer
-     *
-     * p_customer
-     * -> Customer
-     *
-     * customer_address
-     * -> CustomerAddress
-     *
-     * Wenn keine Tabelle vorhanden ist, wird save_key verwendet.
      */
     private function deriveModuleName(
         string $table,
         string $saveKey
     ): string {
+        /*
+         * Wenn eine Tabelle vorhanden ist:
+         *
+         * p_customer
+         * ->
+         * Customer
+         *
+         * customer
+         * ->
+         * Customer
+         */
+
         $source =
             $table !== ''
                 ? $table
                 : $saveKey;
-
-        /*
-         * Tabellenprefix p_ entfernen.
-         */
 
         $source =
             preg_replace(
@@ -595,10 +535,6 @@ final class PluginRegistrationGenerator
                 '',
                 $source
             ) ?? $source;
-
-        /*
-         * Trennzeichen in einzelne Bestandteile zerlegen.
-         */
 
         $parts =
             preg_split(
@@ -639,27 +575,11 @@ final class PluginRegistrationGenerator
             );
         }
 
-        /*
-         * Nur gültiger PHP-Klassenname.
-         */
-
-        if (!preg_match(
-            '/^[A-Z][A-Za-z0-9]*$/',
-            $module
-        )) {
-            throw new RuntimeException(
-                'PluginRegistrationGenerator: '
-                . 'Ungültiger Modulname "' .
-                $module .
-                '".'
-            );
-        }
-
         return $module;
     }
 
     /**
-     * Normalisiert einen Wert auf String.
+     * String normalisieren.
      */
     private function stringValue(
         mixed $value
@@ -678,7 +598,7 @@ final class PluginRegistrationGenerator
     }
 
     /**
-     * Erzeugt eine UUID v4.
+     * UUID v4 erzeugen.
      */
     private function uuidV4(): string
     {
@@ -688,9 +608,8 @@ final class PluginRegistrationGenerator
             );
 
         /*
-         * UUID Version 4.
+         * Version 4.
          */
-
         $data[6] =
             chr(
                 ord(
@@ -703,7 +622,6 @@ final class PluginRegistrationGenerator
         /*
          * RFC 4122 Variant.
          */
-
         $data[8] =
             chr(
                 ord(

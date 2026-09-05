@@ -6,6 +6,7 @@ namespace CMS\Application\FormData\Generator;
 
 use mysqli;
 use RuntimeException;
+use Throwable;
 
 final class GeneratorManager
 {
@@ -19,71 +20,32 @@ final class GeneratorManager
     /**
      * Führt die komplette Generator-Kette aus.
      *
-     * Ablauf:
+     * Reihenfolge:
      *
-     * GeneratorManager
-     *     ↓
-     * PageGenerator
-     *     ↓
-     * NavigationGenerator
-     *     ↓
-     * JsonFormGenerator
-     *     ↓
-     * PluginRegistrationGenerator
-     *     ↓
-     * PageConfigGenerator
-     *
-     * @param array<string,mixed> $config
+     * 1. Page
+     * 2. Navigation
+     * 3. JSON-Form
+     * 4. Plugin
+     * 5. PageConfig
      *
      * @return array<string,mixed>
      */
-    public function generate(
-        array $config
-    ): array {
-        /*
-         * ---------------------------------------------------------
-         * 1. CONFIG NORMALISIEREN
-         * ---------------------------------------------------------
-         */
-
+    public function generate(array $config): array
+    {
         $config =
-            $this->normalizeConfig(
-                $config
-            );
+            $this->normalizeConfig($config);
+
+        $this->validateConfig($config);
+
+        $results = [];
 
         /*
          * ---------------------------------------------------------
-         * 2. CONFIG VALIDIEREN
+         * 1. PAGE
          * ---------------------------------------------------------
          */
 
-        $this->validateConfig(
-            $config
-        );
-
-        /*
-         * ---------------------------------------------------------
-         * RESULT
-         * ---------------------------------------------------------
-         */
-
-        $results = [
-            'page' => null,
-            'navigation' => null,
-            'form' => null,
-            'plugin' => null,
-            'page_config' => null,
-        ];
-
-        /*
-         * ---------------------------------------------------------
-         * 3. PAGE
-         * ---------------------------------------------------------
-         */
-
-        if (
-            $config['generate_page'] === true
-        ) {
+        if ($config['own_page']) {
             $pageGenerator =
                 new PageGenerator(
                     $this->db
@@ -94,147 +56,91 @@ final class GeneratorManager
                     $config
                 );
 
+            $results['page'] =
+                $pageResult;
+
             if (
-                !isset(
-                    $pageResult['page_uuid']
-                )
+                empty($pageResult['page_uuid'])
+                || empty($pageResult['page_slug'])
             ) {
                 throw new RuntimeException(
                     'GeneratorManager: '
-                    . 'PageGenerator hat keine '
-                    . 'page_uuid zurückgegeben.'
+                    . 'PageGenerator hat keine gültige Page zurückgegeben.'
                 );
             }
 
             $config['page_uuid'] =
-                (string)
-                $pageResult['page_uuid'];
+                (string) $pageResult['page_uuid'];
 
             $config['page_slug'] =
-                (string)
-                (
-                    $pageResult['page_slug']
-                    ?? $pageResult['slug']
-                    ?? ''
-                );
-
-            if ($config['page_slug'] === '') {
-                throw new RuntimeException(
-                    'GeneratorManager: '
-                    . 'PageGenerator hat keinen '
-                    . 'page_slug zurückgegeben.'
-                );
-            }
-
-            $results['page'] =
-                $pageResult;
+                (string) $pageResult['page_slug'];
         } else {
-            /*
-             * -----------------------------------------------------
-             * VORHANDENE PAGE LADEN
-             * -----------------------------------------------------
-             */
-
-            $pageResult =
+            $page =
                 $this->loadExistingPage(
                     $config['page']
                 );
 
-            $config['page_uuid'] =
-                (string)
-                $pageResult['page_uuid'];
-
-            $config['page_slug'] =
-                (string)
-                $pageResult['slug'];
+            $results['page'] = [
+                'success' => true,
+                'existing' => true,
+                ...$page,
+            ];
 
             /*
-             * Die tatsächlichen Page-Einstellungen verwenden.
+             * Die tatsächlichen Werte der bestehenden Page
+             * übernehmen.
              *
-             * Damit überschreiben wir nicht versehentlich
-             * Einstellungen einer vorhandenen Page mit Werten
-             * aus dem Generator-Formular.
+             * Nicht die vom Generator-Formular vorgegebenen
+             * Defaultwerte verwenden.
              */
+            $config['page_uuid'] =
+                $page['page_uuid'];
+
+            $config['page_slug'] =
+                $page['slug'];
 
             $config['context'] =
-                (string)
-                $pageResult['context'];
+                $page['context'];
 
             $config['nav_id'] =
-                (string)
-                $pageResult['nav_id'];
+                $page['nav_id'];
 
             $config['required_permission_id'] =
-                $this->nullableString(
-                    $pageResult[
-                        'required_permission_id'
-                    ]
-                    ?? null
-                );
+                $page['required_permission_id'];
 
             $config['page_css_id'] =
-                $this->nullableString(
-                    $pageResult[
-                        'page_css_id'
-                    ]
-                    ?? null
-                );
+                $page['page_css_id'];
 
             $config['auth_visibility'] =
-                (string)
-                $pageResult['auth_visibility'];
+                $page['auth_visibility'];
 
             $config['template'] =
-                (string)
-                $pageResult['template'];
+                $page['template'];
 
             $config['meta_title'] =
-                $this->nullableString(
-                    $pageResult[
-                        'meta_title'
-                    ]
-                    ?? null
-                );
+                $page['meta_title'];
 
             $config['meta_description'] =
-                $this->nullableString(
-                    $pageResult[
-                        'meta_description'
-                    ]
-                    ?? null
-                );
+                $page['meta_description'];
 
             $config['enabled'] =
-                ((int)
-                $pageResult['enabled']) === 1;
+                ((int) $page['enabled']) === 1;
 
             $config['sort_order'] =
-                (int)
-                $pageResult['sort_order'];
-
-            $results['page'] =
-                $pageResult;
+                (int) $page['sort_order'];
         }
 
         /*
          * ---------------------------------------------------------
-         * 4. NAVIGATION
+         * 2. NAVIGATION
          * ---------------------------------------------------------
-         *
-         * Navigation ist optional.
          */
 
-        if (
-            $config['create_navigation'] === true
-        ) {
+        if ($config['create_navigation']) {
             $navigationGenerator =
                 new NavigationGenerator(
                     $this->db
                 );
-
-            /*
-             * Die tatsächlich erzeugte Page verwenden.
-             */
 
             $navigationConfig =
                 $config;
@@ -252,11 +158,23 @@ final class GeneratorManager
 
             $results['navigation'] =
                 $navigationResult;
+
+            if (
+                !empty(
+                    $navigationResult['navigation_uuid']
+                )
+            ) {
+                $config['navigation_uuid'] =
+                    (string)
+                    $navigationResult[
+                        'navigation_uuid'
+                    ];
+            }
         }
 
         /*
          * ---------------------------------------------------------
-         * 5. JSON FORM
+         * 3. JSON FORM
          * ---------------------------------------------------------
          */
 
@@ -265,59 +183,65 @@ final class GeneratorManager
                 $this->db
             );
 
-        $formResult =
+        $jsonFormConfig = [
+            'table' =>
+                $config['table'],
+
+            'form_type' =>
+                $config['form_type'],
+
+            'save_key' =>
+                $config['save_key'],
+        ];
+
+        $jsonFormResult =
             $jsonFormGenerator->generate(
-                [
-                    'table' =>
-                        $config['table'],
-
-                    'form_type' =>
-                        $config['form_type'],
-
-                    'save_key' =>
-                        $config['save_key'],
-                ]
+                $jsonFormConfig
             );
 
+        $results['json_form'] =
+            $jsonFormResult;
+
         if (
-            !isset(
-                $formResult['content_uuid']
+            empty(
+                $jsonFormResult['content_uuid']
             )
-            && !isset(
-                $formResult['plugin_content_uuid']
+            && empty(
+                $jsonFormResult[
+                    'plugin_content_uuid'
+                ]
             )
         ) {
             throw new RuntimeException(
                 'GeneratorManager: '
-                . 'JsonFormGenerator hat keine '
-                . 'Content-UUID zurückgegeben.'
+                . 'JsonFormGenerator hat keine Content-UUID zurückgegeben.'
             );
         }
 
         $pluginContentUuid =
-            (string)
-            (
-                $formResult['plugin_content_uuid']
-                ?? $formResult['content_uuid']
+            (string) (
+                $jsonFormResult[
+                    'plugin_content_uuid'
+                ]
+                ?? $jsonFormResult[
+                    'content_uuid'
+                ]
                 ?? ''
             );
 
         if ($pluginContentUuid === '') {
             throw new RuntimeException(
                 'GeneratorManager: '
-                . 'Ungültige Plugin-Content-UUID.'
+                . 'Keine gültige Plugin-Content-UUID vorhanden.'
             );
         }
 
         $config['plugin_content_uuid'] =
             $pluginContentUuid;
 
-        $results['form'] =
-            $formResult;
-
         /*
          * ---------------------------------------------------------
-         * 6. PLUGIN ERZEUGEN
+         * 4. PLUGIN
          * ---------------------------------------------------------
          */
 
@@ -326,42 +250,47 @@ final class GeneratorManager
                 $this->db
             );
 
-        $plugin =
+        $pluginConfig = [
+            'table' =>
+                $config['table'],
+
+            'save_key' =>
+                $config['save_key'],
+
+            'form_type' =>
+                $config['form_type'],
+        ];
+
+        $pluginResult =
             $pluginGenerator->generate(
-                [
-                    'table' =>
-                        $config['table'],
-
-                    'form_type' =>
-                        $config['form_type'],
-
-                    'save_key' =>
-                        $config['save_key'],
-                ]
+                $pluginConfig
             );
+
+        $results['plugin'] =
+            $pluginResult;
 
         /*
-         * ---------------------------------------------------------
-         * 7. PLUGIN REGISTRIEREN
-         * ---------------------------------------------------------
+         * Plugin registrieren.
          *
-         * register() liefert jetzt ein ARRAY zurück.
+         * generate() erzeugt nur die Definition.
+         * register() sorgt für den DB-Eintrag.
          */
-
         $registeredPlugin =
             $pluginGenerator->register(
-                $plugin
+                $pluginResult
             );
 
+        $results['plugin_registration'] =
+            $registeredPlugin;
+
         if (
-            !isset(
+            empty(
                 $registeredPlugin['plugin_uuid']
             )
         ) {
             throw new RuntimeException(
                 'GeneratorManager: '
-                . 'PluginRegistrationGenerator hat '
-                . 'keine plugin_uuid zurückgegeben.'
+                . 'Plugin wurde nicht registriert.'
             );
         }
 
@@ -369,12 +298,9 @@ final class GeneratorManager
             (string)
             $registeredPlugin['plugin_uuid'];
 
-        $results['plugin'] =
-            $registeredPlugin;
-
         /*
          * ---------------------------------------------------------
-         * 8. PAGE CONFIG
+         * 5. PAGE CONFIG
          * ---------------------------------------------------------
          */
 
@@ -383,23 +309,26 @@ final class GeneratorManager
                 $this->db
             );
 
+        $pageConfig =
+            [
+                'page_uuid' =>
+                    $config['page_uuid'],
+
+                'plugin_uuid' =>
+                    $config['plugin_uuid'],
+
+                'plugin_content_uuid' =>
+                    $config[
+                        'plugin_content_uuid'
+                    ],
+
+                'content_label' =>
+                    $config['save_key'],
+            ];
+
         $pageConfigResult =
             $pageConfigGenerator->generate(
-                [
-                    'page_uuid' =>
-                        $config['page_uuid'],
-
-                    'plugin_uuid' =>
-                        $config['plugin_uuid'],
-
-                    'plugin_content_uuid' =>
-                        $config[
-                            'plugin_content_uuid'
-                        ],
-
-                    'content_label' =>
-                        $config['save_key'],
-                ]
+                $pageConfig
             );
 
         $results['page_config'] =
@@ -407,7 +336,7 @@ final class GeneratorManager
 
         /*
          * ---------------------------------------------------------
-         * 9. RESULT
+         * ERGEBNIS
          * ---------------------------------------------------------
          */
 
@@ -427,8 +356,6 @@ final class GeneratorManager
 
     /**
      * Normalisiert die Generator-Konfiguration.
-     *
-     * @param array<string,mixed> $config
      *
      * @return array<string,mixed>
      */
@@ -472,17 +399,22 @@ final class GeneratorManager
                 ?? false
             );
 
-        $config['generate_page'] =
-            $this->boolValue(
-                $config['generate_page']
-                ?? $config['own_page']
-                ?? false
+        $config['page'] =
+            $this->stringValue(
+                $config['page']
+                ?? ''
             );
 
-        $config['page'] =
-            $this->nullableString(
-                $config['page']
-                ?? null
+        $config['page_uuid'] =
+            $this->stringValue(
+                $config['page_uuid']
+                ?? ''
+            );
+
+        $config['page_slug'] =
+            $this->stringValue(
+                $config['page_slug']
+                ?? ''
             );
 
         $config['slug_mode'] =
@@ -492,22 +424,16 @@ final class GeneratorManager
             );
 
         $config['slug'] =
-            $this->nullableString(
+            $this->stringValue(
                 $config['slug']
-                ?? null
+                ?? ''
             );
 
         $config['new_slug'] =
-            $this->nullableString(
+            $this->stringValue(
                 $config['new_slug']
-                ?? null
+                ?? ''
             );
-
-        /*
-         * ---------------------------------------------------------
-         * PAGE CONFIG
-         * ---------------------------------------------------------
-         */
 
         $config['context'] =
             $this->stringValue(
@@ -522,21 +448,14 @@ final class GeneratorManager
             );
 
         $config['required_permission_id'] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config[
                     'required_permission_id'
-                ]
-                ?? null
-            );
-
-        $config['auth_visibility'] =
-            $this->stringValue(
-                $config['auth_visibility']
-                ?? 'public'
+                ] ?? null
             );
 
         $config['page_css_id'] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config['page_css_id']
                 ?? null
             );
@@ -548,15 +467,16 @@ final class GeneratorManager
             );
 
         $config['meta_title'] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config['meta_title']
                 ?? null
             );
 
         $config['meta_description'] =
-            $this->nullableString(
-                $config['meta_description']
-                ?? null
+            $this->nullableStringValue(
+                $config[
+                    'meta_description'
+                ] ?? null
             );
 
         $config['enabled'] =
@@ -566,20 +486,25 @@ final class GeneratorManager
             );
 
         $config['sort_order'] =
-            $this->intValue(
+            $this->nullableInt(
                 $config['sort_order']
                 ?? 0
             );
 
-        /*
-         * form_action wird bewusst nur übernommen.
-         *
-         * Das Feld existiert noch in page,
-         * wird vom Generator aber nicht verarbeitet.
-         */
+        $config['auth_visibility'] =
+            $this->stringValue(
+                $config['auth_visibility']
+                ?? 'public'
+            );
 
+        /*
+         * form_action wird bewusst nur mitgeführt.
+         *
+         * Das Feld existiert noch in der DB,
+         * wird vom neuen Generator aber nicht verwendet.
+         */
         $config['form_action'] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config['form_action']
                 ?? null
             );
@@ -592,122 +517,124 @@ final class GeneratorManager
 
         $config['create_navigation'] =
             $this->boolValue(
-                $config['create_navigation']
-                ?? false
+                $config[
+                    'create_navigation'
+                ] ?? false
             );
 
         $config['navigation_parent_id'] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config[
                     'navigation_parent_id'
-                ]
-                ?? null
+                ] ?? null
             );
 
         $config['navigation_title'] =
-            $this->nullableString(
+            $this->stringValue(
                 $config[
                     'navigation_title'
-                ]
-                ?? null
+                ] ?? ''
             );
 
         $config['navigation_slug'] =
-            $this->nullableString(
+            $this->stringValue(
                 $config[
                     'navigation_slug'
-                ]
-                ?? null
+                ] ?? ''
             );
 
         $config[
             'navigation_translation_placeholder'
         ] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config[
                     'navigation_translation_placeholder'
-                ]
-                ?? null
+                ] ?? null
             );
 
         $config['navigation_sort_order'] =
-            $this->intValue(
+            $this->nullableInt(
                 $config[
                     'navigation_sort_order'
-                ]
-                ?? 0
+                ] ?? 0
             );
 
         $config['navigation_enabled'] =
             $this->boolValue(
                 $config[
                     'navigation_enabled'
-                ]
-                ?? true
+                ] ?? true
             );
 
         $config['navigation_align'] =
             $this->stringValue(
                 $config[
                     'navigation_align'
-                ]
-                ?? 'left'
+                ] ?? 'left'
             );
 
         $config['navigation_context_id'] =
             $this->stringValue(
                 $config[
                     'navigation_context_id'
-                ]
-                ?? 'admin'
+                ] ?? 'admin'
             );
 
         $config['navigation_permission_id'] =
-            $this->nullableString(
+            $this->nullableStringValue(
                 $config[
                     'navigation_permission_id'
-                ]
-                ?? null
+                ] ?? null
             );
 
         $config['navigation_auth_visibility'] =
             $this->stringValue(
                 $config[
                     'navigation_auth_visibility'
-                ]
-                ?? 'public'
+                ] ?? 'public'
             );
 
         /*
          * ---------------------------------------------------------
-         * RESULT / INTERNAL VALUES
+         * GENERATOR OPTIONEN
          * ---------------------------------------------------------
          */
 
-        $config['page_uuid'] =
-            $this->nullableString(
-                $config['page_uuid']
-                ?? null
-            );
-
-        $config['page_slug'] =
-            $this->nullableString(
-                $config['page_slug']
-                ?? null
-            );
-
-        $config['plugin_uuid'] =
-            $this->nullableString(
-                $config['plugin_uuid']
-                ?? null
-            );
-
-        $config['plugin_content_uuid'] =
-            $this->nullableString(
+        $config['generate_page'] =
+            $this->boolValue(
                 $config[
-                    'plugin_content_uuid'
+                    'generate_page'
+                ] ?? $config['own_page']
+            );
+
+        $config['generate_navigation'] =
+            $this->boolValue(
+                $config[
+                    'generate_navigation'
+                ] ?? $config[
+                    'create_navigation'
                 ]
-                ?? null
+            );
+
+        $config['generate_form'] =
+            $this->boolValue(
+                $config[
+                    'generate_form'
+                ] ?? true
+            );
+
+        $config['generate_plugin'] =
+            $this->boolValue(
+                $config[
+                    'generate_plugin'
+                ] ?? true
+            );
+
+        $config['generate_page_config'] =
+            $this->boolValue(
+                $config[
+                    'generate_page_config'
+                ] ?? true
             );
 
         return $config;
@@ -729,15 +656,13 @@ final class GeneratorManager
 
         if ($config['table'] === '') {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Keine Datenbanktabelle angegeben.'
+                'GeneratorManager: Keine Datenbanktabelle angegeben.'
             );
         }
 
         if ($config['save_key'] === '') {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Kein save_key angegeben.'
+                'GeneratorManager: Kein Form Key angegeben.'
             );
         }
 
@@ -746,22 +671,24 @@ final class GeneratorManager
             $config['save_key']
         )) {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Ungültiger save_key "' .
-                $config['save_key'] .
-                '".'
+                'GeneratorManager: Ungültiger Form Key.'
             );
         }
 
+        $allowedFormTypes = [
+            'entry',
+            'simple',
+        ];
+
         if (
-            $config['form_type'] !== 'entry'
-            && $config['form_type'] !== 'simple'
+            !in_array(
+                $config['form_type'],
+                $allowedFormTypes,
+                true
+            )
         ) {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Ungültiger form_type "' .
-                $config['form_type'] .
-                '".'
+                'GeneratorManager: Ungültiger Formulartyp.'
             );
         }
 
@@ -771,43 +698,54 @@ final class GeneratorManager
          * ---------------------------------------------------------
          */
 
+        $allowedContexts = [
+            'frontend',
+            'frontend-auth',
+            'backend',
+        ];
+
         if (
-            $config['context'] !== 'frontend'
-            && $config['context'] !== 'frontend-auth'
-            && $config['context'] !== 'backend'
+            !in_array(
+                $config['context'],
+                $allowedContexts,
+                true
+            )
         ) {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Ungültiger Page-Kontext "' .
-                $config['context'] .
-                '".'
+                'GeneratorManager: Ungültiger Page-Context.'
             );
         }
 
+        $allowedAuthVisibility = [
+            'public',
+            'guest',
+            'logged_in',
+        ];
+
         if (
-            $config['auth_visibility'] !== 'public'
-            && $config['auth_visibility'] !== 'guest'
-            && $config['auth_visibility'] !== 'logged_in'
+            !in_array(
+                $config['auth_visibility'],
+                $allowedAuthVisibility,
+                true
+            )
         ) {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Ungültige auth_visibility "' .
-                $config['auth_visibility'] .
-                '".'
+                'GeneratorManager: Ungültige auth_visibility.'
             );
         }
 
         if ($config['template'] === '') {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Kein Template angegeben.'
+                'GeneratorManager: Template darf nicht leer sein.'
             );
         }
 
-        if ($config['sort_order'] < 0) {
+        if (
+            $config['sort_order'] !== null
+            && $config['sort_order'] < 0
+        ) {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'sort_order darf nicht negativ sein.'
+                'GeneratorManager: sort_order darf nicht negativ sein.'
             );
         }
 
@@ -818,8 +756,7 @@ final class GeneratorManager
             ) > 150
         ) {
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'meta_title ist zu lang.'
+                'GeneratorManager: meta_title ist zu lang.'
             );
         }
 
@@ -836,73 +773,46 @@ final class GeneratorManager
         }
 
         /*
-         * ---------------------------------------------------------
-         * OWN PAGE
-         * ---------------------------------------------------------
+         * Eigene Page:
+         *
+         * PageGenerator benötigt nav_id.
+         *
+         * Für den Moment muss dieser Wert vorhanden sein.
+         * Die Ableitung frontend/backend -> nav_id
+         * machen wir separat.
          */
-
-        if ($config['generate_page'] === true) {
-            if (
-                $config['slug_mode'] === 'existing'
-            ) {
-                if (
-                    $config['slug'] === null
-                    || $config['slug'] === ''
-                ) {
-                    throw new RuntimeException(
-                        'GeneratorManager: '
-                        . 'Bei slug_mode=existing '
-                        . 'muss ein Slug angegeben werden.'
-                    );
-                }
-            } elseif (
-                $config['slug_mode'] === 'new'
-            ) {
-                if (
-                    $config['new_slug'] === null
-                    || $config['new_slug'] === ''
-                ) {
-                    throw new RuntimeException(
-                        'GeneratorManager: '
-                        . 'Bei slug_mode=new '
-                        . 'muss ein neuer Slug angegeben werden.'
-                    );
-                }
-            } else {
-                throw new RuntimeException(
-                    'GeneratorManager: '
-                    . 'Ungültiger slug_mode "' .
-                    $config['slug_mode'] .
-                    '".'
-                );
-            }
-
-            /*
-             * PageGenerator benötigt aktuell nav_id.
-             *
-             * Dieser Wert darf deshalb bei einer neuen Page
-             * nicht leer sein.
-             */
-
+        if ($config['own_page']) {
             if ($config['nav_id'] === '') {
                 throw new RuntimeException(
                     'GeneratorManager: '
-                    . 'Für eine neue Page muss nav_id '
-                    . 'angegeben werden.'
+                    . 'Für eine neue Page muss nav_id gesetzt sein.'
                 );
             }
-        } else {
-            /*
-             * Vorhandene Page.
-             */
 
             if (
-                $config['page'] === null
-                || $config['page'] === ''
+                $config['slug_mode'] === 'existing'
+                && $config['slug'] === ''
             ) {
                 throw new RuntimeException(
                     'GeneratorManager: '
-                    . 'Keine vorhandene Page angegeben.'
+                    . 'slug_mode=existing benötigt einen Slug.'
+                );
+            }
+
+            if (
+                $config['slug_mode'] === 'new'
+                && $config['new_slug'] === ''
+            ) {
+                throw new RuntimeException(
+                    'GeneratorManager: '
+                    . 'slug_mode=new benötigt new_slug.'
+                );
+            }
+        } else {
+            if ($config['page'] === '') {
+                throw new RuntimeException(
+                    'GeneratorManager: '
+                    . 'Bei einer bestehenden Page muss page angegeben werden.'
                 );
             }
         }
@@ -913,42 +823,35 @@ final class GeneratorManager
          * ---------------------------------------------------------
          */
 
-        if (
-            $config['create_navigation'] === true
-        ) {
-            if (
-                $config['navigation_sort_order'] < 0
-            ) {
-                throw new RuntimeException(
-                    'GeneratorManager: '
-                    . 'navigation_sort_order '
-                    . 'darf nicht negativ sein.'
-                );
-            }
-
+        if ($config['create_navigation']) {
             if (
                 $config['navigation_align'] !== 'left'
                 && $config['navigation_align'] !== 'right'
             ) {
                 throw new RuntimeException(
                     'GeneratorManager: '
-                    . 'navigation_align muss '
-                    . 'left oder right sein.'
+                    . 'Ungültiger navigation_align.'
                 );
             }
 
             if (
-                $config['navigation_auth_visibility']
-                !== 'public'
-                && $config['navigation_auth_visibility']
-                !== 'guest'
-                && $config['navigation_auth_visibility']
-                !== 'logged_in'
+                $config['navigation_auth_visibility'] !== 'public'
+                && $config['navigation_auth_visibility'] !== 'guest'
+                && $config['navigation_auth_visibility'] !== 'logged_in'
             ) {
                 throw new RuntimeException(
                     'GeneratorManager: '
-                    . 'Ungültige Navigation '
-                    . 'auth_visibility.'
+                    . 'Ungültige navigation_auth_visibility.'
+                );
+            }
+
+            if (
+                $config['navigation_sort_order'] !== null
+                && $config['navigation_sort_order'] < 0
+            ) {
+                throw new RuntimeException(
+                    'GeneratorManager: '
+                    . 'navigation_sort_order darf nicht negativ sein.'
                 );
             }
 
@@ -957,30 +860,22 @@ final class GeneratorManager
             ) {
                 throw new RuntimeException(
                     'GeneratorManager: '
-                    . 'navigation_context_id darf '
-                    . 'nicht leer sein.'
+                    . 'navigation_context_id darf nicht leer sein.'
                 );
             }
         }
     }
 
     /**
-     * Lädt eine vorhandene Page vollständig.
+     * Lädt eine bestehende Page.
      *
-     * @return array<string,mixed>
+     * @return array<string,string>
      */
     private function loadExistingPage(
-        ?string $page
+        string $pageIdentifier
     ): array {
-        if (
-            $page === null
-            || $page === ''
-        ) {
-            throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Keine Page zum Laden angegeben.'
-            );
-        }
+        $pageIdentifier =
+            trim($pageIdentifier);
 
         $sql = '
             SELECT
@@ -1005,22 +900,20 @@ final class GeneratorManager
         ';
 
         $stmt =
-            $this->db->prepare(
-                $sql
-            );
+            $this->db->prepare($sql);
 
         if (!$stmt) {
             throw new RuntimeException(
                 'GeneratorManager: '
-                . 'Prepare Page SELECT fehlgeschlagen: '
+                . 'Prepare Page-Abfrage fehlgeschlagen: '
                 . $this->db->error
             );
         }
 
         $stmt->bind_param(
             'ss',
-            $page,
-            $page
+            $pageIdentifier,
+            $pageIdentifier
         );
 
         if (!$stmt->execute()) {
@@ -1031,7 +924,7 @@ final class GeneratorManager
 
             throw new RuntimeException(
                 'GeneratorManager: '
-                . 'Page SELECT fehlgeschlagen: '
+                . 'Page-Abfrage fehlgeschlagen: '
                 . $error
             );
         }
@@ -1046,10 +939,11 @@ final class GeneratorManager
             $stmt->close();
 
             throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Page "' .
-                $page .
-                '" wurde nicht gefunden.'
+                sprintf(
+                    'GeneratorManager: '
+                    . 'Page "%s" wurde nicht gefunden.',
+                    $pageIdentifier
+                )
             );
         }
 
@@ -1058,87 +952,84 @@ final class GeneratorManager
 
         $stmt->close();
 
-        if (!is_array($row)) {
-            throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Ungültige Page-Daten.'
-            );
-        }
-
         return [
             'page_uuid' =>
                 (string)
-                ($row['page_uuid'] ?? ''),
+                $row['page_uuid'],
 
             'slug' =>
                 (string)
-                ($row['slug'] ?? ''),
+                $row['slug'],
 
             'name' =>
                 (string)
-                ($row['name'] ?? ''),
+                $row['name'],
 
             'required_permission_id' =>
-                $row[
-                    'required_permission_id'
-                ] !== null
-                    ? (string)
+                (string) (
                     $row[
                         'required_permission_id'
-                    ]
-                    : null,
+                    ] ?? ''
+                ),
 
             'page_css_id' =>
-                $row['page_css_id'] !== null
-                    ? (string)
-                    $row['page_css_id']
-                    : null,
+                (string) (
+                    $row[
+                        'page_css_id'
+                    ] ?? ''
+                ),
 
             'fk_translation_placeholder' =>
-                $row[
-                    'fk_translation_placeholder'
-                ] !== null
-                    ? (string)
+                (string) (
                     $row[
                         'fk_translation_placeholder'
-                    ]
-                    : null,
+                    ] ?? ''
+                ),
 
             'template' =>
-                (string)
-                ($row['template'] ?? 'default'),
+                (string) (
+                    $row['template']
+                    ?? 'default'
+                ),
 
             'meta_title' =>
-                $row['meta_title'] !== null
-                    ? (string)
+                (string) (
                     $row['meta_title']
-                    : null,
+                    ?? ''
+                ),
 
             'meta_description' =>
-                $row['meta_description'] !== null
-                    ? (string)
+                (string) (
                     $row['meta_description']
-                    : null,
+                    ?? ''
+                ),
 
             'enabled' =>
-                (int)
-                ($row['enabled'] ?? 0),
+                (string) (
+                    $row['enabled']
+                    ?? '1'
+                ),
 
             'sort_order' =>
-                (int)
-                ($row['sort_order'] ?? 0),
+                (string) (
+                    $row['sort_order']
+                    ?? '0'
+                ),
 
             'context' =>
-                (string)
-                ($row['context'] ?? 'frontend'),
+                (string) (
+                    $row['context']
+                    ?? 'frontend'
+                ),
 
             'nav_id' =>
-                (string)
-                ($row['nav_id'] ?? 'generalNav'),
+                (string) (
+                    $row['nav_id']
+                    ?? 'generalNav'
+                ),
 
             'auth_visibility' =>
-                (string)
-                (
+                (string) (
                     $row['auth_visibility']
                     ?? 'public'
                 ),
@@ -1146,7 +1037,7 @@ final class GeneratorManager
     }
 
     /**
-     * Stringwert.
+     * String normalisieren.
      */
     private function stringValue(
         mixed $value
@@ -1165,9 +1056,9 @@ final class GeneratorManager
     }
 
     /**
-     * Nullable String.
+     * Nullable String normalisieren.
      */
-    private function nullableString(
+    private function nullableStringValue(
         mixed $value
     ): ?string {
         $value =
@@ -1181,7 +1072,7 @@ final class GeneratorManager
     }
 
     /**
-     * Booleanwert.
+     * Boolean normalisieren.
      */
     private function boolValue(
         mixed $value
@@ -1190,26 +1081,19 @@ final class GeneratorManager
             return $value;
         }
 
-        if (
-            is_int($value)
-            || is_float($value)
-        ) {
-            return ((int) $value) === 1;
+        if (is_int($value)) {
+            return $value !== 0;
         }
 
         if (is_string($value)) {
-            $value =
+            return in_array(
                 strtolower(
                     trim($value)
-                );
-
-            return in_array(
-                $value,
+                ),
                 [
                     '1',
                     'true',
                     'yes',
-                    'ja',
                     'on',
                 ],
                 true
@@ -1220,19 +1104,30 @@ final class GeneratorManager
     }
 
     /**
-     * Integerwert.
+     * Nullable Integer normalisieren.
      */
-    private function intValue(
+    private function nullableInt(
         mixed $value
-    ): int {
+    ): ?int {
+        if ($value === null) {
+            return null;
+        }
+
+        if (
+            is_string($value)
+            && trim($value) === ''
+        ) {
+            return null;
+        }
+
         if (
             is_int($value)
             || is_float($value)
-            || is_string($value)
+            || is_numeric($value)
         ) {
             return (int) $value;
         }
 
-        return 0;
+        return null;
     }
 }

@@ -162,21 +162,17 @@ final class GenerateAllGenerator
         /*
          * Navigation-ID der Page.
          *
-         * Die Page-Navigation richtet sich nach dem Page-Kontext.
-         * Die eigentliche Admin-/Member-Auswahl erfolgt später
-         * über LayoutController anhand der Rolle.
-         *
-         * frontend       -> generalNav
-         * frontend-auth  -> generalNav
-         * backend        -> adminNav
+         * Beispiele:
+         * generalNav
+         * adminNav
+         * memberNav
          */
 
-        $navId = match ($context) {
-            'backend' => 'adminNav',
-            'frontend',
-            'frontend-auth' => 'generalNav',
-            default => 'generalNav',
-        };
+        $navId =
+            $this->stringValue(
+                $data['nav_id']
+                    ?? ''
+            );
 
         /*
          * Berechtigungen der Page.
