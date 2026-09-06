@@ -301,7 +301,13 @@ final class PageGenerator
             $this->createTranslationPlaceholder(
                 $translationPlaceholder
             );
-
+            /*
+             * Standard-Übersetzungen
+             */
+            $this->createTranslations(
+                $translationPlaceholder,
+                $pageSlug
+            );
             /*
              * Page
              */
@@ -321,13 +327,6 @@ final class PageGenerator
                     sortOrder: $sortOrder
                 );
 
-            /*
-             * Standard-Übersetzungen
-             */
-            $this->createTranslations(
-                $translationPlaceholder,
-                $pageSlug
-            );
 
             $this->db->commit();
 
@@ -565,8 +564,10 @@ final class PageGenerator
                 sort_order,
                 context,
                 nav_id,
-                auth_visibility
+                auth_visibility,
+                form_action
             ) VALUES (
+                ?,
                 ?,
                 ?,
                 ?,
@@ -594,8 +595,10 @@ final class PageGenerator
             );
         }
 
+        $formAction = '';
+
         $stmt->bind_param(
-            'sssssssssiiiss',
+            'sssssssssiiisss',
             $pageUuid,
             $pageSlug,
             $name,
@@ -609,7 +612,8 @@ final class PageGenerator
             $sortOrderValue,
             $context,
             $navId,
-            $authVisibility
+            $authVisibility,
+            $formAction
         );
 
         if (!$stmt->execute()) {
@@ -754,12 +758,16 @@ final class PageGenerator
         string $languageId,
         string $text
     ): void {
+        $translationUuid =
+            $this->uuidV4();
+
         $sql = '
             INSERT INTO translation (
-                fk_translation_placeholder_id,
+                translation_uuid,
+                fk_translation_holder,
                 fk_language_id,
-                translation
-            ) VALUES (?, ?, ?)
+                label
+            ) VALUES (?, ?, ?, ?)
         ';
 
         $stmt =
@@ -773,7 +781,8 @@ final class PageGenerator
         }
 
         $stmt->bind_param(
-            'sss',
+            'ssss',
+            $translationUuid,
             $placeholder,
             $languageId,
             $text

@@ -27,13 +27,6 @@ final class GenerateAllGenerator
     public function handle(array $postData): array
     {
         try {
-            error_log(
-
-                'GENERATOR RAW POST: '
-
-                    . print_r($postData, true)
-
-            );
             $config = $this->buildConfig($postData);
 
             $this->validateConfig($config);
@@ -52,27 +45,27 @@ final class GenerateAllGenerator
                 'success' => true,
 
                 'message' =>
-                'Generator erfolgreich ausgeführt.',
+                    'Generator erfolgreich ausgeführt.',
 
                 'config' =>
-                $config,
+                    $config,
 
                 'results' =>
-                $results,
+                    $results,
             ];
         } catch (Throwable $e) {
             return [
                 'success' => false,
 
                 'message' =>
-                $e->getMessage(),
+                    $e->getMessage(),
 
                 'error' => [
                     'class' =>
-                    $e::class,
+                        $e::class,
 
                     'code' =>
-                    $e->getCode(),
+                        $e->getCode(),
                 ],
             ];
         }
@@ -446,152 +439,152 @@ final class GenerateAllGenerator
 
         return [
             'table' =>
-            $table,
+                $table,
 
             'db_table' =>
-            $table,
+                $table,
 
             'form_type' =>
-            $formType,
+                $formType,
 
             'save_key' =>
-            $saveKey,
+                $saveKey,
 
             /*
              * Page
              */
 
             'own_page' =>
-            $ownPage,
+                $ownPage,
 
             'page' =>
-            $page,
+                $page,
 
             'page_uuid' =>
-            '',
+                '',
 
             'page_slug' =>
-            '',
+                '',
 
             'slug_mode' =>
-            $slugMode,
+                $slugMode,
 
             'slug' =>
-            $slug,
+                $slug,
 
             'new_slug' =>
-            $newSlug,
+                $newSlug,
 
             'context' =>
-            $context,
+                $context,
 
             'nav_id' =>
-            $navId,
+                $navId,
 
             'required_permission_id' =>
-            $requiredPermissionId,
+                $requiredPermissionId,
 
             'page_css_id' =>
-            $pageCssId,
+                $pageCssId,
 
             'auth_visibility' =>
-            $authVisibility,
+                $authVisibility,
 
             'template' =>
-            $template,
+                $template,
 
             'meta_title' =>
-            $metaTitle,
+                $metaTitle,
 
             'meta_description' =>
-            $metaDescription,
+                $metaDescription,
 
             'enabled' =>
-            $enabled,
+                $enabled,
 
             'sort_order' =>
-            $sortOrder,
+                $sortOrder,
 
             //'form_action' =>
-            //   $formAction,
+             //   $formAction,
 
             /*
              * Navigation
              */
 
             'create_navigation' =>
-            $createNavigation,
+                $createNavigation,
 
             'navigation_parent_id' =>
-            $navigationParentId,
+                $navigationParentId,
 
             'navigation_title' =>
-            $navigationTitle,
+                $navigationTitle,
 
             'navigation_slug' =>
-            $navigationSlug,
+                $navigationSlug,
 
             'navigation_translation_placeholder' =>
-            $navigationTranslationPlaceholder,
+                $navigationTranslationPlaceholder,
 
             'navigation_sort_order' =>
-            $navigationSortOrder,
+                $navigationSortOrder,
 
             'navigation_enabled' =>
-            $navigationEnabled,
+                $navigationEnabled,
 
             'navigation_align' =>
-            $navigationAlign,
+                $navigationAlign,
 
             'navigation_context_id' =>
-            $navigationContextId,
+                $navigationContextId,
 
             'navigation_permission_id' =>
-            $navigationPermissionId,
+                $navigationPermissionId,
 
             'navigation_auth_visibility' =>
-            $navigationAuthVisibility,
+                $navigationAuthVisibility,
 
             /*
              * Weitere Generatoroptionen
              */
 
             'multi_table' =>
-            $multiTable,
+                $multiTable,
 
             'entity' =>
-            $entity,
+                $entity,
 
             'module' =>
-            $module,
+                $module,
 
             'namespace' =>
-            $namespace,
+                $namespace,
 
             'output_path' =>
-            $outputPath,
+                $outputPath,
 
             /*
              * Generation Flags
              */
 
             'generate_all' =>
-            $generateAll,
+                $generateAll,
 
             'generate_json_form' =>
-            $generateJsonForm,
+                $generateJsonForm,
 
             'generate_crud' =>
-            $generateCrud,
+                $generateCrud,
 
             'generate_repository' =>
-            $generateRepository,
+                $generateRepository,
 
             'generate_service' =>
-            $generateService,
+                $generateService,
 
             'generate_controller' =>
-            $generateController,
+                $generateController,
         ];
     }
 
@@ -665,7 +658,7 @@ final class GenerateAllGenerator
         ) {
             throw new RuntimeException(
                 'Ungültige Page-Sichtbarkeit: '
-                    . $authVisibility
+                . $authVisibility
             );
         }
 
@@ -759,7 +752,9 @@ final class GenerateAllGenerator
             }
 
             $navigationVisibility =
-                (string) $config['navigation_auth_visibility'];
+                (string) $config[
+                    'navigation_auth_visibility'
+                ];
 
             if (
                 !in_array(
@@ -770,7 +765,7 @@ final class GenerateAllGenerator
             ) {
                 throw new RuntimeException(
                     'Ungültige Navigation-Sichtbarkeit: '
-                        . $navigationVisibility
+                    . $navigationVisibility
                 );
             }
 
