@@ -1,8 +1,0 @@
-RewriteEngine On
- 
-# Wenn Datei oder Ordner existiert → direkt ausliefern
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-
-# Alles andere → index.php
-RewriteRule ^ public/index.php [L]
