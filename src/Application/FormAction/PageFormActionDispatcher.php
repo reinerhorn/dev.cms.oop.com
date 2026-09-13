@@ -20,6 +20,10 @@ final class PageFormActionDispatcher
             $pageAction   = trim($actionKey);
             $buttonAction = trim($postData['action'] ?? '');
 
+            error_log('CSRF CHECK: PageFormActionDispatcher');
+            error_log('CSRF POST: ' . ($postData['_csrf'] ?? 'NULL'));
+            error_log('CSRF SESSION: ' . ($_SESSION['_csrf'] ?? 'NULL'));
+
             // 1) CSRF prüfen
             if (
                 empty($postData['_csrf'])

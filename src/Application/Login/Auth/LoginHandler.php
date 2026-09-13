@@ -32,7 +32,9 @@ final class LoginHandler
             ];
         }
 
+        $db_start = microtime(true);
         $db = CMSApp::getDb();
+        error_log('>>> LOGIN GETDB: ' . number_format(microtime(true) - $db_start, 6) . ' sec');
 
         // -------------------------------------------------
         // 2) User laden
@@ -43,25 +45,34 @@ final class LoginHandler
              WHERE email = ?
              LIMIT 1"
         );
+        $query_start = microtime(true);
+
         $stmt->bind_param('s', $email);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
+        error_log('>>> LOGIN USER QUERY: ' . number_format(microtime(true) - $query_start, 6) . ' sec');
         error_log('LOGIN USER = ' . print_r($user, true));
 
         if ($user && isset($user['password'])) {
             error_log('PASSWORD HASH FROM DB = ' . $user['password']);
 
+            $verify_start = microtime(true);
+
+            error_log('LOGIN PASSWORD LENGTH = ' . strlen($password));
+            error_log('LOGIN PASSWORD SHA256 = ' . hash('sha256', $password));
+
             $verify = password_verify($password, $user['password']);
 
+            error_log('>>> LOGIN PASSWORD VERIFY: ' . number_format(microtime(true) - $verify_start, 6) . ' sec');
             error_log('PASSWORD VERIFY RESULT = ' . ($verify ? 'YES' : 'NO'));
         }
 
         if (
             !$user
             || !isset($user['password'])
-            || !password_verify($password, $user['password'])
+            || !$verify
         ) {
             return [
                 'status'   => 'error',
@@ -96,10 +107,14 @@ final class LoginHandler
              WHERE ld.is_active = 1
                AND ula.id IS NULL"
         );
+        $legal_start = microtime(true);
+
         $stmt->bind_param('s', $user['id']);
         $stmt->execute();
         $missingAcceptances = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
+
+        error_log('>>> LOGIN LEGAL QUERY: ' . number_format(microtime(true) - $legal_start, 6) . ' sec');
 
         if (!empty($missingAcceptances)) {
             if ($frontend) {
@@ -145,11 +160,15 @@ final class LoginHandler
         // 3) Login durchführen
         // -------------------------------------------------
         // Session-Fixation wird im AuthService behandelt
+        $auth_start = microtime(true);
+
         $auth = new AuthService();
         $auth->login(
             (string)$user['id'],
             (string)$user['role_id']
         );
+
+        error_log('>>> LOGIN AUTHSERVICE: ' . number_format(microtime(true) - $auth_start, 6) . ' sec');
 
         error_log('LOGIN SUCCESS USER_ID=' . $user['id']);
         error_log('SESSION AFTER LOGIN = ' . json_encode($_SESSION));
@@ -174,17 +193,23 @@ final class LoginHandler
 
             error_log('CURRENT ROLE FOR RESOLVER = ' . ($currentRoleId ?: 'EMPTY'));
 
+            $role_start = microtime(true);
+
             $defaultPageId = $roleService->getDefaultPageId($currentRoleId);
 
+            error_log('>>> LOGIN ROLE SERVICE: ' . number_format(microtime(true) - $role_start, 6) . ' sec');
             error_log('DEFAULT PAGE ID = ' . ($defaultPageId ?? 'NULL'));
 
             $accessResolver = CMSApp::getAccessResolver();
+
+            $resolver_start = microtime(true);
 
             $redirect = $accessResolver->resolveStartPage(
                 $currentRoleId,
                 (string)($_SESSION['language'] ?? 'de')
             );
 
+            error_log('>>> LOGIN ACCESS RESOLVER: ' . number_format(microtime(true) - $resolver_start, 6) . ' sec');
             error_log('RESOLVE STARTPAGE RESULT = ' . ($redirect ?: 'NULL'));
         }
 

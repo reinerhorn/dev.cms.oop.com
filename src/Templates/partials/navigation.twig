@@ -1,49 +1,61 @@
+{% macro render_items(items, level) %}
+    {% for item in items %}
+        {% set has_children = item.children is defined and item.children|length > 0 %}
+        {% set is_folder = has_children and (item.url is not defined or not item.url) %}
+
+        <li class="nav-item level-{{ level }}{% if has_children %} has-dropdown{% endif %}{% if is_folder %} nav-folder{% endif %}{% if item.active %} active{% endif %}">
+            {% if is_folder %}
+                <span class="nav-title">{{ item.title }}</span>
+            {% elseif item.url is defined and item.url %}
+                <a href="{{ item.url }}">{{ item.title }}</a>
+            {% else %}
+                <span class="nav-title">{{ item.title }}</span>
+            {% endif %}
+
+            {% if has_children %}
+                <ul class="dropdown-menu level-{{ level + 1 }}">
+                    {{ _self.render_items(item.children, level + 1) }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}
+
 <nav id="{{ navId|default('generalNav') }}" class="main-nav">
 
     <!-- LINKS -->
     <ul class="nav-group nav-left">
         {% for item in navigation %}
             {% if item.align is not defined or item.align != 'right' %}
-                <li class="nav-item{% if item.children is defined and item.children|length %} has-dropdown{% endif %}{% if item.active %} active{% endif %}">
-                    {% if item.children is defined and item.children|length %}
-                        <span class="nav-title">{{ item.title }}</span>
-                        <ul class="dropdown-menu">
-                            {% for sub in item.children %}
-                                <li class="nav-sub-item">
-                                    <a href="{{ sub.url }}">{{ sub.title }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <a href="{{ item.url }}">{{ item.title }}</a>
-                    {% endif %}
-                </li>
+                {{ _self.render_items([item], 0) }}
             {% endif %}
         {% endfor %}
     </ul>
 
     <!-- RECHTS -->
-  <ul class="nav-group nav-right">
-    {% for item in navigation %}
-        {% if item.align == 'right' %}
-
-            {% if item.is_logout %}
-                <li class="nav-item nav-logout">
-                    <form method="post" action="/auth/logout">
-                    <input type="hidden" name="_csrf" value="{{ csrf }}">
-                        <button type="submit" class="nav-link logout">
-                            {{ item.title }}
-                        </button>
-                    </form>
-                </li>
-            {% else %}
-                <li class="nav-item{% if item.active %} active{% endif %}">
-                    <a href="{{ item.url }}">{{ item.title }}</a>
-                </li>
+    <ul class="nav-group nav-right">
+        {% for item in navigation %}
+            {% if item.align == 'right' %}
+                {% if item.is_logout %}
+                    <li class="nav-item nav-logout">
+                        <form method="post" action="/auth/logout">
+                            <input type="hidden" name="_csrf" value="{{ csrf }}">
+                            <button type="submit" class="nav-link logout">
+                                {{ item.title }}
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item{% if item.active %} active{% endif %}">
+                        {% if item.url is defined and item.url %}
+                            <a href="{{ item.url }}">{{ item.title }}</a>
+                        {% else %}
+                            <span class="nav-title">{{ item.title }}</span>
+                        {% endif %}
+                    </li>
+                {% endif %}
             {% endif %}
-
-        {% endif %}
-    {% endfor %}
-</ul>
+        {% endfor %}
+    </ul>
 
 </nav>

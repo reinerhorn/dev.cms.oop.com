@@ -7,6 +7,8 @@ class DatabaseConnection {
     private static ?\mysqli $connection = null;
 
     public static function getConnection(): \mysqli {
+        $start = microtime(true);
+        error_log('>>> DB [0.000] START');
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
         $configPath = getenv('CMS_DB_CONFIG');
@@ -26,6 +28,7 @@ class DatabaseConnection {
         if (self::$connection === null) {
             $port = $config['db_port'] ?? 3306;
 
+            error_log('>>> DB [' . number_format(microtime(true) - $start, 6) . '] BEFORE MYSQLI');
             self::$connection = new \mysqli(
                 $config['db_host'],
                 $config['db_user'],
@@ -34,9 +37,12 @@ class DatabaseConnection {
                 $port
             );
 
+            error_log('>>> DB [' . number_format(microtime(true) - $start, 6) . '] AFTER MYSQLI');
             self::$connection->set_charset('utf8mb4');
+            error_log('>>> DB [' . number_format(microtime(true) - $start, 6) . '] AFTER CHARSET');
         }
 
+        error_log('>>> DB [' . number_format(microtime(true) - $start, 6) . '] END');
         return self::$connection;
     }
 }

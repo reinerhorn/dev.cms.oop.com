@@ -40,6 +40,9 @@ final class FormActionDispatcher
         array $postData,
         array $pageMeta
     ): array {
+        $__dispatch_start = microtime(true);
+        error_log('>>> DISPATCH TIMER START');
+
         error_log('========== DISPATCH START ==========');
         error_log('POST DATA: ' . print_r($postData, true));
         error_log('POST SESSION ID: ' . session_id());
@@ -83,6 +86,10 @@ final class FormActionDispatcher
              * 2. CSRF prüfen
              * ---------------------------------------------------------
              */
+            error_log('CSRF CHECK: FormActionDispatcher');
+            error_log('CSRF POST: ' . ($postData['_csrf'] ?? 'NULL'));
+            error_log('CSRF SESSION: ' . ($_SESSION['_csrf'] ?? 'NULL'));
+
             if (
                 empty($postData['_csrf'])
                 || empty($_SESSION['_csrf'])
@@ -463,10 +470,14 @@ final class FormActionDispatcher
                 )
             );
 
+            error_log('>>> HANDLER TIMER START: ' . microtime(true));
+
             $result = $handler->handle(
                 $postData,
                 $pageMeta
             );
+
+            error_log('>>> HANDLER TIMER END: ' . microtime(true));
 
             error_log(
                 'HANDLER RESULT: '
@@ -511,14 +522,35 @@ final class FormActionDispatcher
 
             exit;
 
-        } catch (RuntimeException $e) {
+        } catch (Throwable $e) {
 
             error_log(
                 '========== DISPATCH ERROR =========='
             );
 
             error_log(
-                $e->getMessage()
+                'FAD EXCEPTION CLASS: '
+                . get_class($e)
+            );
+
+            error_log(
+                'FAD EXCEPTION MESSAGE: '
+                . $e->getMessage()
+            );
+
+            error_log(
+                'FAD EXCEPTION FILE: '
+                . $e->getFile()
+            );
+
+            error_log(
+                'FAD EXCEPTION LINE: '
+                . $e->getLine()
+            );
+
+            error_log(
+                'FAD EXCEPTION TRACE: '
+                . $e->getTraceAsString()
             );
 
             /*
@@ -581,6 +613,11 @@ final class FormActionDispatcher
             return true;
         }
 
+        error_log(
+            '>>> DISPATCH TIMER END: '
+            . number_format(microtime(true) - $__dispatch_start, 6)
+            . ' sec'
+        );
         return false;
     }
 }

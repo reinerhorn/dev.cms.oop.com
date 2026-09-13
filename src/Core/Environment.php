@@ -1,29 +1,38 @@
 <?php
- 
+
 declare(strict_types=1);
- 
+
 namespace CMS\Core;
- 
+
 final class Environment
 {
     public static function init(): void
     {
-       // DEBUG vor Umschaltung des Logs (geht noch ins Apache/PHP Default-Log)
-       error_log('>>> ENV INIT START (BEFORE ini_set)');
-        $logFile = dirname(__DIR__, 2) . '/logs/php-error.log';
+        $start = microtime(true);
 
-        if (!is_dir(dirname($logFile))) {
-            mkdir(dirname($logFile), 0777, true);
+        error_log('>>> ENV [0.000] START');
+
+        $logFile = dirname(__DIR__, 2) . '/logs/php-error.log';
+        error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] LOGFILE BUILT: ' . $logFile);
+
+        $logDir = dirname($logFile);
+
+        if (!is_dir($logDir)) {
+            error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] BEFORE MKDIR');
+            mkdir($logDir, 0777, true);
+            error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] AFTER MKDIR');
         }
 
+        error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] BEFORE ini_set log_errors');
         ini_set('log_errors', '1');
+
+        error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] BEFORE ini_set error_log');
         ini_set('error_log', $logFile);
 
-        // DEBUG nach Umschaltung (muss jetzt in dein Projekt-Log gehen)
-        error_log('>>> ENV LOG TARGET: ' . ini_get('error_log'));
-        error_log('>>> ENV INIT SWITCHED TO PROJECT LOG');
+        error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] LOG SWITCHED');
 
         $env = $_ENV['APP_ENV'] ?? 'development';
+        error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] APP_ENV: ' . $env);
 
         if ($env === 'production') {
             error_reporting(0);
@@ -32,6 +41,7 @@ final class Environment
             error_reporting(E_ALL);
             ini_set('display_errors', '1');
         }
-        error_log('>>> ENV INIT END (SHOULD BE IN PROJECT LOG)');
+
+        error_log('>>> ENV [' . number_format(microtime(true) - $start, 6) . '] END');
     }
 }

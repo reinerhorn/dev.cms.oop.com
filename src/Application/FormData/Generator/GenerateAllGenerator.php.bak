@@ -27,118 +27,6 @@ final class GenerateAllGenerator
     public function handle(array $postData): array
     {
         try {
-            /*
-             * ---------------------------------------------------------
-             * Generator-Bestätigung auswerten
-             * ---------------------------------------------------------
-             */
-
-            $decision =
-                $this->stringValue(
-                    $postData['generator_decision']
-                    ?? ''
-                );
-
-            if (
-                $decision !== ''
-                && isset($_SESSION['generator_pending'])
-                && is_array($_SESSION['generator_pending'])
-            ) {
-                $pending =
-                    $_SESSION['generator_pending'];
-
-                unset(
-                    $_SESSION['generator_pending']
-                );
-
-                if ($decision === 'no') {
-                    return [
-                        'success' => false,
-                        'status' => 'cancelled',
-                        'message' =>
-                            'Generator-Ausführung wurde abgebrochen.',
-                    ];
-                }
-
-                if (
-                    $decision === 'yes'
-                    && isset($pending['config'])
-                    && is_array($pending['config'])
-                ) {
-                    $config =
-                        $pending['config'];
-
-                    /*
-                     * Die vorhandene Page verwenden.
-                     */
-
-                    if (
-                        isset($pending['existing_page'])
-                        && is_array($pending['existing_page'])
-                    ) {
-                        $existingPage =
-                            $pending['existing_page'];
-
-                        $config['generate_page'] =
-                            false;
-
-                        $config['own_page'] =
-                            false;
-
-                        $config['page'] =
-                            (string) (
-                                $existingPage['page_uuid']
-                                ?? ''
-                            );
-
-                        $config['slug_mode'] =
-                            'existing';
-
-                        $config['slug'] =
-                            (string) (
-                                $existingPage['slug']
-                                ?? ''
-                            );
-
-                        $config['new_slug'] =
-                            '';
-
-                        if (
-                            $config['navigation']
-                            !== 'none'
-                        ) {
-                            $navigationTitle =
-                                trim(
-                                    (string) (
-                                        $existingPage['name']
-                                        ?? ''
-                                    )
-                                );
-
-                        }
-                    }
-
-                    $manager =
-                        new GeneratorManager(
-                            $this->db
-                        );
-
-                    $results =
-                        $manager->generate(
-                            $config
-                        );
-
-                    return [
-                        'success' => true,
-                        'message' =>
-                            'Generator erfolgreich ausgeführt. '
-                            . 'Die vorhandene Page wurde verwendet.',
-                        'config' => $config,
-                        'results' => $results,
-                    ];
-                }
-            }
-
             error_log(
 
                 'GENERATOR RAW POST: '
@@ -146,11 +34,7 @@ final class GenerateAllGenerator
                     . print_r($postData, true)
 
             );
-
-            $config =
-                $this->buildConfig(
-                    $postData
-                );
+            $config = $this->buildConfig($postData);
 
             $this->validateConfig($config);
 
@@ -233,36 +117,6 @@ final class GenerateAllGenerator
                 $results,
             ];
         } catch (Throwable $e) {
-
-            error_log(
-                '========== GENERATOR EXCEPTION =========='
-            );
-
-            error_log(
-                'GENERATOR EXCEPTION CLASS: '
-                . get_class($e)
-            );
-
-            error_log(
-                'GENERATOR EXCEPTION MESSAGE: '
-                . $e->getMessage()
-            );
-
-            error_log(
-                'GENERATOR EXCEPTION FILE: '
-                . $e->getFile()
-            );
-
-            error_log(
-                'GENERATOR EXCEPTION LINE: '
-                . $e->getLine()
-            );
-
-            error_log(
-                'GENERATOR EXCEPTION TRACE: '
-                . $e->getTraceAsString()
-            );
-
             return [
                 'success' => false,
 
@@ -307,12 +161,6 @@ final class GenerateAllGenerator
         $formType =
             $this->stringValue(
                 $data['form_type']
-                    ?? 'entry'
-            );
-
-        $formHandler =
-            $this->stringValue(
-                $data['form_handler']
                     ?? 'entry'
             );
 
@@ -375,6 +223,25 @@ final class GenerateAllGenerator
             );
 
         /*
+         * Navigation-ID der Page.
+         *
+         * Die Page-Navigation richtet sich nach dem Page-Kontext.
+         * Die eigentliche Admin-/Member-Auswahl erfolgt später
+         * über LayoutController anhand der Rolle.
+         *
+         * frontend       -> generalNav
+         * frontend-auth  -> generalNav
+         * backend        -> adminNav
+         */
+
+        $navId = match ($context) {
+            'backend' => 'adminNav',
+            'frontend',
+            'frontend-auth' => 'generalNav',
+            default => 'generalNav',
+        };
+
+        /*
          * Berechtigungen der Page.
          *
          * Beispiele:
@@ -387,23 +254,6 @@ final class GenerateAllGenerator
                 $data['required_permission_id']
                     ?? null
             );
-
-        /*
-         * Navigation-ID der Page.
-         *
-         * Die Navigation ergibt sich aus der
-         * vorhandenen Berechtigung.
-         *
-         * perm-view-admin  -> adminNav
-         * perm-view-member -> memberNav
-         * sonst            -> generalNav
-         */
-
-        $navId = match ($requiredPermissionId) {
-            'perm-view-admin' => 'adminNav',
-            'perm-view-member' => 'memberNav',
-            default => 'generalNav',
-        };
 
         /*
          * Sichtbarkeit:
@@ -432,6 +282,16 @@ final class GenerateAllGenerator
             $this->nullableStringValue(
                 $data['page_css_id']
                     ?? null
+            );
+
+        /*
+         * Twig/Page-Template.
+         */
+
+        $template =
+            $this->stringValue(
+                $data['template']
+                    ?? 'default'
             );
 
         /*
@@ -471,23 +331,40 @@ final class GenerateAllGenerator
             );
 
         /*
+         * form_action wird bewusst nur übernommen,
+         * aber NICHT weiter verarbeitet.
+         *
+         * Die Spalte existiert noch im System.
+         * Sie ist aktuell nicht Teil der Generator-Logik.
+         */
+
+        $formAction =
+            $this->nullableStringValue(
+                $data['form_action']
+                    ?? null
+            );
+
+        /*
          * ---------------------------------------------------------
          * Navigation
          * ---------------------------------------------------------
          */
 
-        $navigation =
-            $this->stringValue(
-                $data['navigation']
-                    ?? 'none'
-            );
-
         $createNavigation =
-            $navigation !== 'none';
+            $this->boolValue(
+                $data['create_navigation']
+                    ?? false
+            );
 
         $navigationParentId =
             $this->stringValue(
                 $data['navigation_parent_id']
+                    ?? ''
+            );
+
+        $navigationTitle =
+            $this->stringValue(
+                $data['navigation_title']
                     ?? ''
             );
 
@@ -633,9 +510,6 @@ final class GenerateAllGenerator
             'form_type' =>
             $formType,
 
-            'form_handler' =>
-            $formHandler,
-
             'save_key' =>
             $saveKey,
 
@@ -679,6 +553,9 @@ final class GenerateAllGenerator
             'auth_visibility' =>
             $authVisibility,
 
+            'template' =>
+            $template,
+
             'meta_title' =>
             $metaTitle,
 
@@ -691,6 +568,9 @@ final class GenerateAllGenerator
             'sort_order' =>
             $sortOrder,
 
+            //'form_action' =>
+            //   $formAction,
+
             /*
              * Navigation
              */
@@ -700,6 +580,9 @@ final class GenerateAllGenerator
 
             'navigation_parent_id' =>
             $navigationParentId,
+
+            'navigation_title' =>
+            $navigationTitle,
 
             'navigation_slug' =>
             $navigationSlug,
@@ -859,7 +742,8 @@ final class GenerateAllGenerator
         }
 
         if (
-            $slugMode === 'existing'
+            $config['own_page']
+            && $slugMode === 'existing'
             && $config['slug'] === ''
         ) {
             throw new RuntimeException(
@@ -890,6 +774,12 @@ final class GenerateAllGenerator
             );
         }
 
+        if ($config['template'] === '') {
+            throw new RuntimeException(
+                'Das Page-Template darf nicht leer sein.'
+            );
+        }
+
         /*
          * ---------------------------------------------------------
          * Navigation
@@ -900,6 +790,12 @@ final class GenerateAllGenerator
             if ($config['navigation_context_id'] === '') {
                 throw new RuntimeException(
                     'Für die Navigation muss ein context_id angegeben werden.'
+                );
+            }
+
+            if ($config['navigation_title'] === '') {
+                throw new RuntimeException(
+                    'Für die Navigation muss ein Titel angegeben werden.'
                 );
             }
 
@@ -968,9 +864,7 @@ final class GenerateAllGenerator
         $sql = '
             SELECT
                 page_uuid,
-                slug,
-                name,
-                fk_translation_placeholder
+                slug
             FROM page
             WHERE slug = ?
             LIMIT 1
@@ -1036,14 +930,6 @@ final class GenerateAllGenerator
             'slug' =>
                 (string)
                 ($row['slug'] ?? ''),
-
-            'name' =>
-                (string)
-                ($row['name'] ?? ''),
-
-            'fk_translation_placeholder' =>
-                (string)
-                ($row['fk_translation_placeholder'] ?? ''),
         ];
     }
 

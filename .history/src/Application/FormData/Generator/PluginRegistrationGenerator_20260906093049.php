@@ -48,11 +48,6 @@ final class PluginRegistrationGenerator
             ?? 'entry'
         );
 
-        $formHandler = $this->stringValue(
-            $config['form_handler']
-            ?? 'entry'
-        );
-
         /*
          * ---------------------------------------------------------
          * VALIDIERUNG
@@ -90,18 +85,6 @@ final class PluginRegistrationGenerator
             );
         }
 
-        if (
-            $formHandler !== 'entry'
-            && $formHandler !== 'formular'
-        ) {
-            throw new RuntimeException(
-                'PluginRegistrationGenerator: '
-                . 'Ungültiger form_handler "' .
-                $formHandler .
-                '".'
-            );
-        }
-
         /*
          * ---------------------------------------------------------
          * TABLE NAME
@@ -116,34 +99,37 @@ final class PluginRegistrationGenerator
 
         /*
          * ---------------------------------------------------------
-         * GET FORM HANDLER
+         * MODULE
          * ---------------------------------------------------------
-         *
-         * Der Generator registriert hier kein
-         * FormData-POST-Handler-Plugin.
-         *
-         * Entry    -> PluginEntryEditor
-         * Formular -> PluginFormular
          */
 
-        if ($formHandler === 'entry') {
-            $module = 'admin';
-            $handlerClass = 'PluginEntryEditor';
-        } else {
-            $module = 'admin';
-            $handlerClass = 'PluginFormular';
-        }
+        $module = $this->deriveModuleName(
+            $table,
+            $saveKey
+        );
+
+        /*
+         * Handler:
+         *
+         * CMS\Application\FormData\Handler\<Module>\<Module>Handler
+         */
+
+        $handlerClass =
+            'CMS\\Application\\FormData\\Handler\\'
+            . $module
+            . '\\'
+            . $module
+            . 'Handler';
 
         /*
          * ---------------------------------------------------------
          * PLUGIN KEY
          * ---------------------------------------------------------
          *
-         * Beide GET-Formular-Handler verwenden den
-         * bestehenden Plugin-Key "forms".
+         * save_key ist der kanonische Plugin-Key.
          */
 
-        $pluginKey = 'forms';
+        $pluginKey = $saveKey;
 
         /*
          * ---------------------------------------------------------
@@ -298,9 +284,7 @@ final class PluginRegistrationGenerator
 
         $existing =
             $this->findByPluginKey(
-                $pluginKey,
-                $module,
-                $handlerClass
+                $pluginKey
             );
 
         if ($existing !== null) {
@@ -317,23 +301,35 @@ final class PluginRegistrationGenerator
                 );
 
             /*
-             * Die Suche erfolgt bereits eindeutig über:
+             * Gleicher Plugin-Key und gleiche Konfiguration.
              *
-             * plugin_key + module + handler_class
-             *
-             * Ist ein solcher Eintrag vorhanden, wird er
-             * wiederverwendet.
-             *
-             * table_name bleibt Bestandteil des Plugin-Eintrags
-             * und wird weiterhin für die PageConfig verwendet.
+             * Nichts erneut anlegen.
              */
 
-            error_log(
-                'PLUGIN REGISTER: '
-                . 'Plugin bereits vorhanden.'
-            );
+            if (
+                $existingTable === $tableName
+                && $existingHandler === $handlerClass
+            ) {
+                error_log(
+                    'PLUGIN REGISTER: '
+                    . 'Plugin bereits vorhanden.'
+                );
 
-            return $existing;
+                return $existing;
+            }
+
+            /*
+             * Gleicher Key aber andere Konfiguration.
+             *
+             * Nicht überschreiben.
+             */
+
+            throw new RuntimeException(
+                'Plugin mit dem Schlüssel "' .
+                $pluginKey .
+                '" existiert bereits '
+                . 'mit einer anderen Konfiguration.'
+            );
         }
 
         /*
@@ -376,8 +372,7 @@ final class PluginRegistrationGenerator
                 plugin_key,
                 is_active,
                 table_name,
-                help_text,
-                created_at
+                help_text
             )
             VALUES
             (
@@ -388,8 +383,7 @@ final class PluginRegistrationGenerator
                 ?,
                 ?,
                 ?,
-                ?,
-                NOW()
+                ?
             )
         ';
 
@@ -458,9 +452,7 @@ final class PluginRegistrationGenerator
 
         $registeredPlugin =
             $this->findByPluginKey(
-                $pluginKey,
-                $module,
-                $handlerClass
+                $pluginKey
             );
 
         if ($registeredPlugin === null) {
@@ -488,9 +480,7 @@ final class PluginRegistrationGenerator
      * @return array<string,mixed>|null
      */
     private function findByPluginKey(
-        string $pluginKey,
-        string $module,
-        string $handlerClass
+        string $pluginKey
     ): ?array {
         $sql = '
             SELECT
@@ -504,8 +494,6 @@ final class PluginRegistrationGenerator
                 help_text
             FROM plugin
             WHERE plugin_key = ?
-              AND module = ?
-              AND handler_class = ?
             LIMIT 1
         ';
 
@@ -523,10 +511,8 @@ final class PluginRegistrationGenerator
         }
 
         $stmt->bind_param(
-            'sss',
-            $pluginKey,
-            $module,
-            $handlerClass
+            's',
+            $pluginKey
         );
 
         if (!$stmt->execute()) {

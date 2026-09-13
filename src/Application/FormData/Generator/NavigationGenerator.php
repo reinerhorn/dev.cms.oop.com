@@ -55,12 +55,6 @@ final class NavigationGenerator
                 ?? ''
         );
 
-        $title = $this->stringValue(
-            $config['navigation_title']
-                ?? $config['title']
-                ?? ''
-        );
-
         $navigationSlug = $this->stringValue(
             $config['navigation_slug'] ?? ''
         );
@@ -104,12 +98,6 @@ final class NavigationGenerator
         if ($pageUuid === '') {
             throw new RuntimeException(
                 'NavigationGenerator: Keine page_uuid angegeben.'
-            );
-        }
-
-        if ($title === '') {
-            throw new RuntimeException(
-                'NavigationGenerator: Kein Navigationstitel angegeben.'
             );
         }
 
@@ -213,12 +201,17 @@ final class NavigationGenerator
             $pageUuid,
             $contextId
         )) {
-            throw new RuntimeException(
-                sprintf(
-                    'NavigationGenerator: Für die Page "%s" existiert bereits ein Navigationseintrag.',
-                    $pageUuid
-                )
-            );
+            $existingNavigation =
+                $this->loadNavigationForPage(
+                    $pageUuid,
+                    $contextId
+                );
+
+            return [
+                'success' => true,
+                'existing' => true,
+                ...$existingNavigation,
+            ];
         }
 
         /*
@@ -292,9 +285,6 @@ final class NavigationGenerator
 
                 'fk_translation_placeholder' =>
                     $translationPlaceholder,
-
-                'title' =>
-                    $title,
 
                 'sort_order' =>
                     $sortOrder,
@@ -724,6 +714,86 @@ final class NavigationGenerator
         }
 
         $stmt->close();
+    }
+
+    /**
+     * Lädt den vorhandenen Navigationseintrag einer Page.
+     *
+     * @return array<string,mixed>
+     */
+    private function loadNavigationForPage(
+        string $pageUuid,
+        string $contextId
+    ): array {
+        $sql = '
+            SELECT
+                nav_uuid,
+                parent_id,
+                position,
+                fk_page_uuid,
+                seo_slug,
+                fk_translation_placeholder,
+                sort_order,
+                enabled,
+                nav_align,
+                context_id,
+                required_permission_id,
+                auth_visibility
+            FROM navigation
+            WHERE fk_page_uuid = ?
+              AND context_id = ?
+            LIMIT 1
+        ';
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new RuntimeException(
+                'NavigationGenerator: Prepare Navigation-Laden fehlgeschlagen: '
+                . $this->db->error
+            );
+        }
+
+        $stmt->bind_param(
+            'ss',
+            $pageUuid,
+            $contextId
+        );
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error;
+            $stmt->close();
+
+            throw new RuntimeException(
+                'NavigationGenerator: Navigation-Laden fehlgeschlagen: '
+                . $error
+            );
+        }
+
+        $result = $stmt->get_result();
+
+        if (
+            $result === false
+            || $result->num_rows === 0
+        ) {
+            $stmt->close();
+
+            throw new RuntimeException(
+                'NavigationGenerator: Navigation wurde nach der Existenzprüfung nicht gefunden.'
+            );
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        if (!is_array($row)) {
+            throw new RuntimeException(
+                'NavigationGenerator: Ungültige Navigation-Daten.'
+            );
+        }
+
+        return $row;
     }
 
     /**

@@ -33,8 +33,7 @@ final class PageResolver
                 p.auth_visibility,
                 p.required_permission_id,
                 p.nav_id,
-                p.page_css_id,
-                p.form_action
+                p.page_css_id
             FROM page p
                 WHERE p.slug = ?
                 AND p.enabled = 1

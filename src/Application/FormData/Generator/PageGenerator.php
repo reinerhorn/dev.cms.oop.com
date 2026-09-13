@@ -100,12 +100,6 @@ final class PageGenerator
                     ?? 'public'
             );
 
-        $template =
-            $this->stringValue(
-                $config['template']
-                    ?? 'default'
-            );
-
         $metaTitle =
             $this->nullableStringValue(
                 $config['meta_title']
@@ -179,12 +173,6 @@ final class PageGenerator
             throw new RuntimeException(
                 'PageGenerator: Ungültige Auth-Sichtbarkeit: '
                 . $authVisibility
-            );
-        }
-
-        if ($template === '') {
-            throw new RuntimeException(
-                'PageGenerator: Template darf nicht leer sein.'
             );
         }
 
@@ -263,18 +251,6 @@ final class PageGenerator
                 $pageSlug
             );
 
-        if (
-            $this->translationPlaceholderExists(
-                $translationPlaceholder
-            )
-        ) {
-            throw new RuntimeException(
-                'Translation-Placeholder "'
-                . $translationPlaceholder
-                . '" existiert bereits.'
-            );
-        }
-
         /*
          * ---------------------------------------------------------
          * Slug Placeholder
@@ -320,7 +296,6 @@ final class PageGenerator
                     requiredPermissionId: $requiredPermissionId,
                     pageCssId: $pageCssId,
                     authVisibility: $authVisibility,
-                    template: $template,
                     metaTitle: $metaTitle,
                     metaDescription: $metaDescription,
                     enabled: $enabled,
@@ -374,9 +349,6 @@ final class PageGenerator
 
                 'auth_visibility' =>
                     $authVisibility,
-
-                'template' =>
-                    $template,
 
                 'meta_title' =>
                     $metaTitle,
@@ -523,7 +495,6 @@ final class PageGenerator
         ?string $requiredPermissionId,
         ?string $pageCssId,
         string $authVisibility,
-        string $template,
         ?string $metaTitle,
         ?string $metaDescription,
         bool $enabled,
@@ -544,10 +515,6 @@ final class PageGenerator
             $sortOrder ?? 0;
 
         /*
-         * form_action wird absichtlich NICHT gesetzt.
-         *
-         * Die Datenbankspalte existiert weiterhin,
-         * wird aber von diesem Generator nicht verwendet.
          */
         $sql = '
             INSERT INTO page (
@@ -557,18 +524,14 @@ final class PageGenerator
                 required_permission_id,
                 page_css_id,
                 fk_translation_placeholder,
-                template,
                 meta_title,
                 meta_description,
                 enabled,
                 sort_order,
                 context,
                 nav_id,
-                auth_visibility,
-                form_action
+                auth_visibility
             ) VALUES (
-                ?,
-                ?,
                 ?,
                 ?,
                 ?,
@@ -595,25 +558,21 @@ final class PageGenerator
             );
         }
 
-        $formAction = '';
-
         $stmt->bind_param(
-            'sssssssssiiisss',
+            'ssssssssiiiss',
             $pageUuid,
             $pageSlug,
             $name,
             $requiredPermissionId,
             $pageCssId,
             $translationPlaceholder,
-            $template,
             $metaTitle,
             $metaDescription,
             $enabledValue,
             $sortOrderValue,
             $context,
             $navId,
-            $authVisibility,
-            $formAction
+            $authVisibility
         );
 
         if (!$stmt->execute()) {
@@ -643,6 +602,8 @@ final class PageGenerator
             INSERT INTO translation_placeholder (
                 id
             ) VALUES (?)
+            ON DUPLICATE KEY UPDATE
+                id = VALUES(id)
         ';
 
         $stmt =
@@ -768,6 +729,8 @@ final class PageGenerator
                 fk_language_id,
                 label
             ) VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                label = VALUES(label)
         ';
 
         $stmt =

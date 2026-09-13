@@ -522,6 +522,59 @@ final class PluginEntryEditor
 
             /*
              * -----------------------------------------------------
+             * SLUGS FROM PAGE
+             * -----------------------------------------------------
+             */
+
+            if ($sourceType === 'slugs') {
+
+                $options = [];
+
+                $result = $this->db->query(
+                    "SELECT slug AS value, slug AS label
+                     FROM page
+                     WHERE slug IS NOT NULL
+                       AND slug <> ''
+                     ORDER BY slug"
+                );
+
+                if (!$result) {
+
+                    error_log(
+                        'ENTRY EDITOR SLUG QUERY ERROR: '
+                        . $this->db->error
+                    );
+
+                } else {
+
+                    while (
+                        $rowOpt =
+                            $result->fetch_assoc()
+                    ) {
+
+                        $options[] = [
+                            'value' =>
+                                $rowOpt['value'],
+
+                            'label' =>
+                                $rowOpt['label']
+                        ];
+                    }
+
+                    $result->free();
+                }
+
+                $field['ui']['options'] =
+                    $options;
+
+                $field['options'] =
+                    $options;
+
+                continue;
+            }
+
+            /*
+             * -----------------------------------------------------
              * SLUG PLACEHOLDERS
              * -----------------------------------------------------
              */

@@ -42,7 +42,6 @@ class Navigation
         $stmt = $this->db->prepare("
             SELECT
                 n.nav_uuid,
-                n.fk_page_uuid,
                 n.parent_id,
                 n.position,
                 n.seo_slug,
@@ -111,7 +110,6 @@ class Navigation
         $stmt = $this->db->prepare("
             SELECT
                 n.nav_uuid,
-                n.fk_page_uuid,
                 n.parent_id,
                 n.position,
                 n.seo_slug,
@@ -139,26 +137,17 @@ class Navigation
         $result = $stmt->get_result();
 
         while ($row = $result->fetch_assoc()) {
-            if (!$this->isAuthVisible($row['auth_visibility'])) {
+            if (!$this->isAuthVisible($row['auth_visibility'] ?? 'public')) {
                 continue;
             }
-
-            if (!$this->isAllowed($row['required_permission_id'])) {
-                continue;
+            if ($this->isAllowed($row['required_permission_id'])) {
+                $children[] = $this->mapItem($row);
             }
-
-            $item = $this->mapItem($row);
-
-            // Rekursiv weitere Unterebenen laden
-            $item['children'] = $this->getChildren($row['nav_uuid']);
-
-            $children[] = $item;
         }
 
         $stmt->close();
 
         return $children;
-
     }
 
     /**
@@ -176,7 +165,7 @@ class Navigation
             'title' => $row['label'] ?? '',
 
             // URL mit Sprachprefix
-            'url' => !empty($row['fk_page_uuid']) && $slug !== ''
+            'url' => $slug !== ''
                 ? '/' . $this->language . '/' . $slug
                 : null,
 

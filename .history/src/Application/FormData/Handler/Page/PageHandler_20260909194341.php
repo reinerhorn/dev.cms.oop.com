@@ -102,7 +102,7 @@ final class PageHandler implements CrudHandlerInterface
                 area,
                 auth_visibility
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         if (!$stmt) {
@@ -112,7 +112,7 @@ final class PageHandler implements CrudHandlerInterface
         }
 
         $stmt->bind_param(
-'ssssssssiissss',
+'sssssssssiissss',
             $pageUuid,
             $slug,
             $name,
@@ -151,6 +151,7 @@ final class PageHandler implements CrudHandlerInterface
             $data['fk_translation_placeholder'] ?? null
         );
 
+        $template = $this->nullableString($data['template'] ?? null) ?? 'default';
         $metaTitle = $this->nullableString($data['meta_title'] ?? null);
         $metaDescription = $this->nullableString($data['meta_description'] ?? null);
 
@@ -175,6 +176,7 @@ final class PageHandler implements CrudHandlerInterface
                 required_permission_id = ?,
                 page_css_id = ?,
                 fk_translation_placeholder = ?,
+                template = ?,
                 meta_title = ?,
                 meta_description = ?,
                 enabled = ?,
@@ -193,12 +195,13 @@ final class PageHandler implements CrudHandlerInterface
         }
 
         $stmt->bind_param(
-            'sssssssiiisssss',
+            'ssssssssisssssss',
             $slug,
             $name,
             $requiredPermissionId,
             $pageCssId,
             $translationPlaceholder,
+            $template,
             $metaTitle,
             $metaDescription,
             $enabled,

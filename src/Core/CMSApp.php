@@ -26,29 +26,39 @@ class CMSApp
 
     public static function init(): void
     {
-        // -------------------------
-        // .env laden (zentral & einmalig)
-        // -------------------------
+        $__cmsapp_start = microtime(true);
+        error_log('>>> CMSAPP [0.000] START');
+
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] BEFORE ENVLOADER');
         EnvLoader::load(dirname(__DIR__, 2) . '/.env');
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] AFTER ENVLOADER');
+
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] BEFORE SESSION_START');
 
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
+
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] AFTER SESSION_START');
+
         if (empty($_SESSION['_csrf'])) {
             $_SESSION['_csrf'] = bin2hex(random_bytes(32));
-    }
-        // -------------------------
-        // Sprache
-        // -------------------------
+            error_log('CMSApp CSRF CREATED');
+        } else {
+            error_log('CMSApp CSRF EXISTS');
+        }
+
         self::$language = $_SESSION['language'] ?? 'de';
+        error_log('CMSApp LANGUAGE: ' . self::$language);
 
-        // -------------------------
-        // Rolle (NUR LESEN – KEIN Schreiben!)
-        // -------------------------
         self::$roleId = $_SESSION['role_id'] ?? 'guest-role-000';
+        error_log('CMSApp ROLE: ' . self::$roleId);
 
-        // DB initialisieren
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] BEFORE DB');
         self::getDb();
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] AFTER DB');
+
+        error_log('>>> CMSAPP [' . number_format(microtime(true) - $__cmsapp_start, 6) . '] END');
     }
 
     // =========================

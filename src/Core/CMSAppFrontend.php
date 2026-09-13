@@ -27,7 +27,7 @@ final class CMSAppFrontend
             $language = self::detectLanguageFromRequest($db) ?? CMSApp::getLanguage() ?? 'de';
 
             // 2) Page-Metadaten laden
-            $stmt = $db->prepare("SELECT page_uuid, context, enabled, auth_visibility, required_permission_id, nav_id, page_css_id, form_action FROM page WHERE page_uuid = ? LIMIT 1");
+            $stmt = $db->prepare("SELECT page_uuid, context, enabled, auth_visibility, required_permission_id, nav_id, page_css_id FROM page WHERE page_uuid = ? LIMIT 1");
             $stmt->bind_param('s', $pageId);
             $stmt->execute();
             $pageMeta = $stmt->get_result()?->fetch_assoc();
@@ -81,6 +81,10 @@ final class CMSAppFrontend
                     'block'       => $block,
                     'session'     => $_SESSION ?? [],
                     'form_result' => $_SESSION['form_result'] ?? null,
+                    'form_values' => (
+                        $_SESSION['generator_pending']['config']
+                        ?? []
+                    ),
                     'auth'        => [
                         'logged_in' => !empty($_SESSION['user_id']),
                         'user_id'   => $_SESSION['user_id'] ?? null,

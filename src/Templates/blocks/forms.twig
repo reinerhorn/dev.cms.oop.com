@@ -9,11 +9,35 @@
 {% set fields = block.fields ?? config.fields ?? block.form.fields ?? [] %}
 {% set form_class = block.form_class ?? config.form_class ?? null %}
 
+{# Bei einer Generator-Bestätigung die ursprünglich eingegebenen Werte anzeigen #}
+{% if form_result is defined and form_result.confirmation is defined and form_result.confirmation %}
+    {% set pending_post = form_result.pending_post ?? {} %}
+
+    {% for field in fields %}
+        {% set field_name = field.name|default('') %}
+        {% if pending_post[field_name] is defined %}
+            {% set field = field|merge({'value': pending_post[field_name]}) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{# Bei einer Generator-Bestätigung die ursprünglich eingegebenen Werte anzeigen #}
+{% if form_result is defined and form_result.confirmation is defined and form_result.confirmation %}
+    {% set pending_post = form_result.pending_post ?? {} %}
+
+    {% for field in fields %}
+        {% set field_name = field.name|default('') %}
+        {% if pending_post[field_name] is defined %}
+            {% set field = field|merge({'value': pending_post[field_name]}) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
 <div class="admin-form-wrapper">
 
 {# Formular-Feedback (zentral aus CMSAppFrontend) #}
 {% if form_result is defined %}
-    {% if form_result.message %}
+    {% if form_result.message and not (form_result.confirmation is defined and form_result.confirmation) %}
         <div class="form-message {{ form_result.status == 'ok' ? 'form-success' : 'form-error' }}">
             {{ form_result.message }}
         </div>
@@ -42,6 +66,36 @@
         <input type="hidden" name="form_id" value="{{ config.form_id }}">
     {% endif %}
 
+    {% if form_result is defined and form_result.confirmation is defined and form_result.confirmation %}
+        <div class="generator-confirmation">
+            <input type="hidden" name="action" value="save">
+
+            <div class="form-message form-error">
+                {{ form_result.message }}
+            </div>
+
+            <div class="generator-confirmation-buttons">
+                <button
+                    type="submit"
+                    name="generator_decision"
+                    value="yes"
+                    class="btn btn-primary"
+                >
+                    Ja
+                </button>
+
+                <button
+                    type="submit"
+                    name="generator_decision"
+                    value="no"
+                    class="btn btn-secondary"
+                >
+                    Nein
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
     {% if block.headline %}
         <h1>{{ block.headline }}</h1>
     {% endif %}
@@ -65,6 +119,13 @@
         {% set field_name = field.name|default('') %}
         {% set field_id = field.id ?? ui.id|default(field_name) %}
 
+        {# Generator-/POST-Werte haben Vorrang #}
+        {% set current_value =
+            field_name in form_values|keys
+                ? form_values[field_name]
+                : (field.value|default(''))
+        %}
+
         {% set field_label = field.label is iterable
             ? (field.label.text|default(field_name))
             : (field.label|default(field_name)) %}
@@ -80,7 +141,7 @@
                     type="checkbox"
                     name="{{ field_name }}"
                     value="1"
-                    {% if field.value is defined and field.value in [1, '1', true, 'true', 'on'] %}
+                    {% if current_value in [1, '1', true, 'true', 'on'] %}
                         checked
                     {% endif %}
                     {% if required %}required{% endif %}
@@ -94,15 +155,15 @@
                 name="{{ field_name }}"
                 placeholder="{{ field_label }}"
                 {% if required %}required{% endif %}
-            >{{ field.value|default('') }}</textarea>
+            >{{ current_value|default('') }}</textarea>
 
         {% elseif type == 'select' %}
             <div class="form-group">
                 <label for="{{ field_id }}">{{ field_label }}</label>
 
-                {# aktuelle Auswahl sauber und typsicher bestimmen #}
-                {% set current_value = (field.value is defined and field.value is not null)
-                    ? (field.value ~ '')
+                {# Wert aus Generator-Session oder Feld-Standardwert #}
+                {% set current_value = current_value is not null
+                    ? (current_value ~ '')
                     : '' %}
 
                 <select
@@ -137,7 +198,7 @@
                     type="{{ type }}"
                     id="{{ field_id }}"
                     name="{{ field_name }}"
-                    value="{{ field.value|default('') }}"
+                    value="{{ current_value|default('') }}"
                     placeholder=" "
                     {% if required %}required{% endif %}
                 >

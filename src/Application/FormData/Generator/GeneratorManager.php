@@ -184,10 +184,6 @@ final class GeneratorManager
                 (string)
                 $pageResult['auth_visibility'];
 
-            $config['template'] =
-                (string)
-                $pageResult['template'];
-
             $config['meta_title'] =
                 $this->nullableString(
                     $pageResult[
@@ -245,6 +241,11 @@ final class GeneratorManager
             $navigationConfig['page_slug'] =
                 $config['page_slug'];
 
+            error_log(
+                'GENERATOR NAVIGATION CONFIG: '
+                . print_r($navigationConfig, true)
+            );
+
             $navigationResult =
                 $navigationGenerator->generate(
                     $navigationConfig
@@ -273,6 +274,9 @@ final class GeneratorManager
 
                     'form_type' =>
                         $config['form_type'],
+
+                    'form_handler' =>
+                        $config['form_handler'],
 
                     'save_key' =>
                         $config['save_key'],
@@ -541,12 +545,6 @@ final class GeneratorManager
                 ?? null
             );
 
-        $config['template'] =
-            $this->stringValue(
-                $config['template']
-                ?? 'default'
-            );
-
         $config['meta_title'] =
             $this->nullableString(
                 $config['meta_title']
@@ -572,19 +570,6 @@ final class GeneratorManager
             );
 
         /*
-         * form_action wird bewusst nur übernommen.
-         *
-         * Das Feld existiert noch in page,
-         * wird vom Generator aber nicht verarbeitet.
-         */
-
-        $config['form_action'] =
-            $this->nullableString(
-                $config['form_action']
-                ?? null
-            );
-
-        /*
          * ---------------------------------------------------------
          * NAVIGATION
          * ---------------------------------------------------------
@@ -600,14 +585,6 @@ final class GeneratorManager
             $this->nullableString(
                 $config[
                     'navigation_parent_id'
-                ]
-                ?? null
-            );
-
-        $config['navigation_title'] =
-            $this->nullableString(
-                $config[
-                    'navigation_title'
                 ]
                 ?? null
             );
@@ -797,13 +774,6 @@ final class GeneratorManager
             );
         }
 
-        if ($config['template'] === '') {
-            throw new RuntimeException(
-                'GeneratorManager: '
-                . 'Kein Template angegeben.'
-            );
-        }
-
         if ($config['sort_order'] < 0) {
             throw new RuntimeException(
                 'GeneratorManager: '
@@ -990,7 +960,6 @@ final class GeneratorManager
                 required_permission_id,
                 page_css_id,
                 fk_translation_placeholder,
-                template,
                 meta_title,
                 meta_description,
                 enabled,
@@ -1103,10 +1072,6 @@ final class GeneratorManager
                         'fk_translation_placeholder'
                     ]
                     : null,
-
-            'template' =>
-                (string)
-                ($row['template'] ?? 'default'),
 
             'meta_title' =>
                 $row['meta_title'] !== null
