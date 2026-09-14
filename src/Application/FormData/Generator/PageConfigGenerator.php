@@ -76,13 +76,37 @@ final class PageConfigGenerator
         );
 
         /*
-         * Nächsten Index ermitteln.
+         * Prüfen, ob für diese Page bereits
+         * ein page_config-Eintrag vorhanden ist.
          *
-         * Neue Page:
-         *   MAX nicht vorhanden => 0
+         * Wenn ja, keinen weiteren Eintrag anlegen.
+         */
+        if (
+            $this->hasPageConfig(
+                $pageUuid
+            )
+        ) {
+            return [
+                'success' => true,
+
+                'existing' => true,
+
+                'message' =>
+                    'Für diese Page existiert bereits ein page_config-Eintrag. '
+                    . 'Kein weiterer Eintrag wurde angelegt.',
+
+                'fk_page_uuid' =>
+                    $page['page_uuid'],
+
+                'fk_page_slug' =>
+                    $page['slug'],
+            ];
+        }
+
+        /*
+         * Noch kein page_config vorhanden.
          *
-         * Bestehende Page:
-         *   MAX + 1
+         * Der erste Eintrag erhält idx = 0.
          */
         $idx = $this->nextIndex(
             $pageUuid
@@ -204,6 +228,61 @@ final class PageConfigGenerator
             'slug' =>
                 (string) $row['slug'],
         ];
+    }
+
+    /**
+     * Prüft, ob für die Page bereits ein page_config-Eintrag existiert.
+     */
+    private function hasPageConfig(
+        string $pageUuid
+    ): bool {
+        $sql = '
+            SELECT
+                1
+            FROM page_config
+            WHERE fk_page_uuid = ?
+            LIMIT 1
+        ';
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new RuntimeException(
+                'PageConfigGenerator: Prepare Page-Config-Prüfung fehlgeschlagen: '
+                . $this->db->error
+            );
+        }
+
+        $stmt->bind_param(
+            's',
+            $pageUuid
+        );
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error;
+            $stmt->close();
+
+            throw new RuntimeException(
+                'PageConfigGenerator: Page-Config-Prüfung fehlgeschlagen: '
+                . $error
+            );
+        }
+
+        $result = $stmt->get_result();
+
+        if ($result === false) {
+            $stmt->close();
+
+            throw new RuntimeException(
+                'PageConfigGenerator: Page-Config-Ergebnis konnte nicht gelesen werden.'
+            );
+        }
+
+        $exists = $result->num_rows > 0;
+
+        $stmt->close();
+
+        return $exists;
     }
 
     /**

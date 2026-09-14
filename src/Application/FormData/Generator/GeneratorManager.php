@@ -149,65 +149,30 @@ final class GeneratorManager
                 $pageResult['slug'];
 
             /*
-             * Die tatsächlichen Page-Einstellungen verwenden.
-             *
-             * Damit überschreiben wir nicht versehentlich
-             * Einstellungen einer vorhandenen Page mit Werten
-             * aus dem Generator-Formular.
+             * Die bestehende Page mit den aktuellen
+             * Generator-Einstellungen aktualisieren.
              */
+            $this->updateExistingPage(
+                $config
+            );
 
-            $config['context'] =
-                (string)
-                $pageResult['context'];
-
-            $config['nav_id'] =
-                (string)
-                $pageResult['nav_id'];
-
-            $config['required_permission_id'] =
-                $this->nullableString(
-                    $pageResult[
-                        'required_permission_id'
-                    ]
-                    ?? null
+            /*
+             * Danach die tatsächlich gespeicherte Page
+             * erneut laden.
+             */
+            $pageResult =
+                $this->loadExistingPage(
+                    $config['page_uuid']
                 );
 
-            $config['page_css_id'] =
-                $this->nullableString(
-                    $pageResult[
-                        'page_css_id'
-                    ]
-                    ?? null
-                );
-
-            $config['auth_visibility'] =
-                (string)
-                $pageResult['auth_visibility'];
-
-            $config['meta_title'] =
-                $this->nullableString(
-                    $pageResult[
-                        'meta_title'
-                    ]
-                    ?? null
-                );
-
-            $config['meta_description'] =
-                $this->nullableString(
-                    $pageResult[
-                        'meta_description'
-                    ]
-                    ?? null
-                );
-
-            $config['enabled'] =
-                ((int)
-                $pageResult['enabled']) === 1;
-
-            $config['sort_order'] =
-                (int)
-                $pageResult['sort_order'];
-
+            /*
+             * Die gespeicherte Page als Ergebnis übernehmen.
+             *
+             * Die Generator-Konfiguration bleibt unverändert,
+             * damit die aktuellen Generator-Einstellungen
+             * auch für Navigation und Plugin-Konfiguration
+             * weiter verwendet werden.
+             */
             $results['page'] =
                 $pageResult;
         }
@@ -380,6 +345,12 @@ final class GeneratorManager
          * ---------------------------------------------------------
          * 8. PAGE CONFIG
          * ---------------------------------------------------------
+         *
+         * Bei einer neuen Page wird die Zuordnung
+         * neu angelegt.
+         *
+         * Bei einer vorhandenen Page darf kein
+         * weiterer page_config-Eintrag entstehen.
          */
 
         $pageConfigGenerator =
@@ -939,6 +910,141 @@ final class GeneratorManager
      *
      * @return array<string,mixed>
      */
+    /**
+     * Aktualisiert eine vorhandene Page mit den
+     * aktuellen Generator-Einstellungen.
+     *
+     * @param array<string,mixed> $config
+     */
+    private function updateExistingPage(
+        array $config
+    ): void {
+        $pageUuid =
+            (string)
+            ($config['page_uuid'] ?? '');
+
+        if ($pageUuid === '') {
+            throw new RuntimeException(
+                'GeneratorManager: '
+                . 'Keine page_uuid zum Aktualisieren angegeben.'
+            );
+        }
+
+        $requiredPermissionId =
+            $this->nullableString(
+                $config['required_permission_id']
+                ?? null
+            );
+
+        $pageCssId =
+            $this->nullableString(
+                $config['page_css_id']
+                ?? null
+            );
+
+        $metaTitle =
+            $this->nullableString(
+                $config['meta_title']
+                ?? null
+            );
+
+        $metaDescription =
+            $this->nullableString(
+                $config['meta_description']
+                ?? null
+            );
+
+        $enabled =
+            !empty($config['enabled'])
+                ? 1
+                : 0;
+
+        $sortOrder =
+            (int)
+            ($config['sort_order'] ?? 0);
+
+        $context =
+            (string)
+            ($config['context'] ?? 'frontend');
+
+        $navId =
+            (string)
+            ($config['nav_id'] ?? 'generalNav');
+
+        $authVisibility =
+            (string)
+            ($config['auth_visibility'] ?? 'public');
+
+        error_log(
+            'GENERATOR UPDATE EXISTING PAGE: '
+            . print_r(
+                [
+                    'page_uuid' => $pageUuid,
+                    'context' => $context,
+                    'nav_id' => $navId,
+                    'required_permission_id' => $requiredPermissionId,
+                    'auth_visibility' => $authVisibility,
+                ],
+                true
+            )
+        );
+
+        $sql = '
+            UPDATE page
+            SET
+                required_permission_id = ?,
+                page_css_id = ?,
+                meta_title = ?,
+                meta_description = ?,
+                enabled = ?,
+                sort_order = ?,
+                context = ?,
+                nav_id = ?,
+                auth_visibility = ?
+            WHERE page_uuid = ?
+        ';
+
+        $stmt =
+            $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new RuntimeException(
+                'GeneratorManager: '
+                . 'Prepare Page UPDATE fehlgeschlagen: '
+                . $this->db->error
+            );
+        }
+
+        $stmt->bind_param(
+            'ssssiissss',
+            $requiredPermissionId,
+            $pageCssId,
+            $metaTitle,
+            $metaDescription,
+            $enabled,
+            $sortOrder,
+            $context,
+            $navId,
+            $authVisibility,
+            $pageUuid
+        );
+
+        if (!$stmt->execute()) {
+            $error =
+                $stmt->error;
+
+            $stmt->close();
+
+            throw new RuntimeException(
+                'GeneratorManager: '
+                . 'Page UPDATE fehlgeschlagen: '
+                . $error
+            );
+        }
+
+        $stmt->close();
+    }
+
     private function loadExistingPage(
         ?string $page
     ): array {
